@@ -87,10 +87,10 @@ class GraphNet(PowerNet):
             # htp: Hierarchical Token Bucket rate limiter
 #            quality_params = {"bw":10,"delay":'5ms', "loss":100-100.0/e[2]['weight'], "use_htb":True}
             quality_params = {}
-#            quality_params["bw"] = 10
+            quality_params["bw"] = 10
 #            quality_params["delay"] = '5ms'
 #            quality_params["loss"] = 100-100.0/e[2]['weight']
-#            quality_params["use_htb"] = True
+            quality_params["use_htb"] = True
             self.insertLink(self.get(e[0]),self.get(e[1]),quality_params)
 
         if draw:
@@ -158,6 +158,7 @@ class MininetTest(object):
         # but it check the newly created process id using psutil
         host_proc = Process(host.pid)
         host_ps = set(host_proc.get_children())
+        info("Sending cmd: \n\t"+str(args)+"\n")
         host.sendCmd(*(args+("&",)))
         sleep(0.5)
         pid = (set(host_proc.get_children()).difference(host_ps)).pop().pid
@@ -192,8 +193,14 @@ class PSTest(MininetTest):
         if not path.exists(self.prefix):
                 makedirs(self.prefix)
 
-    def launchPS(self,host,params):
-        cmd = "./streamer"
+    def launchPS(self,host,params,stdout,stderr):
+        cmd = "./csaba_streamer"
+        params['-c'] = '50'
+        params['-M'] = '5'
+#        params['-O'] = '3'
+        params['--chunk_log'] = ''
+        params['>'] = stdout
+        params['2>'] = stderr
         self.bgCmd(host,cmd,*reduce(lambda x, y: x + y, params.items()))
 
     def launchPeer(self,host,source,source_port=7000):
@@ -201,11 +208,7 @@ class PSTest(MininetTest):
         params = {}
         params['-i'] = source.defaultIntf().ip
         params['-p'] = str(source_port)
-        params['-c'] = '38'
-        params['--chunk_log'] = ''
-        params['>'] = '/dev/null'
-        params['2>'] = logfile
-        self.launchPS(host,params)
+        self.launchPS(host,params,'/dev/null',logfile)
 
     def launchSource(self,host,chunk_mult=1,source_port=7000):
         video_file = "bunny.ts,loop=1"
@@ -213,13 +216,9 @@ class PSTest(MininetTest):
         params = {}
         params['-I'] = host.defaultIntf().name
         params['-P'] = str(source_port)
-        params['-m'] = str(chunk_mult)
         params['-f'] = video_file
-        params['-c'] = '38'
-        params['--chunk_log'] = ''
-        params['>'] = '/dev/null'
-        params['2>'] = logfile
-        self.launchPS(host,params)
+        params['-m'] = str(chunk_mult)
+        self.launchPS(host,params,'/dev/null',logfile)
 
     def runTest(self):
         info("*** Launching PeerStreamer test\n")
@@ -256,11 +255,14 @@ if __name__ == '__main__':
     net.start()
     net.enableForwarding()
     net.setShortestRoutes()
+#    CLI(net)
     test_name = "FFGRAZ0_parameterless_"+str(int(time()))
     for i in range(1):
         info( "+++++++ Round: "+str(i+1) + '\n')
         #test = PSTest(net,duration=600,name=test_name,num_peers=(10-i))
-        test = PSHostsTest(net,'h46_46',['h121_121','h28_28'],duration=30,name=test_name)
+        test = PSHostsTest(net,'h46_46',['h121_121','h28_28'],duration=600,name=test_name)
+        #test = PSHostsTest(net,'huno_1',['hdue_2','hdue_2','htre_3'],duration=600,name=test_name)
         test.runTest()
       #  sleep(60)
     net.stop()
+    info("*** Done with experiment: "+test_name+"\n")
