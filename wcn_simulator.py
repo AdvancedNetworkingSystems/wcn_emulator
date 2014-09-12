@@ -11,7 +11,13 @@ from mininet.node import CPULimitedHost
 from mininet.link import TCLink
 
 import networkx as nx
+from time import sleep, time
+from os import kill, path, makedirs
+from psutil import Process
+import signal
 from matplotlib.pyplot import ion
+from random import sample
+
 from gengraphs import loadGraph
 from misclibs import showGraph
 
@@ -79,7 +85,12 @@ class GraphNet(PowerNet):
         for e in self.gg.edges(data=True):
             # 10 Mbps, 5ms delay, 10% loss, 1000 packet queue
             # htp: Hierarchical Token Bucket rate limiter
-            quality_params = {"bw":10,"delay":'5ms', "loss":100-100.0/e[2]['weight'], "max_queue_size":1000, "use_htb":True}
+#            quality_params = {"bw":10,"delay":'5ms', "loss":100-100.0/e[2]['weight'], "use_htb":True}
+            quality_params = {}
+#            quality_params["bw"] = 10
+#            quality_params["delay"] = '5ms'
+#            quality_params["loss"] = 100-100.0/e[2]['weight']
+#            quality_params["use_htb"] = True
             self.insertLink(self.get(e[0]),self.get(e[1]),quality_params)
 
         if draw:
@@ -104,37 +115,152 @@ class GraphNet(PowerNet):
                 )
 
     def setShortestRoutes(self):
-        self.setNeighboursRoutes()
         paths = nx.shortest_path(self.gg,weight='weight')
         for node1 in paths.keys():
+            host1 = self.get(node1)
             debug("Starting node: "+node1+'\n')
             debug("\tpaths: "+str(paths[node1])+'\n')
             for node2 in paths[node1].keys():
-                if node2 != node1 and len(paths[node1][node2])>2:
-                    debug("\tDestination node: "+node2+'\n')
-                    nextHop = self.get(paths[node1][node2][1])
-                    debug("\tNextHop node: "+nextHop.name+'\n')
-                    dsts = self.getNodeAddrs(self.get(node2))
-                    intfs = self.get(node1).connectionsTo(nextHop)
-                    nextAddrs = [ couple[1].ip for couple in intfs ]
-                    for dst in dsts:
-                        for addr in nextAddrs:
-                            self.get(node1).cmd("ip route add "+dst+" via "+addr)
-                            debug("\tip route add "+dst+" via "+addr+'\n')
-                
+                if node2 != node1 :
+                    if len(paths[node1][node2])>2:
+                        debug("\tDestination node: "+node2+'\n')
+                        nextHop = self.get(paths[node1][node2][1])
+                        debug("\tNextHop node: "+nextHop.name+'\n')
+                        dsts = self.getNodeAddrs(self.get(node2))
+                        intfs = host1.connectionsTo(nextHop)
+                        nextAddrs = [ couple[1].ip for couple in intfs ]
+                        rintf = intfs[0][0] # WARNING we just consider one link
+                        for dst in dsts:
+                            for addr in nextAddrs:
+                                host1.cmd("ip route add "+dst+" via "+addr+" dev "+rintf.name)
+                                debug("\tip route add "+dst+" via "+addr+'\n')
+                    else :
+                        host2 = self.get(node2)
+                        intfs = [ couple[0] for couple in host1.connectionsTo(host2) ]
+                        rintf = intfs[0] # WARNING we just consider one link
+                        raddrs = self.getNodeAddrs(host2)
+                        for addr in raddrs:
+                            host1.setHostRoute(addr,rintf.name)
+
+
+class MininetTest(object):
+    def __init__(self,mininet):
+        self.net = mininet
+        self.pendingProc = {} 
+    
+    def getHostSample(self,num):
+        hosts = sample(self.net.values(),num)
+        return hosts[:num]
+
+    def bgCmd(self,host,*args):
+        # here it's a little workaround for tracing the resulting pid
+        # it launch the new process using the mininet interface
+        # but it check the newly created process id using psutil
+        host_proc = Process(host.pid)
+        host_ps = set(host_proc.get_children())
+        host.sendCmd(*(args+("&",)))
+        sleep(0.5)
+        pid = (set(host_proc.get_children()).difference(host_ps)).pop().pid
+        info("BGProcess: "+str(pid)+"; ")
+        self.pendingProc[pid] = host
+        return pid
+
+    def sendSig(self,pid,sig=signal.SIGTERM):
+        try:
+            info("Killing BGProcess: "+str(pid)+"; ")
+            kill( pid, sig )
+        except OSError:
+            error("Error while killing process "+str(pid))
+            pass
+
+    def killAll(self):
+        for pid in self.pendingProc.keys():
+            self.sendSig(pid,signal.SIGKILL)
+            self.pendingProc[pid].monitor() # wait exiting
+        self.pendingProc.clear()
+
+class PSTest(MininetTest):
+    def __init__(self,mininet,duration=300):
+        super(PSTest,self).__init__(mininet)
+        self.source = None
+        self.hosts = []
+        self.duration = duration
+        self.prefix = ''
+
+    def setPrefix(self,name):
+        self.prefix = str(name)+'_'+str(self.duration)+'_'+str(len(self.hosts)+1)+'hosts/' 
+        if not path.exists(self.prefix):
+                makedirs(self.prefix)
+
+    def launchPS(self,host,params):
+        cmd = "./streamer"
+        self.bgCmd(host,cmd,*reduce(lambda x, y: x + y, params.items()))
+
+    def launchPeer(self,host,source,source_port=7000):
+        logfile = self.prefix+host.name.split('_')[0]+"_peerstreamer_normal_$(date +%s).log"
+        params = {}
+        params['-i'] = source.defaultIntf().ip
+        params['-p'] = str(source_port)
+        params['-c'] = '38'
+        params['--chunk_log'] = ''
+        params['>'] = '/dev/null'
+        params['2>'] = logfile
+        self.launchPS(host,params)
+
+    def launchSource(self,host,chunk_mult=1,source_port=7000):
+        video_file = "bunny.ts,loop=1"
+        logfile = self.prefix+host.name.split('_')[0]+"_source_normal_$(date +%s).log"
+        params = {}
+        params['-I'] = host.defaultIntf().name
+        params['-P'] = str(source_port)
+        params['-m'] = str(chunk_mult)
+        params['-f'] = video_file
+        params['-c'] = '38'
+        params['--chunk_log'] = ''
+        params['>'] = '/dev/null'
+        params['2>'] = logfile
+        self.launchPS(host,params)
+
+    def runTest(self):
+        info("*** Launching PeerStreamer test\n")
+        info("Data folder: "+self.prefix+"\n")
+        if self.source:
+            self.launchSource(self.source)
+
+        for h in self.hosts:
+            self.launchPeer(h,self.source)
+        info("Waiting completion...\n")
+        sleep(self.duration)
+
+        self.killAll()
+
+class PSHostsTest(PSTest):
+    def __init__(self,mininet,source_name,peer_names,duration=300,name=None):
+        super(PSHostsTest,self).__init__(mininet,duration=duration)
+        self.source = mininet.get(source_name)
+        for n in peer_names:
+            self.hosts.append(mininet.get(n))
+        self.setPrefix(name)
+
+class PSRandomTest(PSTest):
+    def __init__(self,mininet,duration=300,num_peers=5,name=None):
+        super(PSRandomTest,self).__init__(mininet,duration)
+        self.hosts = self.getHostSample(num_peers)
+        if len(self.hosts) > 0:
+            self.source = self.hosts.pop()
+        self.setPrefix(name)
 
 if __name__ == '__main__':
     setLogLevel('info')
-    net = GraphNet("test.edges")
+    net = GraphNet("LeoNets/FFGraz0.edges",draw=True)
     net.start()
     net.enableForwarding()
     net.setShortestRoutes()
-    CLI(net)
+    test_name = "FFGRAZ0_parameterless_"+str(int(time()))
+    for i in range(1):
+        info( "+++++++ Round: "+str(i+1) + '\n')
+        #test = PSTest(net,duration=600,name=test_name,num_peers=(10-i))
+        test = PSHostsTest(net,'h46_46',['h121_121','h28_28'],duration=30,name=test_name)
+        test.runTest()
+      #  sleep(60)
     net.stop()
-
-#    setLogLevel('info')
-#    topo = TopoFactory("minitest.edges")
-#    net = Mininet(topo,controller = OVSController,host=CPULimitedHost, link=TCLink)
-#    net.start()
-#    CLI(net)
-#    net.stop()
