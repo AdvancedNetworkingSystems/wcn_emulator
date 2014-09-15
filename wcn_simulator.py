@@ -16,7 +16,7 @@ from os import kill, path, makedirs
 from psutil import Process
 import signal
 from matplotlib.pyplot import ion
-from random import sample
+from random import sample, randint
 
 from gengraphs import loadGraph
 from misclibs import showGraph
@@ -210,15 +210,18 @@ class PSTest(MininetTest):
         return self.bgCmd(host,True,cmd,*reduce(lambda x, y: x + y, params.items()))
 
     def launchPeer(self,host,source,source_port=7000):
-        logfile = self.prefix+host.name.split('_')[0]+"_peerstreamer_normal_$(date +%s).log"
+        idps = randint(0,100)
+        logfile = self.prefix+host.name.split('_')[0]+"-"+str(idps)+"_peerstreamer_normal_$(date +%s).log"
         params = {}
         params['-i'] = source.defaultIntf().ip
         params['-p'] = str(source_port)
+        params['-P'] = str(randint(4000,8000))
         return self.launchPS(host,params,'/dev/null',logfile)
 
     def launchSource(self,host,chunk_mult=1,source_port=7000):
+        idps = randint(0,100)
         video_file = "bunny.ts,loop=1"
-        logfile = self.prefix+host.name.split('_')[0]+"_source_normal_$(date +%s).log"
+        logfile = self.prefix+host.name.split('_')[0]+"-"+str(idps)+"_source_normal_$(date +%s).log"
         params = {}
         params['-I'] = host.defaultIntf().name
         params['-P'] = str(source_port)
