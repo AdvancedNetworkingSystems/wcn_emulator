@@ -158,12 +158,16 @@ class MininetTest(object):
         # but it check the newly created process id using psutil
         host_proc = Process(host.pid)
         host_ps = set(host_proc.get_children())
-        info("Sending cmd: \n\t"+str(args)+"\n")
+        debug("Sending cmd: \n\t"+str(args)+"\n")
         host.sendCmd(*(args+("&",)))
         sleep(0.5)
-        pid = (set(host_proc.get_children()).difference(host_ps)).pop().pid
-        info("BGProcess: "+str(pid)+"; ")
-        self.pendingProc[pid] = host
+        try :
+            pid = (set(host_proc.get_children()).difference(host_ps)).pop().pid
+            info("BGProcess: "+str(pid)+"; ")
+            self.pendingProc[pid] = host
+        except:
+            info("*** Unable to launch command:\n\t "+args)
+            return None
         return pid
 
     def sendSig(self,pid,sig=signal.SIGTERM):
@@ -194,21 +198,21 @@ class PSTest(MininetTest):
                 makedirs(self.prefix)
 
     def launchPS(self,host,params,stdout,stderr):
-        cmd = "./csaba_streamer"
-        params['-c'] = '50'
-        params['-M'] = '5'
+        cmd = "./streamer"
+        params['-c'] = '38'
+#        params['-M'] = '5'
 #        params['-O'] = '3'
         params['--chunk_log'] = ''
         params['>'] = stdout
         params['2>'] = stderr
-        self.bgCmd(host,cmd,*reduce(lambda x, y: x + y, params.items()))
+        return self.bgCmd(host,cmd,*reduce(lambda x, y: x + y, params.items()))
 
     def launchPeer(self,host,source,source_port=7000):
         logfile = self.prefix+host.name.split('_')[0]+"_peerstreamer_normal_$(date +%s).log"
         params = {}
         params['-i'] = source.defaultIntf().ip
         params['-p'] = str(source_port)
-        self.launchPS(host,params,'/dev/null',logfile)
+        return self.launchPS(host,params,'/dev/null',logfile)
 
     def launchSource(self,host,chunk_mult=1,source_port=7000):
         video_file = "bunny.ts,loop=1"
@@ -218,7 +222,7 @@ class PSTest(MininetTest):
         params['-P'] = str(source_port)
         params['-f'] = video_file
         params['-m'] = str(chunk_mult)
-        self.launchPS(host,params,'/dev/null',logfile)
+        return self.launchPS(host,params,'/dev/null',logfile)
 
     def runTest(self):
         info("*** Launching PeerStreamer test\n")
@@ -251,7 +255,7 @@ class PSRandomTest(PSTest):
 
 if __name__ == '__main__':
     setLogLevel('info')
-    net = GraphNet("LeoNets/FFGraz0.edges",draw=True)
+    net = GraphNet("square.edges",draw=True)
     net.start()
     net.enableForwarding()
     net.setShortestRoutes()
@@ -259,9 +263,8 @@ if __name__ == '__main__':
     test_name = "FFGRAZ0_parameterless_"+str(int(time()))
     for i in range(1):
         info( "+++++++ Round: "+str(i+1) + '\n')
-        #test = PSTest(net,duration=600,name=test_name,num_peers=(10-i))
-        test = PSHostsTest(net,'h46_46',['h121_121','h28_28'],duration=600,name=test_name)
-        #test = PSHostsTest(net,'huno_1',['hdue_2','hdue_2','htre_3'],duration=600,name=test_name)
+        #test = PSRandomTest(net,duration=6,name=test_name,num_peers=2)
+        test = PSHostsTest(net,'h0_0',['h1_1','h1_1','h2_2'],duration=600,name=test_name)
         test.runTest()
       #  sleep(60)
     net.stop()
