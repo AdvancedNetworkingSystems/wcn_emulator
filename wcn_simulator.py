@@ -152,13 +152,15 @@ class MininetTest(object):
         hosts = sample(self.net.values(),num)
         return hosts[:num]
 
-    def bgCmd(self,host,*args):
+    def bgCmd(self,host,force_multiple_processes,*args):
         # here it's a little workaround for tracing the resulting pid
         # it launch the new process using the mininet interface
         # but it check the newly created process id using psutil
         host_proc = Process(host.pid)
         host_ps = set(host_proc.get_children())
         debug("Sending cmd: \n\t"+str(args)+"\n")
+        if force_multiple_processes:
+            host.waiting = False
         host.sendCmd(*(args+("&",)))
         sleep(0.5)
         try :
@@ -166,7 +168,7 @@ class MininetTest(object):
             info("BGProcess: "+str(pid)+"; ")
             self.pendingProc[pid] = host
         except:
-            info("*** Unable to launch command:\n\t "+args)
+            info("*** Unable to launch command:\n\t "+str(args))
             return None
         return pid
 
@@ -205,7 +207,7 @@ class PSTest(MininetTest):
         params['--chunk_log'] = ''
         params['>'] = stdout
         params['2>'] = stderr
-        return self.bgCmd(host,cmd,*reduce(lambda x, y: x + y, params.items()))
+        return self.bgCmd(host,True,cmd,*reduce(lambda x, y: x + y, params.items()))
 
     def launchPeer(self,host,source,source_port=7000):
         logfile = self.prefix+host.name.split('_')[0]+"_peerstreamer_normal_$(date +%s).log"
