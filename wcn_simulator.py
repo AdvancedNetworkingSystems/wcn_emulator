@@ -124,9 +124,8 @@ if __name__ == '__main__':
     for i in range(1):
         c = "peerstreamer.PSHostsTest"
         info("+++++++ Round: "+str(i+1) + '\n')
-        #test = PSRandomTest(net,duration=6,name=test_name,num_peers=2)
         test = C.className(net, testPath, C.confParams)
         test.runTest()
     net.stop()
     test.changePermissions()
-    info("*** Done with experiment: "+test_name+"\n")
+    info("*** Done with experiment: " + testName + "\n")

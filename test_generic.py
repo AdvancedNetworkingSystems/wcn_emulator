@@ -14,9 +14,12 @@ class MininetTest(object):
         self.duration = duration
         self.prefix = ''
     
-    def getHostSample(self,num):
-        hosts = sample(self.net.values(),num)
+    def getHostSample(self, num):
+        hosts = sample(self.net.values(), num)
         return hosts[:num]
+
+    def getAllHosts(self):
+        return self.net.values()
 
     def bgCmd(self,host,force_multiple_processes,*args):
         # here it's a little workaround for tracing the resulting pid
@@ -53,8 +56,7 @@ class MininetTest(object):
         self.pendingProc.clear()
 
     def setPrefix(self, name):
-        self.prefix = str(name) + '_' + str(self.duration) + '_' + \
-                str(len(self.hosts)+1) + 'hosts/' 
+        self.prefix = str(name) + '_' + str(self.duration) + '/'
         if not os.path.exists(self.prefix):
                 os.makedirs(self.prefix)
 
@@ -65,5 +67,4 @@ class MininetTest(object):
                 os.chmod(os.path.join(root, dir), 0777)
             for file in files:
                 os.chmod(os.path.join(root, file), 0777)
-                print "XX", file
 
