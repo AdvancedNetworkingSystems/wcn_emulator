@@ -49,4 +49,5 @@ if __name__ == '__main__':
         test.runTest()
       #  sleep(60)
     net.stop()
+    test.changePermissions()
     info("*** Done with experiment: "+test_name+"\n")

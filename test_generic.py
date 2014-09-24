@@ -1,15 +1,18 @@
 
 import signal
+import os 
 from random import sample
 from psutil import Process
 from time import sleep
 
-from mininet.log import info, error, debug, output
+from mininet.log import info, error, debug, output 
 
 class MininetTest(object):
-    def __init__(self,mininet):
+    def __init__(self, mininet, path, duration):
         self.net = mininet
         self.pendingProc = {} 
+        self.duration = duration
+        self.prefix = ''
     
     def getHostSample(self,num):
         hosts = sample(self.net.values(),num)
@@ -38,7 +41,7 @@ class MininetTest(object):
     def sendSig(self,pid,sig=signal.SIGTERM):
         try:
             info("Killing BGProcess: "+str(pid)+"; ")
-            kill( pid, sig )
+            os.kill( pid, sig )
         except OSError:
             error("Error while killing process "+str(pid))
             pass
@@ -49,4 +52,18 @@ class MininetTest(object):
             self.pendingProc[pid].monitor() # wait exiting
         self.pendingProc.clear()
 
+    def setPrefix(self, name):
+        self.prefix = str(name) + '_' + str(self.duration) + '_' + \
+                str(len(self.hosts)+1) + 'hosts/' 
+        if not os.path.exists(self.prefix):
+                os.makedirs(self.prefix)
+
+    def changePermissions(self):
+        os.chmod(self.prefix, 0777)
+        for root, dirs, files in os.walk(self.prefix):
+            for dir in dirs:
+                os.chmod(os.path.join(root, dir), 0777)
+            for file in files:
+                os.chmod(os.path.join(root, file), 0777)
+                print "XX", file
 

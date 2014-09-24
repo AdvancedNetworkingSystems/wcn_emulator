@@ -9,17 +9,11 @@ from random import sample, randint
 from test_generic import *
 
 class PSTest(MininetTest):
-    def __init__(self,mininet,duration=300):
-        super(PSTest,self).__init__(mininet)
+    def __init__(self, mininet, duration=300):
+        super(PSTest,self).__init__(mininet, path, duration)
         self.source = None
         self.hosts = []
-        self.duration = duration
-        self.prefix = ''
 
-    def setPrefix(self,name):
-        self.prefix = str(name)+'_'+str(self.duration)+'_'+str(len(self.hosts)+1)+'hosts/' 
-        if not path.exists(self.prefix):
-                makedirs(self.prefix)
 
     def launchPS(self,host,params,stdout,stderr):
         cmd = "./streamer"
@@ -65,8 +59,9 @@ class PSTest(MininetTest):
         self.killAll()
 
 class PSHostsTest(PSTest):
-    def __init__(self,mininet,source_name,peer_names,duration=300,name=None):
-        super(PSHostsTest,self).__init__(mininet,duration=duration)
+    def __init__(self, mininet, source_name, peer_names, 
+            duration=300, name=None):
+        super(PSHostsTest,self).__init__(mininet, duration = duration)
         self.source = mininet.get(source_name)
         for n in peer_names:
             self.hosts.append(mininet.get(n))
