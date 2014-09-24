@@ -98,20 +98,19 @@ class GraphNet(PowerNet):
             self.insertLink(self.get(e[0]),self.get(e[1]),quality_params)
 
         if draw:
-            ion()
             showGraph(self.gg)
 
-    def pickHostAddrPort(self,node):
+    def pickHostAddrPort(self, node):
         port = self.hosts_port[node.name]
         addr = "10.0."+node.name.split('_')[-1]+"."+str(port)+"/8"
         self.hosts_port[node.name] += 1
         return addr,port
 
-    def insertLink(self,n1,n2,quality_params={}):
+    def insertLink(self, n1, n2, quality_params={}):
         addr1, port1 = self.pickHostAddrPort(n1)
         addr2, port2 = self.pickHostAddrPort(n2)
 
-        self.addLink(n1,n2,  \
+        self.addLink(n1, n2,  \
                 port1 = port1, \
                 port2 = port2, \
                 params1=dict([('ip',addr1)] + quality_params.items()), \
@@ -269,23 +268,32 @@ class conf(parameters):
 
 if __name__ == '__main__':
     setLogLevel('info')
-    opt = [("-o", ["optional", True, 10, "optional parameter", int])]
-    need = [("-n", ["needed", True, 100, "needed parameter", int])]
+    need = [
+            ("-f", ["graphDefinition", True, "", "path of the graph definition", str]),
+            ("-t", ["testName", True, "", "base name for test output", str])
+           ]
+    opt = [
+            ("-d", ["drawGraph", False, False, 
+                "draw the graph before you run the test", int])
+          ]
+
     P = conf(path.basename(__file__),need, opt)
     P.parseArgs()
+    drawGraph = P.getParam("drawGraph")
     if P.checkCorrectness() == False:
         P.printUsage()
         sys.exit(1)
-    net = GraphNet("square.edges",draw=True)
+    net = GraphNet(P.getParam("graphDefinition"), draw = drawGraph)
     net.start()
     net.enableForwarding()
     net.setShortestRoutes()
 #    CLI(net)
-    test_name = "FFGRAZ0_parameterless_"+str(int(time()))
+    test_name = P.getParam("testName")+str(int(time()))
     for i in range(1):
-        info( "+++++++ Round: "+str(i+1) + '\n')
+        info("+++++++ Round: "+str(i+1) + '\n')
         #test = PSRandomTest(net,duration=6,name=test_name,num_peers=2)
-        test = PSHostsTest(net,'h0_0',['h1_1','h1_1','h2_2'],duration=600,name=test_name)
+        test = PSHostsTest(net, 'h0_0', ['h1_1','h1_1','h2_2'],
+                duration = 600, name = test_name)
         test.runTest()
       #  sleep(60)
     net.stop()
