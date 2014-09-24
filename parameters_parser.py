@@ -75,8 +75,12 @@ class parameters():
                     return self.neededParams[paramName]
         for pname, pvalue in self.optionalParamsNames.items():
             if pvalue[0] == paramName:
-                if paramName in self.neededParams:
+                if paramName in self.optionalParams:
                     return self.optionalParams[paramName]
+                else:
+                    return pvalue[2]
+        print >> sys.stderr, "Coding error: param", paramName,"is not",\
+            "among the available options"
         sys.exit(1)
 
     def printConf(self):
