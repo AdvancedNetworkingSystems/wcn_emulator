@@ -59,16 +59,20 @@ class PSTest(MininetTest):
         self.killAll()
 
 class PSHostsTest(PSTest):
-    def __init__(self, mininet, source_name, peer_names, 
-            duration=300, name=None):
-        super(PSHostsTest,self).__init__(mininet, duration = duration)
+    def __init__(self, mininet, name, args):
+        source_name = args["source_name"]
+        peer_names = args["peer_names"]
+        duration = int(args["duration"])
+        super(PSHostsTest, self).__init__(mininet, duration = duration)
         self.source = mininet.get(source_name)
-        for n in peer_names:
+        for n in peer_names.split():
             self.hosts.append(mininet.get(n))
         self.setPrefix(name)
 
 class PSRandomTest(PSTest):
-    def __init__(self,mininet,duration=300,num_peers=5,name=None):
+    def __init__(self, mininet, name, args):
+        num_peers = int(args["num_peers"])
+        duration = int(args["duration"])
         super(PSRandomTest,self).__init__(mininet,duration)
         self.hosts = self.getHostSample(num_peers)
         if len(self.hosts) > 0:
