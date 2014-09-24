@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/env python
 import sys
 sys.path.append('community_networks_analysis')
 
@@ -20,6 +20,10 @@ from random import sample, randint
 
 from gengraphs import loadGraph
 from misclibs import showGraph
+
+from parameters_parser import parameters
+
+sys.path.append("community_networks_analysis/")
 
 class PowerNet(Mininet):
     def __init__(self,**params):
@@ -258,8 +262,20 @@ class PSRandomTest(PSTest):
             self.source = self.hosts.pop()
         self.setPrefix(name)
 
+class conf(parameters):
+    def checkCorrectness(self):
+        self.checkNeededParams()
+        return True
+
 if __name__ == '__main__':
     setLogLevel('info')
+    opt = [("-o", ["optional", True, 10, "optional parameter", int])]
+    need = [("-n", ["needed", True, 100, "needed parameter", int])]
+    P = conf(path.basename(__file__),need, opt)
+    P.parseArgs()
+    if P.checkCorrectness() == False:
+        P.printUsage()
+        sys.exit(1)
     net = GraphNet("square.edges",draw=True)
     net.start()
     net.enableForwarding()
