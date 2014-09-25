@@ -21,7 +21,7 @@ class MininetTest(object):
     def getAllHosts(self):
         return self.net.values()
 
-    def bgCmd(self,host,force_multiple_processes,*args):
+    def bgCmd(self, host, force_multiple_processes, *args):
         # here it's a little workaround for tracing the resulting pid
         # it launch the new process using the mininet interface
         # but it check the newly created process id using psutil
@@ -49,9 +49,9 @@ class MininetTest(object):
             error("Error while killing process "+str(pid))
             pass
 
-    def killAll(self):
+    def killAll(self, sig = signal.SIGKILL):
         for pid in self.pendingProc.keys():
-            self.sendSig(pid,signal.SIGKILL)
+            self.sendSig(pid, sig)
             self.pendingProc[pid].monitor() # wait exiting
         self.pendingProc.clear()
 
