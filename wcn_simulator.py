@@ -5,7 +5,7 @@ import inspect
 
 sys.path.append('test_code')
 
-from os import path
+import os 
 from time import time
 
 from parameters_parser import parameters
@@ -26,26 +26,29 @@ class configurationFile():
     confParams = {}
     className = None
     def __init__(self, fileName, stanza):
-        # check if filename esists
-        try:
-            fd =  open(fileName, "r")
-        except IOError:
+        """ receives the configuration fileName and the stanza to be 
+        parsed """
+
+        if not os.path.isfile(fileName):
             error("Can not open the configuration file: " + fileName\
                 + "\n")
             sys.exit(1)
         self.parser = ConfigParser.SafeConfigParser()
         self.parser.read(fileName)
-
         self.testName = stanza 
+
         if stanza not in self.parser.sections():
             error("Can not find configuration " + stanza \
                     + " in file " + fileName + "\n")
             sys.exit(1)
+
         for o in self.mandatoryOptions:
             self.mandatoryOptions[o] = \
                 self.getConfigurations(o, raiseError=True)
 
+        # this builds a module with the correct path in python namespace
         moduleName = "test_code." + self.mandatoryOptions['testModule']
+
         if moduleName not in sys.modules:
             errorString = "ERROR: no " \
                 + self.mandatoryOptions['testModule'] \
@@ -58,7 +61,7 @@ class configurationFile():
             errorString = "ERROR: no " \
                 + self.mandatoryOptions['testClass'] \
                 + " simulation class is present in "\
-                + moduleName + "\n"
+                + moduleName.replace(".","/")+".py" + "\n"
             error(errorString)
             sys.exit(1)
 
@@ -85,7 +88,7 @@ if __name__ == '__main__':
             ("-f", ["configFile", True, "",
                 "file with the available configurations", str]),
             ("-t", ["testName", True, "",
-                "base name for test output", str])
+                "name of the configuration to run", str])
            ]
     opt = [
             ("-d", ["drawGraph", False, False,
@@ -94,7 +97,7 @@ if __name__ == '__main__':
                 "file with the topology (overrides configuration)", str])
           ]
 
-    P = conf(path.basename(__file__),need, opt)
+    P = conf(os.path.basename(__file__),need, opt)
     P.parseArgs()
     if P.checkCorrectness() == False:
         P.printUsage()
@@ -119,10 +122,9 @@ if __name__ == '__main__':
     net.start()
     net.enableForwarding()
     net.setShortestRoutes()
-#    CLI(net)
     testPath = testName+"_"+str(int(time()))
+    #CLI(net)
     for i in range(1):
-        c = "peerstreamer.PSHostsTest"
         info("+++++++ Round: "+str(i+1) + '\n')
         test = C.className(net, testPath, C.confParams)
         test.runTest()
