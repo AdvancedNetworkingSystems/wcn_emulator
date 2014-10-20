@@ -94,7 +94,10 @@ if __name__ == '__main__':
             ("-d", ["drawGraph", False, False,
                 "draw the graph before you run the test", int]),
             ("-g", ["graphFile", True, "",
-                "file with the topology (overrides configuration)", str])
+                "file with the topology (overrides configuration)", str]),
+            ("-s", ["shortestPaths", True, True,
+                "fill the routing tables with the shortest route"\
+                + " to any node", int])
           ]
 
     P = conf(os.path.basename(__file__),need, opt)
@@ -121,7 +124,9 @@ if __name__ == '__main__':
     net = GraphNet(networkGraph, draw = drawGraph)
     net.start()
     net.enableForwarding()
-    net.setShortestRoutes()
+
+    if P.getParam("shortestPaths") == True:
+        net.setShortestRoutes()
     testPath = testName+"_"+str(int(time()))
     #CLI(net)
     for i in range(1):
