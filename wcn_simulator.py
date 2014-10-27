@@ -22,7 +22,7 @@ class conf(parameters):
 class configurationFile():
 
     mandatoryOptions = {"testModule":None
-            , "testClass":None}
+            , "testClass":None, "times":1}
     confParams = {}
     className = None
     def __init__(self, fileName, stanza):
@@ -121,8 +121,7 @@ if __name__ == '__main__':
     net.setShortestRoutes()
 #    CLI(net)
     testPath = testName+"_"+str(int(time()))
-    for i in range(1):
-        c = "peerstreamer.PSHostsTest"
+    for i in range(int(C.getConfigurations("times"))):
         info("+++++++ Round: "+str(i+1) + '\n')
         test = C.className(net, testPath, C.confParams)
         test.runTest()
