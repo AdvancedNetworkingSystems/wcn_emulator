@@ -41,6 +41,43 @@ class MininetTest(object):
             return None
         return pid
 
+    def hostSentPackets(self,host):
+        sent_packets = 0
+        sent_bytes = 0
+        intfs = host.intfNames()
+        for intf in intfs:
+            sent_bytes += int(host.cmd("ifconfig",intf ,"| grep -Eo 'TX bytes:[0-9]+' | cut -d':' -f 2"))
+            sent_packets += int(host.cmd("ifconfig ",intf ,"| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2"))
+        return (sent_packets,sent_bytes)
+
+    def hostReceivedPackets(self,host):
+        received_packets = 0
+        received_bytes = 0
+        intfs = host.intfNames()
+        for intf in intfs:
+            received_bytes += int(host.cmd("ifconfig "+intf +" | grep -Eo 'RX bytes:[0-9]+' | cut -d':' -f 2"))
+            received_packets += int(host.cmd("ifconfig "+intf +" | grep -Eo 'RX packets:[0-9]+' | cut -d':' -f 2"))
+        return (received_packets,received_bytes)
+        
+    def generatedPackets(self):
+        # if you experience assertion errors, you should
+        # try to make sleep the mininet thread for a second
+        received_packets = 0
+        received_bytes = 0
+        sent_packets = 0
+        sent_bytes = 0
+        hosts = self.net.values()
+        for h in hosts:
+            p,b = self.hostSentPackets(h)
+            sent_packets += p
+            sent_bytes += b
+            p,b = self.hostReceivedPackets(h)
+            received_packets += p
+            received_bytes += b
+        assert(received_packets == sent_packets)
+        assert(received_bytes == sent_bytes)
+        return (received_packets,received_bytes)
+
     def sendSig(self,pid,sig=signal.SIGTERM):
         try:
             info("Killing BGProcess: "+str(pid)+"; ")
@@ -67,4 +104,3 @@ class MininetTest(object):
                 os.chmod(os.path.join(root, dir), 0777)
             for file in files:
                 os.chmod(os.path.join(root, file), 0777)
-

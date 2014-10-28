@@ -79,4 +79,16 @@ class PSRandomTest(PSTest):
             self.source = self.hosts.pop()
         self.setPrefix(name)
 
+class PSXLOptimization(PSRandomTest):
+    def __init__(self, mininet, name, args):
+        super(PSXLOptimization,self).__init__(mininet,name,args)
+        sleep(1) 
+        sent_packets,sent_bytes = self.generatedPackets()
+        print "sent_packets: "+str(sent_packets)
+        self.net.ping(self.getHostSample(2))
+        sleep(1) 
+        sent_packets,sent_bytes = self.generatedPackets()
+        print "sent_packets: "+str(sent_packets)
+
+
 
