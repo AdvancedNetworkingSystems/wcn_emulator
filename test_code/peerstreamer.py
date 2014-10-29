@@ -1,5 +1,5 @@
-
 import sys
+import numpy as np
 sys.path.append('../')
 from network_builder import *
 from os import kill, path, makedirs
@@ -105,13 +105,23 @@ class PSRandomTest(PSTest):
 class PSXLOptimization(PSRandomTest):
     def __init__(self, mininet, name, args):
         super(PSXLOptimization,self).__init__(mininet,name,args)
+        self.links = {}
+        for l in self.net.getLinks():
+          self.links[l] = self.net.linkSentPackets(l) # base value
+
+    def networkImpact(self):
+        linkos = {}
+        linkos.update(self.links)
+        for l in linkos.keys():
+            linkos[l] = self.net.linkSentPackets(l) - self.links[l]
+        return np.linalg.norm(linkos.values(),2)
 
     def runTest(self):
         sent_packets,sent_bytes = self.net.sentPackets()
         print "sent_packets: "+str(sent_packets)
+        print "network impact: "+str(self.networkImpact())
         super(PSXLOptimization,self).runTest()
         sent_packets,sent_bytes = self.net.sentPackets()
         print "sent_packets: "+str(sent_packets)
-
-
+        print "network impact: "+str(self.networkImpact())
 

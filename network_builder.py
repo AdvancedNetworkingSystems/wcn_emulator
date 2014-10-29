@@ -55,16 +55,17 @@ class PowerNet(Mininet):
     def getLinks(self):
         # returns the hosts couples representing the links
         links = []
-        hosts = self.net.values()
+        hosts = self.values()
         for h in hosts:
-            intfs = h.intfNames()
+            intfs = h.intfList()
             for intf in intfs:
                 if intf.link != None and intf.link not in links:
                     links.append(intf.link)
+        return links
 
     def linkSentPackets(self,link):
-        packets1 = int(link.intf1.node.cmd("ifconfig ",link.intfName1 ,"| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2"))
-        packets2 = int(link.intf2.node.cmd("ifconfig ",link.intfName2 ,"| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2"))
+        packets1 = int(link.intf1.node.cmd("ifconfig ",link.intf1.name ,"| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2"))
+        packets2 = int(link.intf2.node.cmd("ifconfig ",link.intf2.name ,"| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2"))
         return packets1+packets2
 
     def hostSentPackets(self,host):
