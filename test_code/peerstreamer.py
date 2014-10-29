@@ -107,12 +107,10 @@ class PSXLOptimization(PSRandomTest):
         super(PSXLOptimization,self).__init__(mininet,name,args)
 
     def runTest(self):
-        sleep(1)
-        sent_packets,sent_bytes = self.generatedPackets()
+        sent_packets,sent_bytes = self.net.sentPackets()
         print "sent_packets: "+str(sent_packets)
         super(PSXLOptimization,self).runTest()
-        sleep(1)
-        sent_packets,sent_bytes = self.generatedPackets()
+        sent_packets,sent_bytes = self.net.sentPackets()
         print "sent_packets: "+str(sent_packets)
 
 
