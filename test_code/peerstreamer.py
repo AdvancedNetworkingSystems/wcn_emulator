@@ -18,6 +18,10 @@ class PSTest(MininetTest):
         self.peer_opt_params = {}
         self.source_opt_params = {}
         self.set_opt_params(conf_args)
+        self.test_label = "normal"
+
+    def setTestLabel(self,s):
+        self.test_label = s
 
     def launchPS(self,host,params,stdout,stderr):
         cmd = "./streamer"
@@ -26,16 +30,17 @@ class PSTest(MininetTest):
 
     def launchPeer(self,host,source):
         idps = randint(0,100)
-        logfile = self.prefix+host.name.split('_')[0]+"-"+str(idps)+"_peerstreamer_normal_$(date +%s).log"
+        logfile = self.prefix+host.name.split('_')[0]+"-"+str(idps)+"_peerstreamer_"+self.test_label+"_$(date +%s).log"
         params = {}
         params['-i'] = source.defaultIntf().ip
+        params['-I'] = host.defaultIntf().name
         params['-p'] = self.source_opt_params['-P'] 
         params['-P'] = str(randint(4000,8000))
         return self.launchPS(host,params,'/dev/null',logfile)
 
     def launchSource(self,host):
         idps = randint(0,100)
-        logfile = self.prefix+host.name.split('_')[0]+"-"+str(idps)+"_source_normal_$(date +%s).log"
+        logfile = self.prefix+host.name.split('_')[0]+"-"+str(idps)+"_source_"+self.test_label+"_$(date +%s).log"
         params = {}
         params['-I'] = host.defaultIntf().name
         params.update(self.source_opt_params)
@@ -68,6 +73,9 @@ class PSTest(MininetTest):
         if "log_signals" in conf_args:
             if conf_args["log_signals"] != "0":
                 self.peer_opt_params['--signal_log'] = "" 
+        if "xloptimization" in conf_args:
+            if conf_args["xloptimization"] != "":
+                self.peer_opt_params['--xloptimization'] =  conf_args["xloptimization"] 
 
 
     def runTest(self):
@@ -102,9 +110,33 @@ class PSRandomTest(PSTest):
             self.source = self.hosts.pop()
         self.setPrefix(name)
 
-class PSXLOptimization(PSRandomTest):
+class PSXLOptimizationTest(PSRandomTest):
     def __init__(self, mininet, name, args):
-        super(PSXLOptimization,self).__init__(mininet,name,args)
+        super(PSXLOptimizationTest,self).__init__(mininet,name,args)
+        self.paths_file = "shortest.paths"
+        self.dumpShortestPaths()
+        self.resetNetStatistics()
+
+    def dumpShortestPaths(self):
+        assert(self.net.gg)
+        sp = open(self.paths_file,'w')
+        paths = nx.shortest_path(self.net.gg)
+        nodes = paths.keys()
+        while len(nodes):
+            node1 = nodes.pop()
+            for node2 in nodes:
+                path = paths[node1][node2]
+                for n in path:
+                    h = self.net.get(n)
+                    sp.write(h.defaultIntf().ip)
+                    if n != path[len(path)-1]:
+                        sp.write(",")
+                    else:
+                        sp.write("\n")
+        sp.close()
+        
+    def resetNetStatistics(self):
+        self.sent_packets, self.sent_bytes = self.net.sentPackets() # base value
         self.links = {}
         for l in self.net.getLinks():
           self.links[l] = self.net.linkSentPackets(l) # base value
@@ -116,12 +148,66 @@ class PSXLOptimization(PSRandomTest):
             linkos[l] = self.net.linkSentPackets(l) - self.links[l]
         return np.linalg.norm(linkos.values(),2)
 
+    def sentPackets(self):
+        sp,sb = self.net.sentPackets() 
+        return sp - self.sent_packets
+
     def runTest(self):
-        sent_packets,sent_bytes = self.net.sentPackets()
-        print "sent_packets: "+str(sent_packets)
-        print "network impact: "+str(self.networkImpact())
-        super(PSXLOptimization,self).runTest()
-        sent_packets,sent_bytes = self.net.sentPackets()
-        print "sent_packets: "+str(sent_packets)
+        if '--xloptimization' in self.peer_opt_params.keys():
+            self.peer_opt_params.pop('--xloptimization')
+        print "sent_packets: "+str(self.sentPackets())
         print "network impact: "+str(self.networkImpact())
 
+        self.setTestLabel("normal")
+        super(PSXLOptimizationTest,self).runTest()
+        self.norm_res = (self.sentPackets(), self.networkImpact())
+
+        if '--xloptimization' not in self.peer_opt_params.keys():
+            self.peer_opt_params['--xloptimization'] = self.paths_file
+        self.resetNetStatistics()
+        self.setTestLabel("optimized")
+        super(PSXLOptimizationTest,self).runTest()
+        self.optim_res = (self.sentPackets(), self.networkImpact())
+
+        print "Normal case: " + str(self.norm_res)
+        print "Optimized case: " + str(self.optim_res)
+
+class PSXLOptimizationNTest(PSXLOptimizationTest):
+    def __init__(self, mininet, name, args):
+        super(PSXLOptimizationNTest,self).__init__(mininet,name,args)
+        self.min_nodes = int(args["min_nodes_num"])
+        self.max_nodes = int(args["max_nodes_num"])
+        self.nodes_inc = int(args["nodes_num_inc"])
+
+    def setTestLabel(self,s):
+        self.test_label = s + "_"+str(len(self.hosts)+1)+"peers"
+
+    def runTest(self):
+        fp = open(self.prefix+"NTestResults.csv",'w')
+        for n in range(self.min_nodes,self.max_nodes,self.nodes_inc):
+            self.hosts = self.getHostSample(n)
+            self.source = self.hosts.pop()
+            super(PSXLOptimizationNTest,self).runTest()
+            fp.write(str(n)+",")
+            fp.write(str(self.norm_res[0])+","+str(self.norm_res[1])+",")
+            fp.write(str(self.optim_res[0])+","+str(self.optim_res[1])+"\n")
+        fp.close()
+
+class PSXLOptimizationNeighTest(PSXLOptimizationTest):
+    def __init__(self, mininet, name, args):
+        super(PSXLOptimizationNeighTest,self).__init__(mininet,name,args)
+        self.min_neigh = int(args["min_neigh_num"])
+        self.max_neigh = int(args["max_neigh_num"])
+        self.neigh_inc = int(args["neigh_num_inc"])
+
+    def setTestLabel(self,s):
+        self.test_label = s + "_"+str(len(self.hosts)+1)+"neigh"
+
+    def runTest(self):
+        fp = open(self.prefix+"NeighTestResults.csv",'w')
+        for n in range(self.min_neigh,self.max_neigh,self.neigh_inc):
+            super(PSXLOptimizationNeighTest,self).runTest()
+            fp.write(str(n)+",")
+            fp.write(str(self.norm_res[0])+","+str(self.norm_res[1])+",")
+            fp.write(str(self.optim_res[0])+","+str(self.optim_res[1])+"\n")
+        fp.close()
