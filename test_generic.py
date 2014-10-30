@@ -54,6 +54,8 @@ class MininetTest(object):
             self.sendSig(pid,signal.SIGKILL)
             self.pendingProc[pid].monitor() # wait exiting
         self.pendingProc.clear()
+        for host in self.net.values():
+            host.waiting = False
 
     def setPrefix(self, name):
         self.prefix = str(name) + '_' + str(self.duration) + '/'
