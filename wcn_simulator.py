@@ -22,7 +22,7 @@ class conf(parameters):
 class configurationFile():
 
     mandatoryOptions = {"testModule":None
-            , "testClass":None, "times":1}
+            , "testClass":None}
     confParams = {}
     className = None
     def __init__(self, fileName, stanza):
@@ -128,7 +128,12 @@ if __name__ == '__main__':
     if P.getParam("shortestPaths") == True:
         net.setShortestRoutes()
     testPath = testName+"_"+str(int(time()))
-    for i in range(int(C.getConfigurations("times"))):
+    repeat = C.getConfigurations("times")
+    if repeat == None:
+        repeat = 1
+    else:
+        repeat = int(repeat)
+    for i in range(repeat):
         info("+++++++ Round: "+str(i+1) + '\n')
         test = C.className(net, testPath, C.confParams)
         test.runTest()
