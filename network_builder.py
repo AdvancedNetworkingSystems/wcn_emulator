@@ -52,6 +52,52 @@ class PowerNet(Mininet):
             return intfs[0]
         return None
 
+    def getLinks(self):
+        # returns the hosts couples representing the links
+        links = []
+        hosts = self.values()
+        for h in hosts:
+            intfs = h.intfList()
+            for intf in intfs:
+                if intf.link != None and intf.link not in links:
+                    links.append(intf.link)
+        return links
+
+    def linkSentPackets(self,link):
+        packets1 = int(link.intf1.node.cmd("ifconfig ",link.intf1.name ,"| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2"))
+        packets2 = int(link.intf2.node.cmd("ifconfig ",link.intf2.name ,"| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2"))
+        return packets1+packets2
+
+    def hostSentPackets(self,host):
+        sent_packets = 0
+        sent_bytes = 0
+        intfs = host.intfNames()
+        for intf in intfs:
+            host.cmd("ifconfig",intf ,"| grep -Eo 'TX bytes:[0-9]+' | cut -d':' -f 2")
+            sent_bytes += int(host.cmd("ifconfig",intf ,"| grep -Eo 'TX bytes:[0-9]+' | cut -d':' -f 2"))
+            sent_packets += int(host.cmd("ifconfig ",intf ,"| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2"))
+        return (sent_packets,sent_bytes)
+
+    def hostReceivedPackets(self,host):
+        received_packets = 0
+        received_bytes = 0
+        intfs = host.intfNames()
+        for intf in intfs:
+            received_bytes += int(host.cmd("ifconfig "+intf +" | grep -Eo 'RX bytes:[0-9]+' | cut -d':' -f 2"))
+            received_packets += int(host.cmd("ifconfig "+intf +" | grep -Eo 'RX packets:[0-9]+' | cut -d':' -f 2"))
+        return (received_packets,received_bytes)
+        
+    def sentPackets(self):
+        # if you experience assertion errors, you should
+        # try to make sleep the mininet thread for a second
+        sent_packets = 0
+        sent_bytes = 0
+        hosts = self.values()
+        for h in hosts:
+            p,b = self.hostSentPackets(h)
+            sent_packets += p
+            sent_bytes += b
+        return (sent_packets,sent_bytes)
 
 class GraphNet(PowerNet):
     def __init__(self,edges_file,draw=True,**params):

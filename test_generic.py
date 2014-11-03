@@ -54,6 +54,8 @@ class MininetTest(object):
             self.sendSig(pid, sig)
             self.pendingProc[pid].monitor() # wait exiting
         self.pendingProc.clear()
+        for host in self.net.values():
+            host.waiting = False
 
     def setPrefix(self, name):
         self.prefix = str(name) + '_' + str(self.duration) + '/'
@@ -67,4 +69,3 @@ class MininetTest(object):
                 os.chmod(os.path.join(root, dir), 0777)
             for file in files:
                 os.chmod(os.path.join(root, file), 0777)
-
