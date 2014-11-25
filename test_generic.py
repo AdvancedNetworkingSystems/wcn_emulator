@@ -33,7 +33,8 @@ class MininetTest(object):
         host.sendCmd(*(args+("&",)))
         sleep(0.5)
         try :
-            pid = (set(host_proc.get_children()).difference(host_ps)).pop().pid
+            pid = (set(host_proc.get_children()).difference(host_ps)).\
+                    pop().pid
             info("BGProcess: "+str(pid)+"; ")
             self.pendingProc[pid] = host
         except:
@@ -52,7 +53,8 @@ class MininetTest(object):
     def killAll(self, sig = signal.SIGKILL):
         for pid in self.pendingProc.keys():
             self.sendSig(pid, sig)
-            self.pendingProc[pid].monitor() # wait exiting
+            #r = self.pendingProc[pid].monitor(100) # wait exiting
+
         self.pendingProc.clear()
         for host in self.net.values():
             host.waiting = False
