@@ -34,6 +34,7 @@ class configurationFile():
                 + "\n")
             sys.exit(1)
         self.parser = ConfigParser.SafeConfigParser()
+        self.parser.optionxform = str
         self.parser.read(fileName)
         self.testName = stanza 
 
@@ -109,9 +110,6 @@ if __name__ == '__main__':
     configFile = P.getParam("configFile")
     testName = P.getParam("testName")
     C = configurationFile(configFile, testName)
-    #import code
-    #code.interact(local=locals())
-    # parse the conf file
     networkGraph = P.getParam("graphFile")
     if networkGraph == "":
         networkGraph = C.getConfigurations("graphDefinition")
