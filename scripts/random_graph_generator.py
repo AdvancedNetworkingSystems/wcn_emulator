@@ -14,5 +14,7 @@ numNodes = int(sys.argv[3])
 for i in range(numGraphs):
     g = nx.fast_gnp_random_graph(numNodes,0.5)
     if nx.is_connected(g):
-        nx.write_edgelist(g, prefix+"-"+str(i)+".edges")
+        for e in g.edges(data=True):
+            e[2]["weight"] = 1
+        nx.write_edgelist(g, prefix+"-"+str(i)+".edges", data=["weight"])
 
