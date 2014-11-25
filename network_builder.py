@@ -64,8 +64,10 @@ class PowerNet(Mininet):
         return links
 
     def linkSentPackets(self,link):
-        packets1 = int(link.intf1.node.cmd("ifconfig ",link.intf1.name ,"| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2"))
-        packets2 = int(link.intf2.node.cmd("ifconfig ",link.intf2.name ,"| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2"))
+        packets1 = int(link.intf1.node.cmd("ifconfig ",link.intf1.name ,
+            "| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2"))
+        packets2 = int(link.intf2.node.cmd("ifconfig ",link.intf2.name ,
+            "| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2"))
         return packets1+packets2
 
     def hostSentPackets(self,host):
@@ -73,9 +75,12 @@ class PowerNet(Mininet):
         sent_bytes = 0
         intfs = host.intfNames()
         for intf in intfs:
-            host.cmd("ifconfig",intf ,"| grep -Eo 'TX bytes:[0-9]+' | cut -d':' -f 2")
-            sent_bytes += int(host.cmd("ifconfig",intf ,"| grep -Eo 'TX bytes:[0-9]+' | cut -d':' -f 2"))
-            sent_packets += int(host.cmd("ifconfig ",intf ,"| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2"))
+            host.cmd("ifconfig",intf ,
+                    "| grep -Eo 'TX bytes:[0-9]+' | cut -d':' -f 2")
+            sent_bytes += int(host.cmd("ifconfig",intf ,
+                "| grep -Eo 'TX bytes:[0-9]+' | cut -d':' -f 2"))
+            sent_packets += int(host.cmd("ifconfig ",intf ,
+                "| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2"))
         return (sent_packets,sent_bytes)
 
     def hostReceivedPackets(self,host):
