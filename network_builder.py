@@ -1,4 +1,4 @@
-
+import re
 import sys
 import networkx as nx
 
@@ -74,8 +74,8 @@ class PowerNet(Mininet):
         intfs = host.intfNames()
         for intf in intfs:
             host.cmd("ifconfig",intf ,"| grep -Eo 'TX bytes:[0-9]+' | cut -d':' -f 2")
-            sent_bytes += int(host.cmd("ifconfig",intf ,"| grep -Eo 'TX bytes:[0-9]+' | cut -d':' -f 2"))
-            sent_packets += int(host.cmd("ifconfig ",intf ,"| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2"))
+            sent_bytes += int(re.findall(r'\d+',host.cmd("ifconfig",intf ,"| grep -Eo 'TX bytes:[0-9]+' | cut -d':' -f 2"))[0])
+            sent_packets += int(re.findall(r'\d+',host.cmd("ifconfig ",intf ,"| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2"))[0])
         return (sent_packets,sent_bytes)
 
     def hostReceivedPackets(self,host):
@@ -83,8 +83,8 @@ class PowerNet(Mininet):
         received_bytes = 0
         intfs = host.intfNames()
         for intf in intfs:
-            received_bytes += int(host.cmd("ifconfig "+intf +" | grep -Eo 'RX bytes:[0-9]+' | cut -d':' -f 2"))
-            received_packets += int(host.cmd("ifconfig "+intf +" | grep -Eo 'RX packets:[0-9]+' | cut -d':' -f 2"))
+            received_bytes += int(re.findall(r'\d+',host.cmd("ifconfig "+intf +" | grep -Eo 'RX bytes:[0-9]+' | cut -d':' -f 2"))[0])
+            received_packets += int(re.findall(r'\d+',host.cmd("ifconfig "+intf +" | grep -Eo 'RX packets:[0-9]+' | cut -d':' -f 2"))[0])
         return (received_packets,received_bytes)
         
     def sentPackets(self):
