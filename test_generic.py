@@ -27,7 +27,7 @@ class MininetTest(object):
         # but it check the newly created process id using psutil
         host_proc = Process(host.pid)
         host_ps = set(host_proc.get_children())
-        debug("Sending cmd: \n\t"+str(args)+"\n")
+        debug("Sending cmd: \n\t"+str(" ".join(args))+"\n")
         if force_multiple_processes:
             host.waiting = False
         host.sendCmd(*(args+("&",)))
@@ -37,7 +37,7 @@ class MininetTest(object):
             info("BGProcess: "+str(pid)+"; ")
             self.pendingProc[pid] = host
         except:
-            info("*** Unable to launch command:\n\t "+str(args))
+            info("*** Unable to launch command:\n\t "+str(" ".join(args)))
             return None
         return pid
 
