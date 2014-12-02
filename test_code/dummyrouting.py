@@ -56,15 +56,24 @@ class dummyRoutingTest(MininetTest):
 
         hostList = self.getAllHosts()
 
-        if self.stopRandomNode != -1:
+        if self.stopRandomNode != "":
             rNode = random.sample(hostList, 1)[0]
 
         for h in hostList:
             args = ""
             if h == rNode:
-                args = "6969 6969 " + str(self.stopRandomNode)
-                info("\nGoing to stop node"+str(h)+" at time " + \
+                args = str(self.stopRandomNode)
+                info("\nGoing to stop node "+str(h)+" with argument " + \
                         self.stopRandomNode + "\n")
+            if self.startLog != "":
+                args += " " + self.startLog
+            if self.stopLog != "":
+                args += " " + self.stopLog
+            if self.logInterval != "":
+                args += " " + self.logInterval
+            if self.verbose != "":
+                args += " " + self.verbose
+
             self.launchdummyRouting(h, args)
             if self.dump:
                 self.launchSniffer(h)
@@ -73,6 +82,17 @@ class dummyRoutingTest(MininetTest):
         sleep(self.duration)
         self.killAll(signal.SIGTERM)
         self.killAll()
+
+    def parseTime(self, timeString):
+
+        retString = ""
+        if timeString.endswith('s'):
+            retString = timeString[:-1]
+        elif timeString.endswith('m'):
+            retString = int(timeString[:-1])*60
+        else:
+            retString = timeString
+        return str(retString)
 
 class dummyRoutingRandomTest(dummyRoutingTest):
 
@@ -83,18 +103,35 @@ class dummyRoutingRandomTest(dummyRoutingTest):
         else:
             self.dump = False
 
-        if "stopRandomNode" in args.keys():
-            timeStop = args["stopRandomNode"]
-            if timeStop[-1] == "s":
-                self.stopRandomNode = timeStop[:-1]
-            elif timeStop[-1] == "m":
-                self.stopRandomNode = int(timeStop[:-1])*60
-            else:
-                self.stopRandomNode = timeStop
+        if "startLog" in args.keys():
+            self.startLog = "--startlog " + self.parseTime(args["startLog"])
         else:
-            self.stopRandomNode = -1
+            self.startLog = ""
 
-        duration = int(args["duration"])
+        if "stopLog" in args.keys():
+            self.stopLog = "--stoplog " + self.parseTime(args["stopLog"])
+        else:
+            self.stopLog = ""
+
+        if "logInterval" in args.keys():
+            self.logInterval = "--loginterval " \
+                    + self.parseTime(args["logInterval"])
+        else:
+            self.logInterval = ""
+
+        if "verbose" in args.keys():
+            self.verbose = "-v "
+        else:
+            self.verbose = ""
+
+        if "stopRandomNode" in args.keys():
+            self.stopRandomNode = "--crash "\
+                    + self.parseTime(args["stopRandomNode"])
+        else:
+            self.stopRandomNode = ""
+
+        duration = int(self.parseTime(args["duration"]))
+
         super(dummyRoutingRandomTest, self).__init__(mininet, duration)
         self.setPrefix(name)
 
