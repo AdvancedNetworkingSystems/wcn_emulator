@@ -49,6 +49,8 @@ runtest ()
   returnValue=$errors
 }
 
+echo "Deprecated: run and extend run_batch_simulations.py"
+exit
 
 totError=0
 dataDir="data/random/"
