@@ -56,15 +56,18 @@ class dummyRoutingTest(MininetTest):
 
         hostList = self.getAllHosts()
 
-        if self.stopRandomNode != "":
+        if self.stopNode and self.nodeCrashed == "":
             rNode = random.sample(hostList, 1)[0]
+        if self.stopNode and self.nodeCrashed != "":
+            info("Chosen node " + str(self.nodeCrashed) + " to fail\n")
+            rNode = hostList[self.nodeCrashed]
 
         for h in hostList:
             args = ""
             if h == rNode:
-                args = str(self.stopRandomNode)
+                args = str(self.stopNode)
                 info("\nGoing to stop node "+str(h)+" with argument " + \
-                        self.stopRandomNode + "\n")
+                        self.stopNode + "\n")
             if self.startLog != "":
                 args += " " + self.startLog
             if self.stopLog != "":
@@ -73,6 +76,8 @@ class dummyRoutingTest(MininetTest):
                 args += " " + self.logInterval
             if self.verbose != "":
                 args += " " + self.verbose
+            if self.centralityTuning != "":
+                args += " " + self.centralityTuning
 
             self.launchdummyRouting(h, args)
             if self.dump:
@@ -124,11 +129,22 @@ class dummyRoutingRandomTest(dummyRoutingTest):
         else:
             self.verbose = ""
 
-        if "stopRandomNode" in args.keys():
-            self.stopRandomNode = "--crash "\
-                    + self.parseTime(args["stopRandomNode"])
+        if "centralityTuning" in args.keys():
+            self.centralityTuning = "-c "
         else:
-            self.stopRandomNode = ""
+            self.centralityTuning = ""
+
+        if "stopNode" in args.keys():
+            self.stopNode = "--crash "\
+                    + self.parseTime(args["stopNode"])
+        else:
+            self.stopNode = ""
+
+        if "nodeCrashed" in args.keys():
+            self.nodeCrashed = int(args["nodeCrashed"])
+        else:
+            self.nodeCrashed = ""
+
 
         duration = int(self.parseTime(args["duration"]))
 
