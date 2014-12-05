@@ -49,9 +49,9 @@ class EmulationRunner():
             self.command = command
             if not self.args.parseonly:
                 self.execute_run(command)
-            jsonRt, nodeSet, failedNodes, signallingSent = \
+            jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec = \
                     p.readTopology(self.path_prefix)
-            results = p.parseAllRuns(jsonRt, nodeSet, failedNodes)
+            results = p.parseAllRuns(jsonRt, nodeSet, failedNodes, silent=True)
             failures = 0
             for tt in sorted(results):
                 failures += sum(results[tt][1:])
@@ -60,6 +60,7 @@ class EmulationRunner():
             ret_value[i]["signalling"] = signallingSent
             ret_value[i]["failures"] = failures
             ret_value[i]["failed_nodes"] = failedNodes
+            ret_value[i]["sigPerSec"] = sigPerSec
         return ret_value
 
     def save_results(self, results):
@@ -78,13 +79,18 @@ class EmulationRunner():
     def summarise_results(self, results):
         signalling_messages = 0
         failed_routes = 0
+        sig_per_sec = 0
+        counter = 0
         for k,v in results.items():
             if k in ["time", "command"]:
                 continue
             signalling_messages += v["signalling"]
             failed_routes += v["failures"]
+            sig_per_sec += v["sigPerSec"]
+            counter += 1
         ret_value = {}
         ret_value["signalling"] = signalling_messages
+        ret_value["sigpersec"] = float(sig_per_sec)/counter
         ret_value["failures"] = failed_routes
         return ret_value
 
@@ -99,7 +105,6 @@ class EmulationRunner():
                 continue
             run_x = []
             run_y = []
-            print v
             for tt,vv in (sorted(v["results"].items(),
                 key = lambda x: x[0])):
                 run_x.append(tt)
@@ -164,6 +169,7 @@ if __name__ == "__main__":
     results = e.run_and_parse()
     e.save_results(results)
     r = e.summarise_results(results)
-    e.plot_results(results, title = "Tot failures " + str(r["failures"]) + \
-            ", tot signalling " + str(r["signalling"]))
+    e.plot_results(results, title = "Tot failures:" + str(r["failures"]) + \
+            ", tot signalling:" + str(r["signalling"]) + ", sig/sec:" + \
+            "%.2f" % round(r["sigpersec"],2))
     print r

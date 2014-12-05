@@ -29,22 +29,23 @@ class resultParser():
                 failedNodes[nodeIP] = j["failtime"]
             rt = j["log"]
             signallingSent += j["signalling"]
+            sigPerSec = j["signalling"]/j["logInterval"]
             for logId, logDump in rt.items():
                 jsonRt[logId][nodeIP] = logDump["RT"]
                 jsonRt[logId]["time"] = logDump["time"]
             nodeSet.add(str(nodeIP))
-        return jsonRt, nodeSet, failedNodes, signallingSent
-    
-    
-    def checkRoutingTables(self, jsonRt, ns, failedNodes):
+        return jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec
+
+
+    def checkRoutingTables(self, jsonRt, ns, failedNodes, silent=True):
         errors = 0
         loops = 0
         jsonRtPurged = copy.deepcopy(jsonRt)
-    
+
         for failedNode, failureTime in failedNodes.items():
             if jsonRt["time"] > failureTime and failedNode in ns:
                 ns.remove(failedNode)
-    
+
         nl = list(ns)
         routesOk = 0
         for i in range(len(nl)):
@@ -56,29 +57,32 @@ class resultParser():
                 try:
                     route = navigateRoutingTables(jsonRtPurged, sIP,
                         dIP, [], 0)
-                except KeyError as e:
+                except KeyError:
                     errors += 1
-                    print "NOK!: there is no route from ", sIP, "to", dIP
+                    if not silent:
+                        print "NOK!: there is no route from ", sIP, "to", dIP
                     continue
                 except LoopError:
-                    print "NOK: there is a loop from", sIP, "to", dIP
+                    if not silent:
+                        print "NOK: there is a loop from", sIP, "to", dIP
                     loops += 1
                     continue
-                print "OK!: route", route
+                if not silent:
+                    print "OK!: route", route
                 routesOk += 1
         return routesOk, errors, loops
 
 
-    def parseAllRuns(self, jsonRt, nodeSet, failedNodes):
+    def parseAllRuns(self, jsonRt, nodeSet, failedNodes, silent=False):
 
         retDict = {}
         for logId, rt in sorted(jsonRt.items(), 
-                key = lambda x: int(x[0]))[:-1]:
-            # skip the last one, misalignments with random timers can 
+                key = lambda x: int(x[0]))[:-5]:
+            # skip the last few ones, misalignments with random timers can 
             # produce partial data
             retDict[jsonRt[logId]["time"]] = \
                     self.checkRoutingTables(jsonRt[logId], nodeSet,
-                            failedNodes)
+                            failedNodes, silent=silent)
         return retDict
 
 
@@ -96,7 +100,8 @@ if __name__ == "__main__":
     pathPrefix = sys.argv[1]
 
     p = resultParser()
-    jsonRt, nodeSet, failedNodes, signallingSent = p.readTopology(pathPrefix)
+    jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec = \
+            p.readTopology(pathPrefix)
 
     if not nodeSet:
         print "NOK: can not read routing tables"

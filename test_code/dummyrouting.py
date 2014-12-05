@@ -58,9 +58,14 @@ class dummyRoutingTest(MininetTest):
 
         if self.stopNode and self.nodeCrashed == "":
             rNode = random.sample(hostList, 1)[0]
-        if self.stopNode and self.nodeCrashed != "":
+        elif self.stopNode and self.nodeCrashed != "":
             info("Chosen node " + str(self.nodeCrashed) + " to fail\n")
             rNode = hostList[self.nodeCrashed]
+        #elif self.stopNode and self.stopWorstNode:
+        #    self.graph = nx.read_edgelist(args["nodeDefinition"], 
+        #        data=(('weight', float),))
+        #    rNode = sorted(self.graph.degree().items(), key = lambda x: x[1])[-1]
+
 
         for h in hostList:
             args = ""
@@ -68,10 +73,6 @@ class dummyRoutingTest(MininetTest):
                 args = str(self.stopNode)
                 info("\nGoing to stop node "+str(h)+" with argument " + \
                         self.stopNode + "\n")
-            if self.startLog != "":
-                args += " " + self.startLog
-            if self.stopLog != "":
-                args += " " + self.stopLog
             if self.logInterval != "":
                 args += " " + self.logInterval
             if self.verbose != "":
@@ -84,9 +85,26 @@ class dummyRoutingTest(MininetTest):
                 self.launchSniffer(h)
 
         info("\nWaiting completion...\n")
-        sleep(self.duration)
+        duration = self.duration
+        if self.startLog > 0:
+            duration -= self.startLog
+            sleep(self.startLog)
+            # this is interpreted by the daemons as "start logging"
+            self.sendSignal(signal.SIGUSR1)
+            info("\nStart logging now!\n") 
+        if self.stopLog > 0:
+            stopTime = self.stopLog - self.startLog
+            duration -= stopTime
+            sleep(stopTime)
+            self.sendSignal(signal.SIGUSR1)
+            info("\nStop logging now!\n") 
+        sleep(duration)
         self.killAll(signal.SIGTERM)
         self.killAll()
+
+    def sendSignal(self, sig):
+        for pid in self.pendingProc.keys():
+            self.sendSig(pid, sig)
 
     def parseTime(self, timeString):
 
@@ -107,16 +125,23 @@ class dummyRoutingRandomTest(dummyRoutingTest):
             self.dump = True
         else:
             self.dump = False
+        # Doesn't work. If processes are started one after the other
+        # there is misalignment in the relative log time. I use 
+        # a signal instead.
+        #if "startLog" in args.keys():
+        #    self.startLog = "--startlog " + self.parseTime(args["startLog"])
+        #else:
+        #    self.startLog = ""
 
         if "startLog" in args.keys():
-            self.startLog = "--startlog " + self.parseTime(args["startLog"])
+            self.startLog = float(self.parseTime(args["startLog"]))
         else:
-            self.startLog = ""
+            self.startLog = -1
 
         if "stopLog" in args.keys():
-            self.stopLog = "--stoplog " + self.parseTime(args["stopLog"])
+            self.stopLog = float(self.parseTime(args["stopLog"]))
         else:
-            self.stopLog = ""
+            self.stopLog = -1
 
         if "logInterval" in args.keys():
             self.logInterval = "--loginterval " \
@@ -144,6 +169,11 @@ class dummyRoutingRandomTest(dummyRoutingTest):
             self.nodeCrashed = int(args["nodeCrashed"])
         else:
             self.nodeCrashed = ""
+
+        if "stopWorstNode" in args.keys():
+            self.stopWorstNode = True
+        else:
+            self.stopWorsNode = False
 
 
         duration = int(self.parseTime(args["duration"]))
