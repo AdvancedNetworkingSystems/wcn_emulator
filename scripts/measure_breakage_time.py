@@ -12,6 +12,8 @@ import copy
 class resultParser():
 
     def readTopology(self, pathPrefix):
+        """ load all the .json files with the logged routing tables, 
+        return the global time-varying routing table """
         jsonRt = defaultdict(dict)
         nodeSet = set()
         failedNodes = {}
@@ -28,13 +30,17 @@ class resultParser():
             if j["fail"] == True:
                 failedNodes[nodeIP] = j["failtime"]
             rt = j["log"]
+            # number of samples per second
+            logFrequency = j["logFrequency"]
+            # number of loss in a second
             signallingSent += j["signalling"]
             sigPerSec = j["signalling"]/j["logInterval"]
             for logId, logDump in rt.items():
                 jsonRt[logId][nodeIP] = logDump["RT"]
                 jsonRt[logId]["time"] = logDump["time"]
             nodeSet.add(str(nodeIP))
-        return jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec
+        return jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec, \
+                logFrequency
 
 
     def checkRoutingTables(self, jsonRt, ns, failedNodes, silent=True):
@@ -76,13 +82,29 @@ class resultParser():
     def parseAllRuns(self, jsonRt, nodeSet, failedNodes, silent=False):
 
         retDict = {}
-        for logId, rt in sorted(jsonRt.items(), 
-                key = lambda x: int(x[0]))[:-5]:
-            # skip the last few ones, misalignments with random timers can 
-            # produce partial data
-            retDict[jsonRt[logId]["time"]] = \
-                    self.checkRoutingTables(jsonRt[logId], nodeSet,
-                            failedNodes, silent=silent)
+        # first we realign the logs, that can misaligned at start or beginning:
+
+        idToPurge = []
+        for logId, rt in sorted(jsonRt.items(),
+                key = lambda x: int(x[0])):
+                for node in nodeSet:
+                    if node not in rt.keys():
+                        # this node is not in the rt
+                        if node not in failedNodes or \
+                                (node in failedNodes and \
+                                failedNodes[node] > rt["time"]):
+                            # this node has not failed or has not failed
+                            # yet, it should be in the RT
+                            idToPurge.append(logId)
+                            break
+        for idx in idToPurge:
+            del jsonRt[idx]
+
+        for logId, rt in sorted(jsonRt.items(),
+                key = lambda x: int(x[0])):
+            ret = self.checkRoutingTables(
+                    jsonRt[logId], nodeSet, failedNodes, silent=silent)
+            retDict[jsonRt[logId]["time"]] = ret
         return retDict
 
 
@@ -100,8 +122,8 @@ if __name__ == "__main__":
     pathPrefix = sys.argv[1]
 
     p = resultParser()
-    jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec = \
-            p.readTopology(pathPrefix)
+    jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec,\
+        logFrequency = p.readTopology(pathPrefix)
 
     if not nodeSet:
         print "NOK: can not read routing tables"

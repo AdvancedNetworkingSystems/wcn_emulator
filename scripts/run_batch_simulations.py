@@ -49,9 +49,10 @@ class EmulationRunner():
             self.command = command
             if not self.args.parseonly:
                 self.execute_run(command)
-            jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec = \
-                    p.readTopology(self.path_prefix)
-            results = p.parseAllRuns(jsonRt, nodeSet, failedNodes, silent=True)
+            jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec,\
+                logFrequency = p.readTopology(self.path_prefix)
+            results = p.parseAllRuns(jsonRt, nodeSet, failedNodes, \
+                    silent=True)
             failures = 0
             for tt in sorted(results):
                 failures += sum(results[tt][1:])
@@ -61,6 +62,7 @@ class EmulationRunner():
             ret_value[i]["failures"] = failures
             ret_value[i]["failed_nodes"] = failedNodes
             ret_value[i]["sigPerSec"] = sigPerSec
+            ret_value[i]["logFrequency"] = logFrequency
         return ret_value
 
     def save_results(self, results):
@@ -81,9 +83,12 @@ class EmulationRunner():
         failed_routes = 0
         sig_per_sec = 0
         counter = 0
+        logFrequency = 0
         for k,v in results.items():
             if k in ["time", "command"]:
                 continue
+            # we assume all nodes log with the same freq
+            logFrequency = v["logFrequency"]
             signalling_messages += v["signalling"]
             failed_routes += v["failures"]
             sig_per_sec += v["sigPerSec"]
@@ -91,7 +96,7 @@ class EmulationRunner():
         ret_value = {}
         ret_value["signalling"] = signalling_messages
         ret_value["sigpersec"] = float(sig_per_sec)/counter
-        ret_value["failures"] = failed_routes
+        ret_value["failures"] = failed_routes/logFrequency
         return ret_value
 
     def plot_results(self, results, title=""):
@@ -172,4 +177,3 @@ if __name__ == "__main__":
     e.plot_results(results, title = "Tot failures:" + str(r["failures"]) + \
             ", tot signalling:" + str(r["signalling"]) + ", sig/sec:" + \
             "%.2f" % round(r["sigpersec"],2))
-    print r
