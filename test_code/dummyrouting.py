@@ -52,9 +52,21 @@ class dummyRoutingTest(MininetTest):
         info("*** Launching dummyRouting test\n")
         info("Data folder: "+self.prefix+"\n")
 
+        if self.stopAllNodes:
+            self.centList = self.getCentrality()
+            self.numRuns = 3 #len(self.centList)
+
         for runid in range(self.numRuns):
             info("\nStarting run " + str(runid) + "\n")
             self.runId = runid
+            if self.stopAllNodes:
+                nc = self.centList.pop()[0]
+                print "XXXXXXXXX", nc
+                for idx, h in enumerate(self.getAllHosts()):
+                    if h.name == nc:
+                        self.nodeCrashed = idx
+                        break
+
             self.startRun()
 
             info("\nWaiting completion...\n")
@@ -76,6 +88,16 @@ class dummyRoutingTest(MininetTest):
 
         self.killAll(signal.SIGTERM)
         self.killAll()
+
+
+
+    def getCentrality(self):
+
+        centList =  sorted(
+                [n for n in nx.betweenness_centrality(self.graph).items() if n[1] > 0],
+                key = lambda x: x[1])
+        print "XX", centList
+        return centList
 
     def startRun(self):
 
@@ -192,6 +214,13 @@ class dummyRoutingRandomTest(dummyRoutingTest):
         else:
             self.nodeCrashed = ""
 
+        if "stopAllNodes" in args.keys():
+            self.stopAllNodes = True
+            self.nodeCrashed = ""
+            info("Going to stop all the nodes in sequence")
+        else:
+            self.stopAllNodes = False
+
         if "stopCentralNode" in args.keys():
             self.stopCentralNode = int(args["stopCentralNode"])
             if self.stopCentralNode < 0 or self.stopCentralNode > 3:
@@ -200,7 +229,11 @@ class dummyRoutingRandomTest(dummyRoutingTest):
         else:
             self.stopCentralNode = -1
 
+        # stopAllNodes will confilct with numRuns!
         if "numRuns" in args.keys():
+            if self.stopAllNodes == True:
+                error("Cannot set stopAllNodes and numRuns in the same configuration")
+                sys.exit(1)
             self.numRuns = int(args["numRuns"])
         else:
             self.numRuns = 1
