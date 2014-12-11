@@ -4,7 +4,6 @@ import csv
 import numpy as np
 sys.path.append('../')
 from network_builder import *
-from optimal import *
 from os import kill, path, makedirs
 from matplotlib.pyplot import ion
 from random import sample, randint

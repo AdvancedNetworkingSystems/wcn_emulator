@@ -119,7 +119,7 @@ if __name__ == '__main__':
     net.start()
     net.enableForwarding()
     net.setShortestRoutes()
-#    CLI(net)
+    #CLI(net)
     testPath = testName+"_"+str(int(time()))
     for i in range(int(C.getConfigurations("times"))):
         info("+++++++ Round: "+str(i+1) + '\n')

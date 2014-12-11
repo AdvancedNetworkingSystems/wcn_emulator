@@ -64,8 +64,10 @@ class PowerNet(Mininet):
         return links
 
     def linkSentPackets(self,link):
-        packets1 = int(link.intf1.node.cmd("ifconfig ",link.intf1.name ,"| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2"))
-        packets2 = int(link.intf2.node.cmd("ifconfig ",link.intf2.name ,"| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2"))
+        pstr1 = link.intf1.node.cmd("ifconfig ",link.intf1.name ,"| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2")
+        pstr2 = link.intf2.node.cmd("ifconfig ",link.intf2.name ,"| grep -Eo 'TX packets:[0-9]+' | cut -d':' -f 2")
+	packets1 = int(pstr1.split("\n")[0])
+	packets2 = int(pstr2.split("\n")[0])
         return packets1+packets2
 
     def hostSentPackets(self,host):
@@ -128,8 +130,10 @@ class GraphNet(PowerNet):
 #            quality_params = {"bw":10,"delay":'5ms', "loss":100-100.0/e[2]['weight'], "use_htb":True}
             quality_params = {}
             quality_params["bw"] = 10
-#            quality_params["delay"] = '5ms'
-#            quality_params["loss"] = 100-100.0/e[2]['weight']
+            quality_params["delay"] = '1.496824ms'
+            quality_params["jitter"] = '2.826534ms'
+            quality_params["delay_distribution"] = 'guifi_m1.496824_s2.826534'
+            quality_params["loss"] = 100*((1-(1.0/(e[2]['weight'])))**5)
             quality_params["use_htb"] = True
             self.insertLink(self.get(e[0]),self.get(e[1]),quality_params)
 
