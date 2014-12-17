@@ -54,6 +54,7 @@ class dummyRoutingTest(MininetTest):
 
         if self.stopAllNodes:
             self.centList = self.getCentrality()
+            # FIXME this is just for testing, remove this
             self.numRuns = 3 #len(self.centList)
 
         for runid in range(self.numRuns):
@@ -61,7 +62,6 @@ class dummyRoutingTest(MininetTest):
             self.runId = runid
             if self.stopAllNodes:
                 nc = self.centList.pop()[0]
-                print "XXXXXXXXX", nc
                 for idx, h in enumerate(self.getAllHosts()):
                     if h.name == nc:
                         self.nodeCrashed = idx
@@ -69,21 +69,33 @@ class dummyRoutingTest(MininetTest):
 
             self.startRun()
 
+            # FIXME can not send make things fail if i don't restart
+            # the processes. So i should remove the stopNode option
+            # and use another signal that i send only to the node
+            # that is supposed to die  
             info("\nWaiting completion...\n")
             duration = self.duration
+            import time
+            print "XX", duration, time.time()
             if self.startLog > 0:
                 duration -= self.startLog
                 sleep(self.startLog)
-                # this is interpreted by the daemons as "start logging"
+                print "XX", self.startLog, duration, time.time()
+                # this is interpreted by the daemons as 
+                # "start (or stop) logging"
                 self.sendSignal(signal.SIGUSR1)
                 info("\nStart logging now!\n") 
             if self.stopLog > 0:
                 stopTime = self.stopLog - self.startLog
                 duration -= stopTime
+                print "XX", stopTime, duration, time.time()
                 sleep(stopTime)
                 self.sendSignal(signal.SIGUSR1)
                 info("\nStop logging now!\n") 
+            print "XX", time.time(), duration
             sleep(duration)
+            # this is interpreted by the daemons as 
+            # "restart a new run"
             self.sendSignal(signal.SIGUSR2)
 
         self.killAll(signal.SIGTERM)
@@ -92,11 +104,18 @@ class dummyRoutingTest(MininetTest):
 
 
     def getCentrality(self):
+        """ return a list of nodes ordered by centrality. Return only nodes
+        that can be removed from the network without partitioning the network """
 
         centList =  sorted(
                 [n for n in nx.betweenness_centrality(self.graph).items() if n[1] > 0],
                 key = lambda x: x[1])
-        print "XX", centList
+        for idx, n in enumerate(centList[:]):
+            gg = self.graph.copy()
+            gg.remove_node(n[0])
+            conSize = len(nx.connected_components(gg)[0])
+            if conSize != len(self.graph) - 1:
+                del centList[idx]
         return centList
 
     def startRun(self):
