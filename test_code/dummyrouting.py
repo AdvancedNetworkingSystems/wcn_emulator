@@ -5,6 +5,7 @@ from network_builder import *
 from os import kill, path, makedirs
 from matplotlib.pyplot import ion
 import random 
+import time
 
 import signal
 
@@ -54,49 +55,70 @@ class dummyRoutingTest(MininetTest):
 
         if self.stopAllNodes:
             self.centList = self.getCentrality()
-            # FIXME this is just for testing, remove this
-            self.numRuns = 3 #len(self.centList)
+            self.numRuns = 2#len(self.centList)
 
         for runid in range(self.numRuns):
             info("\nStarting run " + str(runid) + "\n")
             self.runId = runid
             if self.stopAllNodes:
-                nc = self.centList.pop()[0]
-                for idx, h in enumerate(self.getAllHosts()):
-                    if h.name == nc:
-                        self.nodeCrashed = idx
-                        break
+                self.nodeCrashed = self.centList.pop()[0]
 
             self.startRun()
 
-            # FIXME can not send make things fail if i don't restart
-            # the processes. So i should remove the stopNode option
-            # and use another signal that i send only to the node
-            # that is supposed to die  
-            info("\nWaiting completion...\n")
-            duration = self.duration
-            import time
-            print "XX", duration, time.time()
-            if self.startLog > 0:
-                duration -= self.startLog
-                sleep(self.startLog)
-                print "XX", self.startLog, duration, time.time()
-                # this is interpreted by the daemons as 
-                # "start (or stop) logging"
-                self.sendSignal(signal.SIGUSR1)
-                info("\nStart logging now!\n") 
-            if self.stopLog > 0:
-                stopTime = self.stopLog - self.startLog
-                duration -= stopTime
-                print "XX", stopTime, duration, time.time()
-                sleep(stopTime)
-                self.sendSignal(signal.SIGUSR1)
-                info("\nStop logging now!\n") 
-            print "XX", time.time(), duration
-            sleep(duration)
-            # this is interpreted by the daemons as 
-            # "restart a new run"
+            eventDict = {
+                    self.startLog:["Start logging", self.sendSignal,
+                        {"sig":signal.SIGUSR1}],
+                    self.stopNode:["Stopping node " + str(self.nodeCrashed),
+                        self.sendSignal, {"sig":signal.SIGTSTP,
+                        "hostName":self.nodeCrashed}],
+                    self.stopLog:["Stop logging", self.sendSignal,
+                        {"sig":signal.SIGUSR1}]}
+
+            eventList = []
+            relativeTime = 0
+            for e in sorted(eventDict.keys()):
+                if e > 0:
+                    data = eventDict[e]
+                    eventList.append([e - relativeTime] + data)
+                    relativeTime += (e - relativeTime)
+
+            waitTime = self.duration - relativeTime
+
+            for event in eventList:
+                sleep(event[0])
+                event[2](**event[3])
+                print " XX", time.time(), event[0], event[1]
+                info(event[1] + str(time.time()) + "\n")
+            sleep(waitTime)
             self.sendSignal(signal.SIGUSR2)
+            #if self.startLog > 0:
+            #    duration -= self.startLog
+            #    sleep(self.startLog)
+            #    print "XX", self.startLog, duration, time.time()
+            #    # this is interpreted by the daemons as 
+            #    # "start (or stop) logging"
+            #    self.sendSignal(signal.SIGUSR1)
+            #    info("\nStart logging now!\n") 
+            #if self.stopNode > 0:
+            #    crashTime = self.stopNode - self.startLog
+            #    duration -= crashTime
+            #    sleep(crashTime)
+            #    print "XX", self.stopNode, duration, time.time()
+            #    # this is interpreted as "crash"
+            #    self.sendSignal(signal.SIGTSTP, self.nodeCrashed)
+            #    info("\nSent crash signal to node " + str(self.nodeCrashed))
+            #if self.stopLog > 0:
+            #    stopTime = self.stopLog - (self.startLog + self.stopNode)
+            #    duration -= stopTime
+            #    print "XX", stopTime, duration, time.time()
+            #    sleep(stopTime)
+            #    self.sendSignal(signal.SIGUSR1)
+            #    info("\nStop logging now!\n") 
+            #print "XX", time.time(), duration
+            #sleep(duration)
+            ## this is interpreted by the daemons as 
+            ## "restart a new run"
+            #self.sendSignal(signal.SIGUSR2)
 
         self.killAll(signal.SIGTERM)
         self.killAll()
@@ -108,8 +130,8 @@ class dummyRoutingTest(MininetTest):
         that can be removed from the network without partitioning the network """
 
         centList =  sorted(
-                [n for n in nx.betweenness_centrality(self.graph).items() if n[1] > 0],
-                key = lambda x: x[1])
+                [n for n in nx.betweenness_centrality(self.graph).items() \
+                        if n[1] > 0], key = lambda x: x[1])
         for idx, n in enumerate(centList[:]):
             gg = self.graph.copy()
             gg.remove_node(n[0])
@@ -122,7 +144,7 @@ class dummyRoutingTest(MininetTest):
 
         rNode = ""
         hostList = self.getAllHosts()
-        if self.stopNode and self.stopCentralNode != -1:
+        if self.stopNode > 0 and self.stopCentralNode != -1:
             # split the degree list in 5 parts ordered for their degree
             # the input value selects one of the parts, and one
             # random node in this part will be returned
@@ -136,14 +158,17 @@ class dummyRoutingTest(MininetTest):
             sys.exit(1)
             for h in hostList:
                 if h.name == nodeName:
-                    rNode = h
+                    rNode = h.name
                     break
 
-        elif self.stopNode and self.nodeCrashed == "":
-            rNode = random.sample(hostList, 1)[0]
+        # TODO this function must be refactored. I don't use 
+        # command line to trigger failures anymore, so rNode 
+        # makes no sense anymore, just use self.nodeCrashed
+        elif self.stopNode  > 0 and self.nodeCrashed == "":
+            rNode = random.sample(hostList, 1)[0].name
 
-        elif self.stopNode and self.nodeCrashed != "":
-            rNode = hostList[self.nodeCrashed]
+        elif self.stopNode > 0 and self.nodeCrashed != "":
+            rNode = self.nodeCrashed
 
         if rNode:
             info("\nChosen node " + str(rNode) + " to fail\n")
@@ -151,8 +176,6 @@ class dummyRoutingTest(MininetTest):
         if self.runId == 0:
             for h in hostList:
                 args = ""
-                if h == rNode:
-                    args = str(self.stopNode)
                 if self.logInterval != "":
                     args += " " + self.logInterval
                 if self.verbose != "":
@@ -164,9 +187,18 @@ class dummyRoutingTest(MininetTest):
                 if self.dump:
                     self.launchSniffer(h)
 
-    def sendSignal(self, sig):
-        for pid in self.pendingProc.keys():
+        if not self.nodeCrashed and rNode:
+            self.nodeCrashed = rNode
+
+    def sendSignal(self, sig, hostName=""):
+        for pid, h in self.pendingProc.items():
+            if hostName:
+                if hostName == h.name:
+                    self.sendSig(pid, sig)
+                    break
+                continue
             self.sendSig(pid, sig)
+
 
     def parseTime(self, timeString):
 
@@ -223,10 +255,9 @@ class dummyRoutingRandomTest(dummyRoutingTest):
             self.centralityTuning = ""
 
         if "stopNode" in args.keys():
-            self.stopNode = "--crash "\
-                    + self.parseTime(args["stopNode"])
+            self.stopNode = int(self.parseTime(args["stopNode"]))
         else:
-            self.stopNode = ""
+            self.stopNode = -1
 
         if "nodeCrashed" in args.keys():
             self.nodeCrashed = int(args["nodeCrashed"])

@@ -14,7 +14,7 @@ class resultParser():
     def readTopology(self, pathPrefix):
         """ load all the .json files with the logged routing tables, 
         return the global time-varying routing table """
-        jsonRt = defaultdict(dict)
+        jsonRt = {}
         nodeSet = set()
         failedNodes = {}
         signallingSent = 0
@@ -27,30 +27,39 @@ class resultParser():
                 sys.exit(1)
             #nodeIP = ".".join(j["node"].split(":")[0].split(".")[:3])
             nodeIP = j["node"].split(":")[0]
-            if j["fail"] == True:
-                failedNodes[nodeIP] = j["failtime"]
             rt = j["log"]
             # number of samples per second
             logFrequency = j["logFrequency"]
             # number of loss in a second
             signallingSent += j["signalling"]
             sigPerSec = j["signalling"]/j["logInterval"]
+            runId = j["runId"]
+            if runId not in failedNodes:
+                failedNodes[runId] = {}
+            if j["fail"] == True:
+                failedNodes[runId][nodeIP] = j["failtime"]
+            if runId not in jsonRt:
+                jsonRt[runId] = defaultdict(dict)
             for logId, logDump in rt.items():
-                jsonRt[logId][nodeIP] = logDump["RT"]
-                jsonRt[logId]["time"] = logDump["time"]
+                jsonRt[runId][logId][nodeIP] = logDump["RT"]
+                jsonRt[runId][logId]["time"] = logDump["time"]
             nodeSet.add(str(nodeIP))
         return jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec, \
                 logFrequency
 
 
-    def checkRoutingTables(self, jsonRt, ns, failedNodes, silent=True):
+    def checkRoutingTables(self, jsonRt, nodeSet, failedNodes, silent=True):
         errors = 0
         loops = 0
         jsonRtPurged = copy.deepcopy(jsonRt)
+        failedNodeSet = set()
+        ns = copy.deepcopy(nodeSet)
 
         for failedNode, failureTime in failedNodes.items():
             if jsonRt["time"] > failureTime and failedNode in ns:
                 ns.remove(failedNode)
+                failedNodeSet.add(failedNode)
+        print "XX", failedNodes, failedNodeSet, jsonRt["time"]
 
         nl = list(ns)
         routesOk = 0
@@ -82,8 +91,8 @@ class resultParser():
     def parseAllRuns(self, jsonRt, nodeSet, failedNodes, silent=False):
 
         retDict = {}
-        # first we realign the logs, that can misaligned at start or beginning:
-
+        # first we realign the logs, that can be 
+        # misaligned at start or beginning:
         idToPurge = []
         for logId, rt in sorted(jsonRt.items(),
                 key = lambda x: int(x[0])):
@@ -93,8 +102,7 @@ class resultParser():
                         if node not in failedNodes or \
                                 (node in failedNodes and \
                                 failedNodes[node] > rt["time"]):
-                            # this node has not failed or has not failed
-                            # yet, it should be in the RT
+                            # this node has failed
                             idToPurge.append(logId)
                             break
         for idx in idToPurge:
@@ -129,10 +137,14 @@ if __name__ == "__main__":
         print "NOK: can not read routing tables"
         sys.exit(1)
 
-    results = p.parseAllRuns(jsonRt, nodeSet, failedNodes)
+    results = {}
+    for runId in jsonRt:
+        results[runId] = p.parseAllRuns(jsonRt[runId], nodeSet, 
+                failedNodes[runId])
 
-    for time in sorted(results):
-        print "FailedRoutes", time, results[time]
+    for runId in results:
+        for time in sorted(results[runId]):
+            print "FailedRoutes", time, results[runId][time]
     print "Signalling: ", signallingSent
 
 

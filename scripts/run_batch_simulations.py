@@ -7,6 +7,7 @@ import argparse
 import glob
 import matplotlib.pyplot as plt
 from subprocess import check_output, CalledProcessError, call
+from collections import defaultdict
 
 import json
 
@@ -33,12 +34,14 @@ class EmulationRunner():
 
 
     def run_and_parse(self):
+        # FIXME change the number of runs with a sequence of 
+        # different configurations (runs have been included in the simulator)
         if not self.args.parseonly and os.getuid() != 0:
             print "You should run this script as root"
             sys.exit(1)
         p = resultParser()
         self.path_prefix = "/tmp/dummyrouting-log"
-        ret_value = {}
+        ret_value = defaultdict(dict)
         for i in range(self.args.runs):
             if not self.args.parseonly and i == 0:
                 self.clean_environment()
@@ -51,18 +54,20 @@ class EmulationRunner():
                 self.execute_run(command)
             jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec,\
                 logFrequency = p.readTopology(self.path_prefix)
-            results = p.parseAllRuns(jsonRt, nodeSet, failedNodes, \
-                    silent=True)
-            failures = 0
-            for tt in sorted(results):
-                failures += sum(results[tt][1:])
-            ret_value[i] = {}
-            ret_value[i]["results"] = results
-            ret_value[i]["signalling"] = signallingSent
-            ret_value[i]["failures"] = failures
-            ret_value[i]["failed_nodes"] = failedNodes
-            ret_value[i]["sigPerSec"] = sigPerSec
-            ret_value[i]["logFrequency"] = logFrequency
+            for runId in jsonRt:
+                print "QQQQQQQQQQQQQQ ", runId
+                results = p.parseAllRuns(jsonRt[runId], nodeSet, 
+                        failedNodes[runId], silent=True)
+                failures = 0
+                for tt in sorted(results):
+                    failures += sum(results[tt][1:])
+                ret_value[runId][i] = {}
+                ret_value[runId][i]["results"] = results
+                ret_value[runId][i]["signalling"] = signallingSent
+                ret_value[runId][i]["failures"] = failures
+                ret_value[runId][i]["failed_nodes"] = failedNodes
+                ret_value[runId][i]["sigPerSec"] = sigPerSec
+                ret_value[runId][i]["logFrequency"] = logFrequency
         return ret_value
 
     def save_results(self, results):
@@ -117,6 +122,7 @@ class EmulationRunner():
             run_number += 1
             x.append(run_x)
             y.append(run_y)
+        print x,y
         for runId in range(run_number):
             plt.plot(x[runId],y[runId], label="Failed node:")
         plt.xlabel(xlabel)
@@ -172,8 +178,14 @@ if __name__ == "__main__":
     e = EmulationRunner()
     e.parse_args()
     results = e.run_and_parse()
+    resultSerie = defaultdict(dict)
+    for runId in results:
+        r = e.summarise_results(results[runId])
+        e.plot_results(results[runId], title = "Tot failures:" + str(r["failures"]) + \
+                ", tot signalling:" + str(r["signalling"]) + ", sig/sec:" + \
+                "%.2f" % round(r["sigpersec"],2))
+        resultSerie[runId]['failures'] = r['failures']
+        resultSerie[runId]['signalling'] = r['signalling']
+        resultSerie[runId]['sigpersec'] = r['sigpersec']
     e.save_results(results)
-    r = e.summarise_results(results)
-    e.plot_results(results, title = "Tot failures:" + str(r["failures"]) + \
-            ", tot signalling:" + str(r["signalling"]) + ", sig/sec:" + \
-            "%.2f" % round(r["sigpersec"],2))
+    print resultSerie
