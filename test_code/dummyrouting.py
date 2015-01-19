@@ -55,7 +55,7 @@ class dummyRoutingTest(MininetTest):
 
         if self.stopAllNodes:
             self.centList = self.getCentrality()
-            self.numRuns = 2#len(self.centList)
+            self.numRuns = 4#len(self.centList)
 
         for runid in range(self.numRuns):
             info("\nStarting run " + str(runid) + "\n")

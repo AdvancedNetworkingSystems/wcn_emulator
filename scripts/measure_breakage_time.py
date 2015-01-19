@@ -18,6 +18,7 @@ class resultParser():
         nodeSet = set()
         failedNodes = {}
         signallingSent = 0
+        timeBasedRoute = defaultdict(dict)
         for topoFile in glob.glob(pathPrefix+"*.json"):
             try:
                 f = open(topoFile, "r")
@@ -43,6 +44,8 @@ class resultParser():
             for logId, logDump in rt.items():
                 jsonRt[runId][logId][nodeIP] = logDump["RT"]
                 jsonRt[runId][logId]["time"] = logDump["time"]
+                timeBasedRoute[runId][logDump["time"]] = {}
+                timeBasedRoute[runId][logDump["time"]][nodeIP] = logDump["RT"]
             nodeSet.add(str(nodeIP))
         return jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec, \
                 logFrequency
@@ -59,7 +62,6 @@ class resultParser():
             if jsonRt["time"] > failureTime and failedNode in ns:
                 ns.remove(failedNode)
                 failedNodeSet.add(failedNode)
-        print "XX", failedNodes, failedNodeSet, jsonRt["time"]
 
         nl = list(ns)
         routesOk = 0
@@ -130,12 +132,13 @@ if __name__ == "__main__":
     pathPrefix = sys.argv[1]
 
     p = resultParser()
-    jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec,\
+    timeBasedRoute, jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec,\
         logFrequency = p.readTopology(pathPrefix)
 
     if not nodeSet:
         print "NOK: can not read routing tables"
         sys.exit(1)
+
 
     results = {}
     for runId in jsonRt:
