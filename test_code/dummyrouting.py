@@ -55,11 +55,11 @@ class dummyRoutingTest(MininetTest):
 
         if self.stopAllNodes:
             self.centList = self.getCentrality()
-            self.numRuns = 4#len(self.centList)
+            self.numRuns = 3#len(self.centList)
 
         for runid in range(self.numRuns):
             info("\nStarting run " + str(runid) + "\n")
-            self.runId = runid
+            self.runId = str(runid)
             if self.stopAllNodes:
                 self.nodeCrashed = self.centList.pop()[0]
 
@@ -90,7 +90,11 @@ class dummyRoutingTest(MininetTest):
                 print " XX", time.time(), event[0], event[1]
                 info(event[1] + str(time.time()) + "\n")
             sleep(waitTime)
-            self.sendSignal(signal.SIGUSR2)
+            self.killAll(signal.SIGTERM)
+            time.sleep(1)
+            self.killAll()
+            time.sleep(1)
+            #sendSignal(signal.SIGUSR2)
             #if self.startLog > 0:
             #    duration -= self.startLog
             #    sleep(self.startLog)
@@ -120,8 +124,6 @@ class dummyRoutingTest(MininetTest):
             ## "restart a new run"
             #self.sendSignal(signal.SIGUSR2)
 
-        self.killAll(signal.SIGTERM)
-        self.killAll()
 
 
 
@@ -145,6 +147,8 @@ class dummyRoutingTest(MininetTest):
         rNode = ""
         hostList = self.getAllHosts()
         if self.stopNode > 0 and self.stopCentralNode != -1:
+            # unused
+
             # split the degree list in 5 parts ordered for their degree
             # the input value selects one of the parts, and one
             # random node in this part will be returned
@@ -155,7 +159,6 @@ class dummyRoutingTest(MininetTest):
             rr = random.sample(range(self.stopCentralNode*partLength, 
                 min((self.stopCentralNode+1)*partLength, len(deg))), 1)[0]
             nodeName = deg[rr][0]
-            sys.exit(1)
             for h in hostList:
                 if h.name == nodeName:
                     rNode = h.name
@@ -164,28 +167,28 @@ class dummyRoutingTest(MininetTest):
         # TODO this function must be refactored. I don't use 
         # command line to trigger failures anymore, so rNode 
         # makes no sense anymore, just use self.nodeCrashed
-        elif self.stopNode  > 0 and self.nodeCrashed == "":
-            rNode = random.sample(hostList, 1)[0].name
+        #elif self.stopNode  > 0 and self.nodeCrashed == "":
+        #    rNode = random.sample(hostList, 1)[0].name
 
-        elif self.stopNode > 0 and self.nodeCrashed != "":
-            rNode = self.nodeCrashed
+        #elif self.stopNode > 0 and self.nodeCrashed != "":
+        #    rNode = self.nodeCrashed
 
         if rNode:
             info("\nChosen node " + str(rNode) + " to fail\n")
 
-        if self.runId == 0:
-            for h in hostList:
-                args = ""
-                if self.logInterval != "":
-                    args += " " + self.logInterval
-                if self.verbose != "":
-                    args += " " + self.verbose
-                if self.centralityTuning != "":
-                    args += " " + self.centralityTuning
+        #if self.runId == 0:
+        for h in hostList:
+            args = " --runid=" + self.runId
+            if self.logInterval != "":
+                args += " " + self.logInterval
+            if self.verbose != "":
+                args += " " + self.verbose
+            if self.centralityTuning != "":
+                args += " " + self.centralityTuning
 
-                self.launchdummyRouting(h, args)
-                if self.dump:
-                    self.launchSniffer(h)
+            self.launchdummyRouting(h, args)
+            if self.dump:
+                self.launchSniffer(h)
 
         if not self.nodeCrashed and rNode:
             self.nodeCrashed = rNode
@@ -260,7 +263,7 @@ class dummyRoutingRandomTest(dummyRoutingTest):
             self.stopNode = -1
 
         if "nodeCrashed" in args.keys():
-            self.nodeCrashed = int(args["nodeCrashed"])
+            self.nodeCrashed = args["nodeCrashed"]
         else:
             self.nodeCrashed = ""
 

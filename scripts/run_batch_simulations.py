@@ -55,7 +55,6 @@ class EmulationRunner():
             jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec,\
                 logFrequency = p.readTopology(self.path_prefix)
             for runId in jsonRt:
-                print "QQQQQQQQQQQQQQ ", runId
                 results = p.parseAllRuns(jsonRt[runId], nodeSet, 
                         failedNodes[runId], silent=True)
                 failures = 0
@@ -65,7 +64,7 @@ class EmulationRunner():
                 ret_value[runId][i]["results"] = results
                 ret_value[runId][i]["signalling"] = signallingSent
                 ret_value[runId][i]["failures"] = failures
-                ret_value[runId][i]["failed_nodes"] = failedNodes
+                ret_value[runId][i]["failed_nodes"] = failedNodes[runId]
                 ret_value[runId][i]["sigPerSec"] = sigPerSec
                 ret_value[runId][i]["logFrequency"] = logFrequency
         return ret_value

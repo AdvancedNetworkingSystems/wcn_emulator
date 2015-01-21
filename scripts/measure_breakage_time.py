@@ -73,7 +73,7 @@ class resultParser():
                 dIP = nl[j]
                 try:
                     route = navigateRoutingTables(jsonRtPurged, sIP,
-                        dIP, [], 0)
+                        dIP, [], 0, silent=False)
                 except KeyError:
                     errors += 1
                     if not silent:
