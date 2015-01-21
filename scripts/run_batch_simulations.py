@@ -5,6 +5,7 @@ import os
 import time
 import argparse
 import glob
+import ConfigParser
 import matplotlib.pyplot as plt
 from subprocess import check_output, CalledProcessError, call
 from collections import defaultdict
@@ -12,6 +13,8 @@ from collections import defaultdict
 import json
 
 from measure_breakage_time import resultParser
+
+topology_override_string = "no_topology_override_see_config_file"
 
 class EmulationRunner():
 
@@ -30,25 +33,52 @@ class EmulationRunner():
                 help="name of the configuration to run", type=str)
         parser.add_argument("-p", dest="parseonly", action="store_true",
                 help="do not run the simulation, only parse results")
+        parser.add_argument("-g", dest="graphfolder", action="store_true",
+                help="a folder with .adj files from which to extract topologies")
         self.args = parser.parse_args()
 
 
-    def run_and_parse(self):
-        # FIXME change the number of runs with a sequence of 
-        # different configurations (runs have been included in the simulator)
+    def extract_simulation_type_from_conf(conf, file_name, stanza):
+        parser = ConfigParser.SafeConfigParser()
+        parser.optionxform = str
+        file_name = "../" + file_name
+        parser.read(file_name)
+
+        if stanza not in parser.sections():
+            print file_name, stanza
+            print "ERROR: I can't find the configuration specified! this run will fail"
+            return True # this configuration will fail anyway!
+        try:
+            r = parser.get(stanza, "centralityTuning")
+            print r
+            return True
+        except:
+            return False 
+
+    def run_and_parse(self, topo_files = [topology_override_string, 
+            batch_identifier=topology_override_string):
         if not self.args.parseonly and os.getuid() != 0:
             print "You should run this script as root"
             sys.exit(1)
         p = resultParser()
         self.path_prefix = "/tmp/dummyrouting-log"
         ret_value = defaultdict(dict)
-        for i in range(self.args.runs):
-            if not self.args.parseonly and i == 0:
+        run_number = 0
+        optimized = self.extract_simulation_type_from_conf(str(self.args.confile), 
+                str(self.args.stanza))
+
+        for topo in topo_files:
+            if not self.args.parseonly and run_number == 0:
                 self.clean_environment()
-            elif i != 0:
+            elif run_number != 0:
                 self.clean_environment(auto=True)
+            run_number = 1
             command = ["./wcn_simulator.py", "-f", str(self.args.confile), \
                     "-t", str(self.args.stanza)]
+
+            #TODO: yes this sucks a bit...
+            if topo != topology_override_string:
+                command +=  ["-g", topo]
             self.command = command
             if not self.args.parseonly:
                 self.execute_run(command)
@@ -60,13 +90,16 @@ class EmulationRunner():
                 failures = 0
                 for tt in sorted(results):
                     failures += sum(results[tt][1:])
-                ret_value[runId][i] = {}
-                ret_value[runId][i]["results"] = results
-                ret_value[runId][i]["signalling"] = signallingSent
-                ret_value[runId][i]["failures"] = failures
-                ret_value[runId][i]["failed_nodes"] = failedNodes[runId]
-                ret_value[runId][i]["sigPerSec"] = sigPerSec
-                ret_value[runId][i]["logFrequency"] = logFrequency
+                ret_value[runId][topo] = {}
+                ret_value[runId][topo]["signalling"] = signallingSent
+                ret_value[runId][topo]["failures"] = failures
+                ret_value[runId][topo]["failed_nodes"] = failedNodes[runId]
+                ret_value[runId][topo]["sigPerSec"] = sigPerSec
+                ret_value[runId][topo]["logFrequency"] = logFrequency
+                ret_value[runId][topo]["network_size"] = batch_identifier
+                ret_value[runId][topo]["optimized"] = optimized
+                ret_value[runId][topo]["results"] = results
+
         return ret_value
 
     def save_results(self, results):
@@ -176,6 +209,8 @@ class EmulationRunner():
 if __name__ == "__main__":
     e = EmulationRunner()
     e.parse_args()
+    if e.args.graphfolder:
+        topo_list = e.get_topo_list_from_folder()
     results = e.run_and_parse()
     resultSerie = defaultdict(dict)
     for runId in results:
