@@ -56,13 +56,17 @@ class EmulationRunner():
         except:
             return False 
 
-    def run_and_parse(self, topo_files = [topology_override_string]):
+    def run_and_parse(self, size, type, res=None, 
+            topo_files = [topology_override_string]):
         if not self.args.parseonly and os.getuid() != 0:
             print "You should run this script as root"
             sys.exit(1)
         p = resultParser()
         self.path_prefix = "/tmp/dummyrouting-log"
-        ret_value = defaultdict(dict)
+        if res:
+            ret_value = res
+        else:
+            ret_value = defaultdict(dict)
         run_number = 0
         optimized = self.extract_simulation_type_from_conf("centralityTuning", 
                 str(self.args.confile), str(self.args.stanza))
@@ -84,9 +88,12 @@ class EmulationRunner():
                 self.execute_run(command)
             jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec,\
                 logFrequency = p.readTopology(self.path_prefix)
+            import code
+            #code.interact(local=locals())
             for runId in jsonRt:
                 results = p.parseAllRuns(jsonRt[runId], nodeSet, 
                         failedNodes[runId], silent=True)
+                #code.interact(local=locals())
                 failures = 0
                 for tt in sorted(results):
                     failures += sum(results[tt][1:])
@@ -96,8 +103,8 @@ class EmulationRunner():
                 ret_value[topo][runId]["failed_nodes"] = failedNodes[runId]
                 ret_value[topo][runId]["sigPerSec"] = sigPerSec
                 ret_value[topo][runId]["logFrequency"] = logFrequency
-                ret_value[topo][runId]["network_size"] = self.size
-                ret_value[topo][runId]["topology_type"] = self.type_label
+                ret_value[topo][runId]["network_size"] = size
+                ret_value[topo][runId]["topology_type"] = type
                 ret_value[topo][runId]["optimized"] = optimized
                 ret_value[topo][runId]["results"] = results
 
@@ -115,6 +122,7 @@ class EmulationRunner():
             raise
         print >> out_file, out_string
         out_file.close()
+        return out_file_name
 
     def summarise_results(self, results):
         signalling_messages = 0
@@ -159,6 +167,7 @@ class EmulationRunner():
         log_files = glob.glob(self.path_prefix+"*")
         dump_files = glob.glob("../"+self.args.stanza+"*")
         c = []
+        user_input = 'n'
         if log_files:
             commands.append(["rm", "-rf"]+log_files)
         if dump_files:
@@ -183,15 +192,23 @@ class EmulationRunner():
     def get_topo_list_from_folder(self):
         # I expect to have topo files in a structure like: 
         # data_path/TYPE_LABEL/SIZE/graph*.edges
+        # TODO support a list of folders separated by comma
+        topo_files = []
+        type_label = []
+        size = []
+
         if self.args.graphfolder:
-            topo_files = glob.glob(self.args.graphfolder + "*.edges")
-            self.type_label = self.args.graphfolder.split("/")[-3]
-            self.size = self.args.graphfolder.split("/")[-2]
+            for folder in self.args.graphfolder.split(','):
+                topo_files.append(glob.glob(
+                    folder + "*.edges"))
+                type_label.append(folder.split("/")[-3])
+                size.append(folder.split("/")[-2])
         else:
-            self.type_label = topology_override_string
-            self.size = topology_override_string
-            topo_file = [topology_override_string]
-        return topo_files
+            type_label = [topology_override_string]
+            size = [topology_override_string]
+            topo_files = [[topology_override_string]]
+        print topo_files
+        return topo_files, size, type_label
         
 
 
@@ -212,17 +229,25 @@ class EmulationRunner():
 if __name__ == "__main__":
     e = EmulationRunner()
     e.parse_args()
-    topo_list = e.get_topo_list_from_folder()
-    results = e.run_and_parse(topo_list)
-    resultSerie = defaultdict(dict)
+    topo_list, size_list, type_list = e.get_topo_list_from_folder()
+    # TODO loop 
+    # over the folders, pass results to the next run_and_parse
+    results = defaultdict(dict)
+    for index, file_list in enumerate(topo_list):
+        results = e.run_and_parse(size_list[index],
+            type_list[index], results, topo_files=file_list)
+        #TODO fix also size and type
+    #resultSerie = defaultdict(dict)
     for topo in results:
         for runId in results[topo]:
             #r = e.summarise_results(results[topo][runId])
             r = results[topo][runId]
+            import code
             e.plot_results(results[topo][runId], 
-                    title = "Optimized = " + str(r['optimized']) + ". Tot failures:" + str(r["failures"]) + \
+                    title = "Optimized = " + str(r['optimized']) + ". Tot failures:" + str(r["failures"]/r["logFrequency"]) + \
                     ", tot signalling:" + str(r["signalling"]) + ", sig/sec:" + \
                     "%.2f" % round(r["sigPerSec"],2))
+            #code.interact(local=locals())
             #resultSerie[topo]['failures'] = r['failures']
             #resultSerie[topo]['signalling'] = r['signalling']
             #resultSerie[topo]['sigpersec'] = r['sigpersec']
