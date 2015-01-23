@@ -57,26 +57,22 @@ class EmulationRunner():
             return False 
 
     def run_and_parse(self, size, type, res=None, 
-            topo_files = [topology_override_string]):
+            topo_files = [topology_override_string], auto_clean=False):
         if not self.args.parseonly and os.getuid() != 0:
             print "You should run this script as root"
             sys.exit(1)
         p = resultParser()
         self.path_prefix = "/tmp/dummyrouting-log"
-        if res:
-            ret_value = res
-        else:
-            ret_value = defaultdict(dict)
-        run_number = 0
+        if res == None:
+            res = defaultdict(dict)
         optimized = self.extract_simulation_type_from_conf("centralityTuning", 
                 str(self.args.confile), str(self.args.stanza))
 
         for topo in topo_files:
-            if not self.args.parseonly and run_number == 0:
+            if not self.args.parseonly and not auto_clean:
                 self.clean_environment()
-            elif run_number != 0:
+            elif auto_clean:
                 self.clean_environment(auto=True)
-            run_number = 1
             command = ["./wcn_simulator.py", "-f", str(self.args.confile), \
                     "-t", str(self.args.stanza)]
 
@@ -97,22 +93,22 @@ class EmulationRunner():
                 failures = 0
                 for tt in sorted(results):
                     failures += sum(results[tt][1:])
-                ret_value[topo][runId] = {}
-                ret_value[topo][runId]["signalling"] = signallingSent
-                ret_value[topo][runId]["failures"] = failures
-                ret_value[topo][runId]["failed_nodes"] = failedNodes[runId]
-                ret_value[topo][runId]["sigPerSec"] = sigPerSec
-                ret_value[topo][runId]["logFrequency"] = logFrequency
-                ret_value[topo][runId]["network_size"] = size
-                ret_value[topo][runId]["topology_type"] = type
-                ret_value[topo][runId]["optimized"] = optimized
-                ret_value[topo][runId]["results"] = results
+                res[topo][runId] = {}
+                res[topo][runId]["signalling"] = signallingSent
+                res[topo][runId]["failures"] = failures
+                res[topo][runId]["failed_nodes"] = failedNodes[runId]
+                res[topo][runId]["sigPerSec"] = sigPerSec
+                res[topo][runId]["logFrequency"] = logFrequency
+                res[topo][runId]["network_size"] = size
+                res[topo][runId]["topology_type"] = type
+                res[topo][runId]["optimized"] = optimized
+                res[topo][runId]["results"] = results
 
-        return ret_value
+        return res
 
     def save_results(self, results):
-        results["time"] = time.time()
         results["command"] = " ".join(self.command)
+        results["time"] = time.time()
         out_string = json.dumps(results, indent=1)
         out_file_name = "/tmp/"+self.args.stanza+"_"+str(int(time.time()))+".results"
         try:
@@ -234,11 +230,13 @@ if __name__ == "__main__":
     # over the folders, pass results to the next run_and_parse
     results = defaultdict(dict)
     for index, file_list in enumerate(topo_list):
-        results = e.run_and_parse(size_list[index],
-            type_list[index], results, topo_files=file_list)
+        e.run_and_parse(size_list[index],
+            type_list[index], res=results, topo_files=file_list, 
+            auto_clean = bool(index))
         #TODO fix also size and type
     #resultSerie = defaultdict(dict)
     for topo in results:
+        print results[topo]
         for runId in results[topo]:
             #r = e.summarise_results(results[topo][runId])
             r = results[topo][runId]
