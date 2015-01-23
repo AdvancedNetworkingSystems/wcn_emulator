@@ -87,7 +87,6 @@ class dummyRoutingTest(MininetTest):
             for event in eventList:
                 sleep(event[0])
                 event[2](**event[3])
-                print " XX", time.time(), event[0], event[1]
                 info(event[1] + str(time.time()) + "\n")
             sleep(waitTime)
             self.killAll(signal.SIGTERM)
@@ -134,13 +133,14 @@ class dummyRoutingTest(MininetTest):
         centList =  sorted(
                 [n for n in nx.betweenness_centrality(self.graph).items() \
                         if n[1] > 0], key = lambda x: x[1])
-        for idx, n in enumerate(centList[:]):
+        connected_centlist = []
+        for idx, n in enumerate(centList):
             gg = self.graph.copy()
             gg.remove_node(n[0])
             conSize = len(nx.connected_components(gg)[0])
-            if conSize != len(self.graph) - 1:
-                del centList[idx]
-        return centList
+            if conSize == len(self.graph) - 1:
+                connected_centlist.append(n)
+        return connected_centlist
 
     def startRun(self):
 
@@ -197,6 +197,7 @@ class dummyRoutingTest(MininetTest):
         for pid, h in self.pendingProc.items():
             if hostName:
                 if hostName == h.name:
+                    print "sending signal to host:", hostName, ", pid", pid
                     self.sendSig(pid, sig)
                     break
                 continue
