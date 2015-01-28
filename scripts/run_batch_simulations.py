@@ -6,6 +6,7 @@ import time
 import argparse
 import glob
 import ConfigParser
+import tarfile
 import matplotlib.pyplot as plt
 from subprocess import check_output, CalledProcessError, call
 from collections import defaultdict
@@ -51,7 +52,6 @@ class EmulationRunner():
             return True # this configuration will fail anyway!
         try:
             r = parser.get(stanza, conf)
-            print r
             return True
         except:
             return False 
@@ -68,17 +68,25 @@ class EmulationRunner():
         optimized = self.extract_simulation_type_from_conf("centralityTuning", 
                 str(self.args.confile), str(self.args.stanza))
 
+        prev_run_id = ""
         for topo in topo_files:
-            if not self.args.parseonly and not auto_clean:
-                self.clean_environment()
-            elif auto_clean:
-                self.clean_environment(auto=True)
+            if prev_run_id:
+                self.save_environment(prev_run_id)
+                prev_run_id = ""
             command = ["./wcn_simulator.py", "-f", str(self.args.confile), \
                     "-t", str(self.args.stanza)]
-
             #TODO: yes this sucks a bit...
             if topo != topology_override_string:
                 command +=  ["-g", os.path.abspath(topo)]
+                prev_run_id = os.path.splitext(os.path.basename(topo))[0] 
+            prev_run_id += str(self.args.stanza)
+
+            if not self.args.parseonly and not auto_clean:
+                self.clean_environment()
+                auto_clean=True
+            elif auto_clean:
+                self.clean_environment(auto=True)
+
             self.command = command
             if not self.args.parseonly:
                 self.execute_run(command)
@@ -155,7 +163,14 @@ class EmulationRunner():
         plt.ylabel(ylabel)
         plt.title(title)
         plt.savefig("/tmp/pp.png")
-        plt.show()
+
+
+    def save_environment(self, path_name):
+        log_files = glob.glob(self.path_prefix+"*")
+        t = tarfile.open(path_name+"tar.gz", "w:gz")
+        for f in log_files:
+            t.add(f)
+        t.close()
 
 
     def clean_environment(self, auto=False):
@@ -203,7 +218,6 @@ class EmulationRunner():
             type_label = [topology_override_string]
             size = [topology_override_string]
             topo_files = [[topology_override_string]]
-        print topo_files
         return topo_files, size, type_label
         
 
@@ -236,7 +250,6 @@ if __name__ == "__main__":
         #TODO fix also size and type
     #resultSerie = defaultdict(dict)
     for topo in results:
-        print results[topo]
         for runId in results[topo]:
             #r = e.summarise_results(results[topo][runId])
             r = results[topo][runId]

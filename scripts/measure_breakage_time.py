@@ -19,6 +19,8 @@ class resultParser():
         failedNodes = {}
         signallingSent = 0
         timeBasedRoute = defaultdict(dict)
+        sigPerSec = 0
+        logFrequency = 0
         for topoFile in glob.glob(pathPrefix+"*.json"):
             try:
                 f = open(topoFile, "r")
@@ -41,11 +43,14 @@ class resultParser():
                 failedNodes[runId][nodeIP] = j["failtime"]
             if runId not in jsonRt:
                 jsonRt[runId] = defaultdict(dict)
-            for logId, logDump in rt.items():
-                jsonRt[runId][logId][nodeIP] = logDump["RT"]
-                jsonRt[runId][logId]["time"] = logDump["time"]
-                timeBasedRoute[runId][logDump["time"]] = {}
-                timeBasedRoute[runId][logDump["time"]][nodeIP] = logDump["RT"]
+            try:
+                for logId, logDump in rt.items():
+                    jsonRt[runId][logId][nodeIP] = logDump["RT"]
+                    jsonRt[runId][logId]["time"] = logDump["time"]
+                    timeBasedRoute[runId][logDump["time"]] = {}
+                    timeBasedRoute[runId][logDump["time"]][nodeIP] = logDump["RT"]
+            except KeyError:
+                del jsonRt[runId]
             nodeSet.add(str(nodeIP))
         return jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec, \
                 logFrequency
