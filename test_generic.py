@@ -48,7 +48,7 @@ class MininetTest(object):
         try:
             os.kill( pid, sig )
         except OSError as e:
-            error("Error while sending " + str(sig) + " to process "+str(pid))
+            error("Error while sending " + str(sig) + " to process "+str(pid) + " ")
             error("\nWith error " + str(e))
             pass
 
