@@ -118,6 +118,7 @@ class GraphNet(PowerNet):
             nodeCounter += 1
 
         self.gg = nx.relabel_nodes(g,nodeMap)
+        self.gg_name = edges_file
 
         self.hosts_port = {}
 
