@@ -62,7 +62,6 @@ class dummyRoutingTest(MininetTest):
             self.runId = str(runid)
             if self.stopAllNodes:
                 self.nodeCrashed = self.centList.pop(0)
-            print "WWWWWWWWWWW", self.nodeCrashed
 
             if not self.startRun():
                 # some times process are not killed in time, UDP
