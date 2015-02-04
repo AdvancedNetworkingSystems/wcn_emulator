@@ -110,8 +110,8 @@ class DataMerger():
                     self.data[size] = {}
                 if g_type not in self.data[size]:
                     self.data[size][g_type] = {}
-                if r_c.optimized not in self.data[size][g_type]:
-                    opt = r_c.optimized
+                opt = r_c.optimized
+                if opt not in self.data[size][g_type]:
                     self.data[size][g_type][opt] = {}
                     print "XX", size, g_type, opt
                 for run_id, run_id_vec in results_comparer[g_type][size]['y'].items():
@@ -136,16 +136,29 @@ class DataMerger():
                     for run_id in self.data[size][g_type][True]:
                         for graph in self.data[size][g_type][False][run_id]:
                             if graph in self.data[size][g_type][True][run_id]:
-                                y.append(self.data[size][g_type][True][run_id][graph] \
-                                    / self.data[size][g_type][False][run_id][graph])
+                                print size,g_type, run_id, graph
+                                try:
+                                    y.append(self.data[size][g_type][True][run_id][graph] \
+                                            / self.data[size][g_type][False][run_id][graph])
+                                except ZeroDivisionError:
+                                    pass
                         data_c[size][g_type]['y'][int(run_id)] = \
                                 np.average(y)
-        print data_c
+        return data_c
 
 
 
-    def plot_data(self):
-        pass
+    def plot_data(self, data):
+        # TODO add info to the graph
+        for size in data:
+            f = plt.figure()
+            plt.title("Size:"+size)
+            for g_type in data[size]:
+                plt.plot(data[size][g_type]['y'].keys(), 
+                        data[size][g_type]['y'].values(), label=g_type)
+            plt.legend()
+            plt.show()
+
     def print_data(self):
         pp = pprint.PrettyPrinter()
         pp.pprint(self.data)
@@ -166,49 +179,6 @@ def parse_args():
      args = parser.parse_args()
      return args
 
-
-def generate_relative_dataset(non_opt, opt):
-
-    # let's check the size of the result set
-    if opt.keys() == non_opt.keys():
-        for size in opt:
-            if opt[size]['plot'].keys() == non_opt[size]['plot'].keys():
-                for g_type in opt[size]['plot']:
-                    if len(opt[size]['plot'][g_type]) == \
-                            len(non_opt[size]['plot'][g_type]):
-                        continue
-                    else:
-                        print opt[size]['plot'][g_type], "is not as long as", \
-                                non_opt[size]['plot'][g_type]
-                    return {}
-            else:
-                print opt[size]['plot'], " differs from ", non_opt[size]['plot']
-                return {}
-    else:
-        print opt.keys(), "differs from", non_opt.keys()
-        return {}
-
-    merged_data = opt.copy()
-    for size in opt:
-        for g_type in opt[size]['plot']:
-            merged_data[size]['plot'][g_type] = np.array(
-                    opt[size]['plot'][g_type])/np.array(
-                    non_opt[size]['plot'][g_type])
-            merged_data[size]['title'] += "size:" + str(size)
-    return  merged_data
-
-def print_data(merged_data):
-    for size in merged_data:
-        f = plt.figure()
-        f.title = merged_data[size]['title']
-        for g_type in merged_data[size]['plot']:
-            y = merged_data[size]['plot'][g_type]
-            plt.plot(range(len(y)), y, 'o', label=g_type)
-        plt.xlabel("Crashed node, orderd by betweenness")
-        plt.ylabel("Failed routes")
-        plt.ylim([0,1])
-        plt.legend()
-        plt.show()
     
 
 args = parse_args()
@@ -219,12 +189,56 @@ for res_file in args.res_file:
     r.average_data()
     r.format_data_for_plot()
     m.merge_data(r)
-m.compare_data()
+m.plot_data(m.compare_data())
 m.print_data()
 #if args.res_file_opt:
 #    ro = ResultsComparer(args.res_file_opt)
 #    ro.parse_results()
 #    ro.average_data()
-#    ro.format_data_for_plot()
+             #    ro.format_data_for_plot()
 #    m = generate_relative_dataset(r.formatted_data, ro.formatted_data)
 #    print_data(m)
+
+#
+#def generate_relative_dataset(non_opt, opt):
+#
+#    # let's check the size of the result set
+#    if opt.keys() == non_opt.keys():
+#        for size in opt:
+#            if opt[size]['plot'].keys() == non_opt[size]['plot'].keys():
+#                for g_type in opt[size]['plot']:
+#                    if len(opt[size]['plot'][g_type]) == \
+#                            len(non_opt[size]['plot'][g_type]):
+#                        continue
+#                    else:
+#                        print opt[size]['plot'][g_type], "is not as long as", \
+#                                non_opt[size]['plot'][g_type]
+#                    return {}
+#            else:
+#                print opt[size]['plot'], " differs from ", non_opt[size]['plot']
+#                return {}
+#    else:
+#        print opt.keys(), "differs from", non_opt.keys()
+#        return {}
+#
+#    merged_data = opt.copy()
+#    for size in opt:
+#        for g_type in opt[size]['plot']:
+#            merged_data[size]['plot'][g_type] = np.array(
+#                    opt[size]['plot'][g_type])/np.array(
+#                    non_opt[size]['plot'][g_type])
+#            merged_data[size]['title'] += "size:" + str(size)
+#    return  merged_data
+#
+#def print_data(merged_data):
+#    for size in merged_data:
+#        f = plt.figure()
+#        f.title = merged_data[size]['title']
+#        for g_type in merged_data[size]['plot']:
+#            y = merged_data[size]['plot'][g_type]
+#            plt.plot(range(len(y)), y, 'o', label=g_type)
+#        plt.xlabel("Crashed node, orderd by betweenness")
+#        plt.ylabel("Failed routes")
+#        plt.ylim([0,1])
+#        plt.legend()
+#        plt.show()
