@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+from inherit_config_parser import InheritConfigParser
 import ConfigParser
 import inspect
 
@@ -33,7 +34,7 @@ class configurationFile():
             error("Can not open the configuration file: " + fileName\
                 + "\n")
             sys.exit(1)
-        self.parser = ConfigParser.SafeConfigParser()
+        self.parser = InheritConfigParser()
         self.parser.optionxform = str
         self.parser.read(fileName)
         self.testName = stanza 
