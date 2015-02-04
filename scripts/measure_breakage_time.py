@@ -52,9 +52,9 @@ class resultParser():
             except KeyError:
                 del jsonRt[runId]
             nodeSet.add(str(nodeIP))
+            #print topoFile, failedNodes, nodeSet
         return jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec, \
                 logFrequency
-
 
     def checkRoutingTables(self, jsonRt, nodeSet, failedNodes, silent=True):
         errors = 0
@@ -68,6 +68,7 @@ class resultParser():
                 ns.remove(failedNode)
                 failedNodeSet.add(failedNode)
 
+
         nl = list(ns)
         routesOk = 0
         for i in range(len(nl)):
@@ -78,7 +79,7 @@ class resultParser():
                 dIP = nl[j]
                 try:
                     route = navigateRoutingTables(jsonRtPurged, sIP,
-                        dIP, [], 0, silent=False)
+                        dIP, [], 0, silent=silent)
                 except KeyError:
                     errors += 1
                     if not silent:
@@ -94,8 +95,7 @@ class resultParser():
                 routesOk += 1
         return routesOk, errors, loops
 
-
-    def parseAllRuns(self, jsonRt, nodeSet, failedNodes, silent=False):
+    def parseAllRuns(self, jsonRt, nodeSet, failedNodes, silent=True):
 
         retDict = {}
         # first we realign the logs, that can be 
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     pathPrefix = sys.argv[1]
 
     p = resultParser()
-    timeBasedRoute, jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec,\
+    jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec,\
         logFrequency = p.readTopology(pathPrefix)
 
     if not nodeSet:
@@ -148,7 +148,7 @@ if __name__ == "__main__":
     results = {}
     for runId in jsonRt:
         results[runId] = p.parseAllRuns(jsonRt[runId], nodeSet, 
-                failedNodes[runId])
+                failedNodes[runId], silent=True)
 
     for runId in results:
         for time in sorted(results[runId]):
