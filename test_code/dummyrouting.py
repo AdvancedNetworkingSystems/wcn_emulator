@@ -54,21 +54,35 @@ class dummyRoutingTest(MininetTest):
         info("Data folder: "+self.prefix+"\n")
 
         if self.stopAllNodes:
-            self.centList = self.getCentrality()
-            self.numRuns = 3#len(self.centList)
+            self.centList = self.getCentrality()[:self.stopAllNodes]
 
-        for runid in range(self.numRuns):
+
+        for runid in range(len(self.centList)):
             info("\nStarting run " + str(runid) + "\n")
             self.runId = str(runid)
             if self.stopAllNodes:
-                self.nodeCrashed = self.centList.pop()[0]
+                self.nodeCrashed = self.centList.pop(0)
+            print "WWWWWWWWWWW", self.nodeCrashed
 
-            self.startRun()
+            if not self.startRun():
+                # some times process are not killed in time, UDP
+                # ports are still occupied and the next run can not
+                # start correctly. I kill everything, wait some time, try 
+                # to restart. If something still goes wrong i stop the emulation
+                self.killAll()
+                time.sleep(10)
+                info("\nWARNING: run_id " + str(runid) + " could not start, retying...\n")
+                if not self.startRun():
+                    error("\nERROR: run_id " + str(runid) + " could not start!" + \
+                            "please check the logs\n")
+                    sys.exit(1)
+
+
 
             eventDict = {
                     self.startLog:["Start logging", self.sendSignal,
                         {"sig":signal.SIGUSR1}],
-                    self.stopNode:["Stopping node " + str(self.nodeCrashed),
+                    self.stopNode:["Stopping node(s) " + str(self.nodeCrashed) + " ",
                         self.sendSignal, {"sig":signal.SIGTSTP,
                         "hostName":self.nodeCrashed}],
                     self.stopLog:["Stop logging", self.sendSignal,
@@ -86,13 +100,14 @@ class dummyRoutingTest(MininetTest):
 
             for event in eventList:
                 sleep(event[0])
+                print event
                 event[2](**event[3])
                 info(event[1] + str(time.time()) + "\n")
             sleep(waitTime)
             self.killAll(signal.SIGTERM)
-            time.sleep(1)
+            time.sleep(2)
             self.killAll()
-            time.sleep(1)
+            time.sleep(2)
             #sendSignal(signal.SIGUSR2)
             #if self.startLog > 0:
             #    duration -= self.startLog
@@ -128,55 +143,36 @@ class dummyRoutingTest(MininetTest):
 
     def getCentrality(self):
         """ return a list of nodes ordered by centrality. Return only nodes
-        that can be removed from the network without partitioning the network """
+        that can be removed from the network without partitioning the network,
+        (excluding the leaf nodes attached to the node that is removed, which 
+        are obviously partitioned when removing the core node) """
 
         centList =  sorted(
                 [n for n in nx.betweenness_centrality(self.graph).items() \
-                        if n[1] > 0], key = lambda x: x[1])
+                        if n[1] > 0], key = lambda x: -x[1])
         connected_centlist = []
         for idx, n in enumerate(centList):
             gg = self.graph.copy()
+            neighs = gg.neighbors(n[0])
+            leaf_neighs = []
+            for neigh in neighs:
+                if len(gg.neighbors(neigh)) == 1:
+                    gg.remove_node(neigh)
+                    leaf_neighs.append(neigh)
             gg.remove_node(n[0])
             conSize = len(nx.connected_components(gg)[0])
-            if conSize == len(self.graph) - 1:
-                connected_centlist.append(n)
+            if conSize == len(self.graph) - (len(leaf_neighs) + 1):
+                connected_centlist.append([n[0]] + leaf_neighs)
         return connected_centlist
 
     def startRun(self):
 
         rNode = ""
         hostList = self.getAllHosts()
-        if self.stopNode > 0 and self.stopCentralNode != -1:
-            # unused
-
-            # split the degree list in 5 parts ordered for their degree
-            # the input value selects one of the parts, and one
-            # random node in this part will be returned
-            deg = sorted(
-                    [n for n in self.graph.degree().items() if n[1] > 1],
-                    key = lambda x: x[1])
-            partLength = len(deg)/4
-            rr = random.sample(range(self.stopCentralNode*partLength, 
-                min((self.stopCentralNode+1)*partLength, len(deg))), 1)[0]
-            nodeName = deg[rr][0]
-            for h in hostList:
-                if h.name == nodeName:
-                    rNode = h.name
-                    break
-
-        # TODO this function must be refactored. I don't use 
-        # command line to trigger failures anymore, so rNode 
-        # makes no sense anymore, just use self.nodeCrashed
-        #elif self.stopNode  > 0 and self.nodeCrashed == "":
-        #    rNode = random.sample(hostList, 1)[0].name
-
-        #elif self.stopNode > 0 and self.nodeCrashed != "":
-        #    rNode = self.nodeCrashed
 
         if rNode:
             info("\nChosen node " + str(rNode) + " to fail\n")
 
-        #if self.runId == 0:
         for h in hostList:
             args = " --runid=" + self.runId
             if self.logInterval != "":
@@ -186,22 +182,25 @@ class dummyRoutingTest(MininetTest):
             if self.centralityTuning != "":
                 args += " " + self.centralityTuning
 
-            self.launchdummyRouting(h, args)
+            launch_pid = self.launchdummyRouting(h, args)
+
             if self.dump:
                 self.launchSniffer(h)
 
         if not self.nodeCrashed and rNode:
-            self.nodeCrashed = rNode
+            self.nodeCrashed = [rNode]
+        return launch_pid
 
     def sendSignal(self, sig, hostName=""):
         for pid, h in self.pendingProc.items():
             if hostName:
-                if hostName == h.name:
-                    print "sending signal to host:", hostName, ", pid", pid
-                    self.sendSig(pid, sig)
-                    break
-                continue
-            self.sendSig(pid, sig)
+                for host in hostName:
+                    if host == h.name:
+                        print "sending signal to host:", host, ", pid", pid
+                        self.sendSig(pid, sig)
+            # send to all 
+            else:
+                self.sendSig(pid, sig)
 
 
     def parseTime(self, timeString):
@@ -264,39 +263,32 @@ class dummyRoutingRandomTest(dummyRoutingTest):
             self.stopNode = -1
 
         if "nodeCrashed" in args.keys():
-            self.nodeCrashed = args["nodeCrashed"]
+            self.nodeCrashed = [args["nodeCrashed"]]
         else:
             self.nodeCrashed = ""
 
         if "stopAllNodes" in args.keys():
-            self.stopAllNodes = True
-            self.nodeCrashed = ""
             info("Going to stop all the nodes in sequence")
+            if args["stopAllNodes"].isdigit():
+                stop_n = int(args["stopAllNodes"])
+                if stop_n <= 0:
+                    error("\nPlease stopAllNodes must be > 0\n")
+                    sys.exit(1)
+                self.stopAllNodes = stop_n
+                info("... limited to " + args["stopAllNodes"] + "nodes.")
+            else:
+                self.stopAllNodes = len(mininet.gg)
+            self.nodeCrashed = []
         else:
             self.stopAllNodes = False
-
-        if "stopCentralNode" in args.keys():
-            self.stopCentralNode = int(args["stopCentralNode"])
-            if self.stopCentralNode < 0 or self.stopCentralNode > 3:
-                error("\nPlease stopCentralNode must be between 0 and 3\n")
-                sys.exit(1)
-        else:
-            self.stopCentralNode = -1
-
-        # stopAllNodes will confilct with numRuns!
-        if "numRuns" in args.keys():
-            if self.stopAllNodes == True:
-                error("Cannot set stopAllNodes and numRuns in the same configuration")
-                sys.exit(1)
-            self.numRuns = int(args["numRuns"])
-        else:
-            self.numRuns = 1
 
         self.runId = 0
 
         duration = int(self.parseTime(args["duration"]))
 
         super(dummyRoutingRandomTest, self).__init__(mininet, duration)
-        self.setPrefix(name)
+        self.localPrefix = os.path.basename(os.path.splitext(
+            mininet.gg_name)[0])
+        self.setPrefix(name + self.localPrefix)
 
 
