@@ -5,7 +5,8 @@ import os
 import time
 import argparse
 import glob
-import ConfigParser
+sys.path.append("../")
+from inherit_config_parser import InheritConfigParser
 import tarfile
 import matplotlib.pyplot as plt
 from subprocess import check_output, CalledProcessError, call
@@ -41,7 +42,7 @@ class EmulationRunner():
 
 
     def extract_simulation_type_from_conf(self, conf, file_name, stanza):
-        parser = ConfigParser.SafeConfigParser()
+        parser = InheritConfigParser()
         parser.optionxform = str
         file_name = "../" + file_name
         parser.read(file_name)
@@ -211,7 +212,7 @@ class EmulationRunner():
         if self.args.graphfolder:
             for folder in self.args.graphfolder.split(','):
                 topo_files.append(glob.glob(
-                    folder + "*.edges"))
+                    folder + "*.edges")[:self.args.runs])
                 type_label.append(folder.split("/")[-3])
                 size.append(folder.split("/")[-2])
         else:
