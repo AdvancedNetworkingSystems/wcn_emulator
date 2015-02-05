@@ -113,7 +113,6 @@ class DataMerger():
                 opt = r_c.optimized
                 if opt not in self.data[size][g_type]:
                     self.data[size][g_type][opt] = {}
-                    print "XX", size, g_type, opt
                 for run_id, run_id_vec in results_comparer[g_type][size]['y'].items():
                     # run_id follows the order in the sequence of failures
                     # so it mirrors the order by centrality of failed nodes
@@ -133,15 +132,15 @@ class DataMerger():
                 data_c[size][g_type] = {'y':{}}
                 if len(self.data[size][g_type]) == 2:
                     y = []
-                    for run_id in self.data[size][g_type][True]:
+                    for run_id in sorted(self.data[size][g_type][True], key = lambda(x) : int(x)):
                         for graph in self.data[size][g_type][False][run_id]:
                             if graph in self.data[size][g_type][True][run_id]:
-                                print size,g_type, run_id, graph
-                                try:
-                                    y.append(self.data[size][g_type][True][run_id][graph] \
-                                            / self.data[size][g_type][False][run_id][graph])
-                                except ZeroDivisionError:
-                                    pass
+                                if self.data[size][g_type][True][run_id][graph]:
+                                    try:
+                                        y.append(self.data[size][g_type][True][run_id][graph] \
+                                                / self.data[size][g_type][False][run_id][graph])
+                                    except ZeroDivisionError:
+                                        pass
                         data_c[size][g_type]['y'][int(run_id)] = \
                                 np.average(y)
         return data_c
@@ -173,6 +172,9 @@ def parse_args():
      parser.add_argument('-f', dest='res_file',
              help="the file with the results", action="append",
              required=True, type=str)
+     parser.add_argument('-s', dest='show_graph',
+             help="show the plot", action="store_true",
+             required=False, default=False)
      #parser.add_argument('-o', dest='res_file_opt',
      #        help="the file with the results for the optimized run",
      #        required=False, type=str)
@@ -189,7 +191,9 @@ for res_file in args.res_file:
     r.average_data()
     r.format_data_for_plot()
     m.merge_data(r)
-m.plot_data(m.compare_data())
+c = m.compare_data()
+if args.show_graph:
+    m.plot_data(c)
 m.print_data()
 #if args.res_file_opt:
 #    ro = ResultsComparer(args.res_file_opt)
