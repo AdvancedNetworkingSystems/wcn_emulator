@@ -130,10 +130,10 @@ class GraphNet(PowerNet):
 #            quality_params = {"bw":10,"delay":'5ms', "loss":100-100.0/e[2]['weight'], "use_htb":True}
             quality_params = {}
             quality_params["bw"] = 10
-            quality_params["delay"] = '1.496824ms'
-            quality_params["jitter"] = '2.826534ms'
-            quality_params["delay_distribution"] = 'guifi_m1.496824_s2.826534'
-            quality_params["loss"] = 100*((1-(1.0/(e[2]['weight'])))**5)
+#            quality_params["delay"] = '1.496824ms'
+#            quality_params["jitter"] = '2.826534ms'
+#            quality_params["delay_distribution"] = 'guifi_m1.496824_s2.826534'
+#            quality_params["loss"] = 100*((1-(1.0/(e[2]['weight'])))**5)
             quality_params["use_htb"] = True
             self.insertLink(self.get(e[0]),self.get(e[1]),quality_params)
 

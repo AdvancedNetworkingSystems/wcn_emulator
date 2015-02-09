@@ -54,6 +54,7 @@ class MininetTest(object):
             self.sendSig(pid,signal.SIGKILL)
             self.pendingProc[pid].monitor() # wait exiting
         self.pendingProc.clear()
+        info("\n")
         for host in self.net.values():
             host.waiting = False
 

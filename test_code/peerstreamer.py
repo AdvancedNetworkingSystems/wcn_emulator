@@ -154,12 +154,21 @@ class PSXLOptimizationTest(PSRandomTest):
         for l in self.net.getLinks():
           self.links[l] = self.net.linkSentPackets(l) # base value
 
+    def jain_fairness(self,values):
+        n = len(values)
+        den = float(n*sum([x**2 for x in values]))
+        if den >0:
+            return (sum(values)**2)/den
+        else:
+            return 0
+        
     def networkImpact(self):
         linkos = {}
         linkos.update(self.links)
         for l in linkos.keys():
             linkos[l] = self.net.linkSentPackets(l) - self.links[l]
-        return np.linalg.norm(linkos.values(),2)
+        #return np.linalg.norm(linkos.values(),2)
+        return self.jain_fairness(linkos.values())
 
     def sentPackets(self):
         sp,sb = self.net.sentPackets() 
@@ -210,12 +219,14 @@ class PSXLOptimizationNTest(PSXLOptimizationTest):
 
     def runTest(self):
         fp = open(self.prefix+"NTestResults_"+str(int(time()))+".csv",'w')
+        fp.write("NeighSize,pkts_normal,netimpact_normal,pkts_hopcount,netimpact_hopcount,pkts_optimized,netimpact_optimized\n")
         for n in range(self.min_nodes,self.max_nodes + 1,self.nodes_inc):
             self.hosts = self.getHostSample(n)
             self.source = self.hosts.pop()
             super(PSXLOptimizationNTest,self).runTest()
             fp.write(str(n)+",")
             fp.write(str(self.norm_res[0])+","+str(self.norm_res[1])+",")
+            fp.write(str(self.hopcount_res[0])+","+str(self.hopcount_res[1])+",")
             fp.write(str(self.optim_res[0])+","+str(self.optim_res[1])+"\n")
         fp.close()
 
