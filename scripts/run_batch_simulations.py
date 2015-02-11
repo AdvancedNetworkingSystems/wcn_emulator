@@ -35,9 +35,9 @@ class EmulationRunner():
                 help="name of the configuration to run", type=str)
         parser.add_argument("-p", dest="parseonly", action="store_true",
                 help="do not run the simulation, only parse results")
-        parser.add_argument("-g", dest="graphfolder", action="store",
-                default="", required=False,
-                help="a folder with .adj files from which to extract topologies")
+        parser.add_argument("-g", dest="graphfolder", action="append",
+                help="a folder with .adj files from which to"\
+                        +"extract topologies (multiple folders are supported)")
         self.args = parser.parse_args()
 
 
@@ -93,15 +93,15 @@ class EmulationRunner():
                 self.execute_run(command)
             jsonRt, nodeSet, failedNodes, signallingSent, sigPerSec,\
                 logFrequency = p.readTopology(self.path_prefix)
-            import code
-            #code.interact(local=locals())
             for runId in jsonRt:
+                total_fail_samples = 0
                 results = p.parseAllRuns(jsonRt[runId], nodeSet, 
                         failedNodes[runId], silent=True)
-                #code.interact(local=locals())
                 failures = 0
-                for tt in sorted(results):
+                log_time_array = sorted(results)
+                for tt in log_time_array:
                     failures += sum(results[tt][1:])
+                    total_fail_samples += 1
                 res[topo][runId] = {}
                 res[topo][runId]["signalling"] = signallingSent
                 res[topo][runId]["failures"] = failures
@@ -112,6 +112,9 @@ class EmulationRunner():
                 res[topo][runId]["topology_type"] = type
                 res[topo][runId]["optimized"] = optimized
                 res[topo][runId]["results"] = results
+                res[topo][runId]["total_fail_samples"] = total_fail_samples
+                res[topo][runId]["unrepaired_routes"] = \
+                    sum(results[log_time_array[-1]][1:])
 
         return res
 
@@ -210,7 +213,7 @@ class EmulationRunner():
         size = []
 
         if self.args.graphfolder:
-            for folder in self.args.graphfolder.split(','):
+            for folder in self.args.graphfolder:
                 topo_files.append(glob.glob(
                     folder + "*.edges")[:self.args.runs])
                 type_label.append(folder.split("/")[-3])
