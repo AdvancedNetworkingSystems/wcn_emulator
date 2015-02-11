@@ -34,16 +34,20 @@ class ResultsComparer():
             for runId in run_ids:
                 g_type = self.json[topo_file][runId]["topology_type"]
                 size = self.json[topo_file][runId]["network_size"]
+                if not self.json[topo_file][runId]["failed_nodes"]:
+                    continue
                 failed_node = \
                     self.json[topo_file][runId]["failed_nodes"].keys()[0]
                 failures = \
                     self.json[topo_file][runId]["failures"]
                 results = self.json[topo_file][runId]["results"]
-                s = sorted([float(x) for x in results.keys()])
+                s = sorted(results.keys(), key = lambda x: float(x))
+
                 if not s:
                     continue
-                min_time = s[0]
-                max_time = s[-1]
+                min_time = float(s[0])
+                max_time = float(s[-1])
+
                 frequency = (max_time - min_time)/len(results.keys())
                 if size not in self.data[g_type]:
                     self.data[g_type][size] = {'x':defaultdict(list), \
@@ -52,6 +56,7 @@ class ResultsComparer():
                 self.data[g_type][size]['y'][runId].append(failures*frequency)
                 self.data[g_type][size]['topo_file'][runId].append(topo_file)
                 self.optimized = self.json[topo_file][runId]["optimized"]
+                self.unrepaired_routes = sum(results[s[-1]][1:])
                 self.simulation_time = self.json["time"]
 
     def print_raw_data(self):
