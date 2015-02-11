@@ -150,13 +150,13 @@ class dummyRoutingTest(MininetTest):
         core node) """
 
         purged_graph = self.graph.copy()
+        centList =  sorted(
+                [n for n in nx.betweenness_centrality(purged_graph).items() \
+                        if n[1] > 0], key = lambda x: -x[1])
         deg_dict = purged_graph.degree()
         for node, deg in deg_dict.items():
             if deg == 1:
                 purged_graph.remove_node(node)
-        centList =  sorted(
-                [n for n in nx.betweenness_centrality(purged_graph).items() \
-                        if n[1] > 0], key = lambda x: -x[1])
 
         connected_centlist = []
         for idx, n in enumerate(centList):
