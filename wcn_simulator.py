@@ -7,6 +7,8 @@ import inspect
 sys.path.append('test_code')
 
 import os 
+import StringIO
+
 from time import time
 
 from parameters_parser import parameters
@@ -26,7 +28,7 @@ class configurationFile():
             , "testClass":None}
     confParams = {}
     className = None
-    def __init__(self, fileName, stanza):
+    def __init__(self, fileName, stanza, overrideOption=""):
         """ receives the configuration fileName and the stanza to be 
         parsed """
 
@@ -73,6 +75,15 @@ class configurationFile():
         for name, value in self.parser.items(self.testName):
             self.confParams[name] = value
 
+        if overrideOption:
+            overrideConf = StringIO.StringIO("[DEFAULT]\n"+ overrideOption)
+            tmpParser = ConfigParser.ConfigParser()
+            tmpParser.optionxform = str
+            tmpParser.readfp(overrideConf)
+            for name, value in tmpParser.defaults().items():
+                print name, value
+                self.confParams[name] = value
+
     def getConfigurations(self, name, raiseError=False):
         try:
             r = self.parser.get(self.testName, name)
@@ -99,7 +110,9 @@ if __name__ == '__main__':
                 "file with the topology (overrides configuration)", str]),
             ("-s", ["shortestPaths", True, True,
                 "fill the routing tables with the shortest route"\
-                + " to any node", int])
+                + " to any node", int]),
+            ("-o", ["overrideOption", True, "",
+                "some string option to override the ini file", str]),
           ]
 
     P = conf(os.path.basename(__file__),need, opt)
@@ -110,7 +123,7 @@ if __name__ == '__main__':
 
     configFile = P.getParam("configFile")
     testName = P.getParam("testName")
-    C = configurationFile(configFile, testName)
+    C = configurationFile(configFile, testName, P.getParam("overrideOption"))
     networkGraph = P.getParam("graphFile")
     if networkGraph == "":
         networkGraph = C.getConfigurations("graphDefinition")
