@@ -6,11 +6,16 @@ import time
 import argparse
 import glob
 sys.path.append("../")
+sys.path.append('../community_networks_analysis/')
 from inherit_config_parser import InheritConfigParser
 import tarfile
 import matplotlib.pyplot as plt
 from subprocess import check_output, CalledProcessError, call
 from collections import defaultdict
+import networkx as nx
+from gengraphs import loadGraph
+from misclibs import showGraph
+import random
 
 import json
 
@@ -18,11 +23,93 @@ from measure_breakage_time import resultParser
 
 topology_override_string = "no_topology_override_see_config_file"
 
+
+class OptimizeGraphChoice:
+
+    def compute_topology_failure_maps(self, topo_file_list, min_run_number):
+        failure_map = defaultdict(list)
+        topo_failures = {}
+        for topo in topo_file_list:
+            failure_number = self.get_emulation_runs_per_topology(topo)
+            for idx in range(failure_number):
+                failure_map[idx].append(topo)
+                topo_failures[topo] = failure_number
+
+        min_fail = len(
+                filter(lambda z: z>min_run_number,
+                [len(y[1]) for y in sorted(
+                    failure_map.items(), key = lambda x: x[0])]) 
+                )
+        print "The maximum number of failures avilable with "
+        print min_run_number, "runs, is ", min_fail
+
+        # file -> failure list
+        file_dict = defaultdict(list)
+
+        print filter(lambda z: z>min_run_number,
+                [len(y[1]) for y in sorted(
+                    failure_map.items(), key = lambda x: x[0])]) 
+
+        failure_counter = [0]*min_fail
+
+        for (idx, file_list) in sorted(failure_map.items(), key = lambda x: x[0])[:min_fail]:
+                random.shuffle(file_list)
+                for f in file_list:
+                    if f in file_dict:
+                        continue
+                    print "XX", idx, min(topo_failures[f], min_fail)
+                    rem_runs = range(idx, min(topo_failures[f], min_fail))
+                    file_dict[f] = rem_runs
+                    for r in rem_runs:
+                        failure_counter[r] += 1
+                    if failure_counter[idx] >=  min_run_number:
+                        break
+
+        for f,runs in sorted(file_dict.items(), key = lambda x: len(x[1])):
+            print f, [1 if x in runs else 0 for x in range(min_fail)]
+
+        return file_dict
+
+    def get_emulation_runs_per_topology(self, topo_file):
+        """ return a list of nodes ordered by centrality that can be removed.
+        Return only nodes in the core graph (no leaves) that can be removed
+        from the network without partitioning the network, (excluding the leaf
+        nodes attached to the node that is removed, which are obviously
+        partitioned when removing the core node). 
+        In this script this is necessary because not all the graphs support 
+        the same number or run_ids. Some graph may allow 10 runs (10 failures)
+        while other 8 failures. I pre-parse the topology to identify this number, 
+        then i run the simulations with the sufficient number of graphs that 
+        allow me to have a minimum number of repetitions for each run_id (for each
+        failure). The minimum number is taken from the runs parameter in 
+        command line """
+
+        graph = loadGraph(topo_file, silent=True)
+        purged_graph = graph.copy()
+        centList =  sorted(
+                [n for n in nx.betweenness_centrality(purged_graph).items() \
+                        if n[1] > 0], key = lambda x: -x[1])
+        deg_dict = purged_graph.degree()
+        for node, deg in deg_dict.items():
+            if deg == 1:
+                purged_graph.remove_node(node)
+
+        fallible_nodes = 0
+        for idx, n in enumerate(centList):
+            gg = purged_graph.copy()
+            gg.remove_node(n[0])
+            conSize = len(nx.connected_components(gg)[0])
+            if conSize == len(gg):
+                fallible_nodes += 1
+        return fallible_nodes
+
 class EmulationRunner():
 
     def __init__(self):
         self.path_prefix = ""
         self.args = None
+        self.run_dict = []
+        self.defaultFailures = 10
 
     def parse_args(self):
         parser = argparse.ArgumentParser(description = "batch simulation launcher"+ \
@@ -35,13 +122,23 @@ class EmulationRunner():
                 help="name of the configuration to run", type=str)
         parser.add_argument("-p", dest="parseonly", action="store_true",
                 help="do not run the simulation, only parse results")
+        parser.add_argument("-c", dest="check_connectivity", action="store_true",
+                help="select graphs in order to have a minimum number " +\
+                        "of repetitions per run_id (see code)")
         parser.add_argument("-g", dest="graphfolder", action="append",
                 help="a folder with .adj files from which to"\
                         +"extract topologies (multiple folders are supported)")
         self.args = parser.parse_args()
 
+        if self.args.check_connectivity:
+            try:
+                self.failures = \
+                    self.extract_simulation_parameter_from_conf("stopAllNodes", 
+                        self.args.file_name, self.args.stanza)
+            except:
+                self.failures = self.defaultFailures
 
-    def extract_simulation_type_from_conf(self, conf, file_name, stanza):
+    def extract_simulation_parameter_from_conf(self, conf, file_name, stanza):
         parser = InheritConfigParser()
         parser.optionxform = str
         file_name = "../" + file_name
@@ -50,12 +147,8 @@ class EmulationRunner():
         if stanza not in parser.sections():
             print file_name, stanza
             print "ERROR: I can't find the configuration specified! this run will fail"
-            return True # this configuration will fail anyway!
-        try:
-            r = parser.get(stanza, conf)
-            return True
-        except:
-            return False 
+        r = parser.get(stanza, conf)
+        return r
 
     def run_and_parse(self, size, type, res=None, 
             topo_files = [topology_override_string], auto_clean=False):
@@ -66,8 +159,12 @@ class EmulationRunner():
         self.path_prefix = "/tmp/dummyrouting-log"
         if res == None:
             res = defaultdict(dict)
-        optimized = self.extract_simulation_type_from_conf("centralityTuning", 
+        try:
+            self.extract_simulation_parameter_from_conf("centralityTuning", 
                 str(self.args.confile), str(self.args.stanza))
+            optimized = True
+        except:
+            optimized = False
 
         prev_run_id = ""
         for topo in topo_files:
@@ -215,7 +312,7 @@ class EmulationRunner():
         if self.args.graphfolder:
             for folder in self.args.graphfolder:
                 topo_files.append(glob.glob(
-                    folder + "*.edges")[:self.args.runs])
+                    folder + "*.edges"))
                 type_label.append(folder.split("/")[-3])
                 size.append(folder.split("/")[-2])
         else:
@@ -244,12 +341,13 @@ if __name__ == "__main__":
     e = EmulationRunner()
     e.parse_args()
     topo_list, size_list, type_list = e.get_topo_list_from_folder()
-    # TODO loop 
-    # over the folders, pass results to the next run_and_parse
+    #o = OptimizeGraphChoice()
+    #o.compute_topology_failure_maps(topo_list[0], e.args.runs)
+    #exit()
     results = defaultdict(dict)
     for index, file_list in enumerate(topo_list):
         e.run_and_parse(size_list[index],
-            type_list[index], res=results, topo_files=file_list, 
+                type_list[index], res=results, topo_files=file_list[:e.args.runs],
             auto_clean = bool(index))
         #TODO fix also size and type
     #resultSerie = defaultdict(dict)
@@ -257,7 +355,6 @@ if __name__ == "__main__":
         for runId in results[topo]:
             #r = e.summarise_results(results[topo][runId])
             r = results[topo][runId]
-            import code
             e.plot_results(results[topo][runId], 
                     title = "Optimized = " + str(r['optimized']) + ". Tot failures:" + str(r["failures"]/r["logFrequency"]) + \
                     ", tot signalling:" + str(r["signalling"]) + ", sig/sec:" + \
