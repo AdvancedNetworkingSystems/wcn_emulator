@@ -70,7 +70,7 @@ class dummyRoutingTest(MininetTest):
                 # to restart. If something still goes wrong i stop the emulation
                 self.killAll()
                 time.sleep(10)
-                info("\nWARNING: run_id " + str(runid) + " could not start, retying...\n")
+                info("\nWARNING: run_id " + str(runid) + " could not start, retrying...\n")
                 if not self.startRun():
                     error("\nERROR: run_id " + str(runid) + " could not start!" + \
                             "please check the logs\n")
@@ -103,8 +103,10 @@ class dummyRoutingTest(MininetTest):
                 event[2](**event[3])
                 info(event[1] + str(time.time()) + "\n")
             sleep(waitTime)
-            self.killAll(signal.SIGTERM)
+            for pid in self.pendingProc.keys():
+                self.sendSig(pid, signal.SIGTERM)
             time.sleep(2)
+            # in case some process got stuck:
             self.killAll()
             time.sleep(2)
             #sendSignal(signal.SIGUSR2)
@@ -141,14 +143,21 @@ class dummyRoutingTest(MininetTest):
 
 
     def getCentrality(self):
-        """ return a list of nodes ordered by centrality. Return only nodes
-        that can be removed from the network without partitioning the network,
-        (excluding the leaf nodes attached to the node that is removed, which 
-        are obviously partitioned when removing the core node) """
+        """ return a list of nodes ordered by centrality. Return only nodes in
+        the core graph (no leaves) that can be removed from the network without
+        partitioning the network, (excluding the leaf nodes attached to the
+        node that is removed, which are obviously partitioned when removing the
+        core node) """
 
+        purged_graph = self.graph.copy()
+        deg_dict = purged_graph.degree()
+        for node, deg in deg_dict.items():
+            if deg == 1:
+                purged_graph.remove_node(node)
         centList =  sorted(
-                [n for n in nx.betweenness_centrality(self.graph).items() \
+                [n for n in nx.betweenness_centrality(purged_graph).items() \
                         if n[1] > 0], key = lambda x: -x[1])
+
         connected_centlist = []
         for idx, n in enumerate(centList):
             gg = self.graph.copy()
