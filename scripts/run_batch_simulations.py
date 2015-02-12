@@ -1,107 +1,26 @@
 #! /usr/bin/env python
 
 import sys
+sys.path.append("../")
+sys.path.append("../test_code/")
+sys.path.append('../community_networks_analysis/')
+
 import os
 import time
 import argparse
 import glob
-sys.path.append("../")
-sys.path.append('../community_networks_analysis/')
-from inherit_config_parser import InheritConfigParser
 import tarfile
 import matplotlib.pyplot as plt
 from subprocess import check_output, CalledProcessError, call
 from collections import defaultdict
-import networkx as nx
-from gengraphs import loadGraph
-from misclibs import showGraph
-import random
-
 import json
 
+from inherit_config_parser import InheritConfigParser
 from measure_breakage_time import resultParser
+from dummyrouting import OptimizeGraphChoice
+from gengraphs import loadGraph
 
 topology_override_string = "no_topology_override_see_config_file"
-
-
-class OptimizeGraphChoice:
-
-    def compute_topology_failure_maps(self, topo_file_list, min_run_number):
-        failure_map = defaultdict(list)
-        topo_failures = {}
-        for topo in topo_file_list:
-            failure_number = self.get_emulation_runs_per_topology(topo)
-            for idx in range(failure_number):
-                failure_map[idx].append(topo)
-                topo_failures[topo] = failure_number
-
-        min_fail = len(
-                filter(lambda z: z>min_run_number,
-                [len(y[1]) for y in sorted(
-                    failure_map.items(), key = lambda x: x[0])]) 
-                )
-        print "The maximum number of failures avilable with "
-        print min_run_number, "runs, is ", min_fail
-
-        # file -> failure list
-        file_dict = defaultdict(list)
-
-        print filter(lambda z: z>min_run_number,
-                [len(y[1]) for y in sorted(
-                    failure_map.items(), key = lambda x: x[0])]) 
-
-        failure_counter = [0]*min_fail
-
-        for (idx, file_list) in sorted(failure_map.items(), key = lambda x: x[0])[:min_fail]:
-                random.shuffle(file_list)
-                for f in file_list:
-                    if f in file_dict:
-                        continue
-                    print "XX", idx, min(topo_failures[f], min_fail)
-                    rem_runs = range(idx, min(topo_failures[f], min_fail))
-                    file_dict[f] = rem_runs
-                    for r in rem_runs:
-                        failure_counter[r] += 1
-                    if failure_counter[idx] >=  min_run_number:
-                        break
-
-        for f,runs in sorted(file_dict.items(), key = lambda x: len(x[1])):
-            print f, [1 if x in runs else 0 for x in range(min_fail)]
-
-        return file_dict
-
-    def get_emulation_runs_per_topology(self, topo_file):
-        """ return a list of nodes ordered by centrality that can be removed.
-        Return only nodes in the core graph (no leaves) that can be removed
-        from the network without partitioning the network, (excluding the leaf
-        nodes attached to the node that is removed, which are obviously
-        partitioned when removing the core node). 
-        In this script this is necessary because not all the graphs support 
-        the same number or run_ids. Some graph may allow 10 runs (10 failures)
-        while other 8 failures. I pre-parse the topology to identify this number, 
-        then i run the simulations with the sufficient number of graphs that 
-        allow me to have a minimum number of repetitions for each run_id (for each
-        failure). The minimum number is taken from the runs parameter in 
-        command line """
-
-        graph = loadGraph(topo_file, silent=True)
-        purged_graph = graph.copy()
-        centList =  sorted(
-                [n for n in nx.betweenness_centrality(purged_graph).items() \
-                        if n[1] > 0], key = lambda x: -x[1])
-        deg_dict = purged_graph.degree()
-        for node, deg in deg_dict.items():
-            if deg == 1:
-                purged_graph.remove_node(node)
-
-        fallible_nodes = 0
-        for idx, n in enumerate(centList):
-            gg = purged_graph.copy()
-            gg.remove_node(n[0])
-            conSize = len(nx.connected_components(gg)[0])
-            if conSize == len(gg):
-                fallible_nodes += 1
-        return fallible_nodes
 
 class EmulationRunner():
 
@@ -342,7 +261,8 @@ if __name__ == "__main__":
     e.parse_args()
     topo_list, size_list, type_list = e.get_topo_list_from_folder()
     #o = OptimizeGraphChoice()
-    #o.compute_topology_failure_maps(topo_list[0], e.args.runs)
+    #topo_dict = dict([(t, loadGraph(t)) for t in topo_list[0]])
+    #o.compute_topology_failure_maps(topo_dict, e.args.runs)
     #exit()
     results = defaultdict(dict)
     for index, file_list in enumerate(topo_list):
