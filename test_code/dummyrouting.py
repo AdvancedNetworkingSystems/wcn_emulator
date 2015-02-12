@@ -4,18 +4,106 @@ sys.path.append('../')
 from network_builder import *
 from os import kill, path, makedirs
 from matplotlib.pyplot import ion
+from collections import defaultdict
 import random 
 import time
+import ast
+import networkx as nx
 
 import signal
 
 from test_generic import *
+
+class OptimizeGraphChoice:
+    """ helper class to optimize the choice of the 
+    graphs to run the simulations """
+
+    def compute_topology_failure_maps(self, graph_dict, min_run_number):
+        failure_map = defaultdict(list)
+        topo_failures = {}
+        for topo, graph in graph_dict.items():
+            failure_list = self.get_emulation_runs_per_topology(graph)
+            failure_number = len(failure_list)
+            for idx in range(failure_number):
+                failure_map[idx].append(topo)
+                topo_failures[topo] = failure_number
+
+        min_fail = len(
+                filter(lambda z: z>min_run_number,
+                [len(y[1]) for y in sorted(
+                    failure_map.items(), key = lambda x: x[0])]) 
+                )
+        print "The maximum number of failures avilable with "
+        print min_run_number, "runs, is ", min_fail
+
+        # file -> failure list
+        file_dict = defaultdict(list)
+
+        print filter(lambda z: z>min_run_number,
+                [len(y[1]) for y in sorted(
+                    failure_map.items(), key = lambda x: x[0])]) 
+
+        failure_counter = [0]*min_fail
+
+        for (idx, file_list) in \
+            sorted(failure_map.items(), key = lambda x: x[0])[:min_fail]:
+                random.shuffle(file_list)
+                for f in file_list:
+                    if f in file_dict:
+                        continue
+                    rem_runs = range(idx, min(topo_failures[f], min_fail))
+                    file_dict[f] = rem_runs
+                    for r in rem_runs:
+                        failure_counter[r] += 1
+                    if failure_counter[idx] >=  min_run_number:
+                        break
+
+        for f,runs in sorted(file_dict.items(), key = lambda x: len(x[1])):
+            print f, [1 if x in runs else 0 for x in range(min_fail)]
+
+        return file_dict
+
+    def get_emulation_runs_per_topology(self, graph):
+        """ return a list of nodes ordered by centrality that can be removed.
+        Return only nodes in the core graph (no leaves) that can be removed
+        from the network without partitioning the network, (excluding the leaf
+        nodes attached to the node that is removed, which are obviously
+        partitioned when removing the core node). 
+        In this script this is necessary because not all the graphs support 
+        the same number or run_ids. Some graph may allow 10 runs (10 failures)
+        while other 8 failures. I pre-parse the topology to identify this number, 
+        then i run the simulations with the sufficient number of graphs that 
+        allow me to have a minimum number of repetitions for each run_id (for each
+        failure). The minimum number is taken from the runs parameter in 
+        command line """
+
+        purged_graph = graph.copy()
+        centList =  sorted(
+                [n for n in nx.betweenness_centrality(purged_graph).items() \
+                        if n[1] > 0], key = lambda x: -x[1])
+        deg_dict = purged_graph.degree()
+        for node, deg in deg_dict.items():
+            if deg == 1:
+                purged_graph.remove_node(node)
+
+        fallible_nodes = []
+        for idx, n in enumerate(centList):
+            gg = purged_graph.copy()
+            gg.remove_node(n[0])
+            conSize = len(nx.connected_components(gg)[0])
+            if conSize == len(gg):
+                purgable_nodes = [n[0]] + \
+                        [n for n in graph.neighbors(n[0]) if graph.degree(n) == 1]
+                fallible_nodes.append(purgable_nodes)
+        return fallible_nodes
+
 
 class dummyRoutingTest(MininetTest):
 
     def __init__(self, mininet, duration=10):
 
         super(dummyRoutingTest, self).__init__(mininet, path, duration)
+        self.centList = []
 
 
     def launchSniffer(self, host):
@@ -54,8 +142,11 @@ class dummyRoutingTest(MininetTest):
         info("Data folder: "+self.prefix+"\n")
 
         if self.stopAllNodes:
-            self.centList = self.getCentrality()[:self.stopAllNodes]
-
+            if type(self.stopAllNodes) == int:
+                self.centList = self.getCentrality()[:self.stopAllNodes]
+            elif type(self.stopAllNodes) == list:
+                for idx in self.stopAllNodes:
+                    self.centList.append(self.getCentrality()[idx])
 
         for runid in range(len(self.centList)):
             info("\nStarting run " + str(runid) + "\n")
@@ -143,35 +234,8 @@ class dummyRoutingTest(MininetTest):
 
 
     def getCentrality(self):
-        """ return a list of nodes ordered by centrality. Return only nodes in
-        the core graph (no leaves) that can be removed from the network without
-        partitioning the network, (excluding the leaf nodes attached to the
-        node that is removed, which are obviously partitioned when removing the
-        core node) """
-
-        purged_graph = self.graph.copy()
-        centList =  sorted(
-                [n for n in nx.betweenness_centrality(purged_graph).items() \
-                        if n[1] > 0], key = lambda x: -x[1])
-        deg_dict = purged_graph.degree()
-        for node, deg in deg_dict.items():
-            if deg == 1:
-                purged_graph.remove_node(node)
-
-        connected_centlist = []
-        for idx, n in enumerate(centList):
-            gg = self.graph.copy()
-            neighs = gg.neighbors(n[0])
-            leaf_neighs = []
-            for neigh in neighs:
-                if len(gg.neighbors(neigh)) == 1:
-                    gg.remove_node(neigh)
-                    leaf_neighs.append(neigh)
-            gg.remove_node(n[0])
-            conSize = len(nx.connected_components(gg)[0])
-            if conSize == len(self.graph) - (len(leaf_neighs) + 1):
-                connected_centlist.append([n[0]] + leaf_neighs)
-        return connected_centlist
+        o = OptimizeGraphChoice()
+        return o.get_emulation_runs_per_topology(self.graph)
 
     def startRun(self):
 
@@ -277,15 +341,28 @@ class dummyRoutingRandomTest(dummyRoutingTest):
 
         if "stopAllNodes" in args.keys():
             info("Going to stop all the nodes in sequence")
-            if args["stopAllNodes"].isdigit():
-                stop_n = int(args["stopAllNodes"])
-                if stop_n <= 0:
-                    error("\nPlease stopAllNodes must be > 0\n")
-                    sys.exit(1)
-                self.stopAllNodes = stop_n
-                info("... limited to " + args["stopAllNodes"] + "nodes.")
+            # convert option in a python object
+            if args['stopAllNodes'] == '':
+                # stop all the nodes 
+                self.stopAllNodes = len(self.graph)
             else:
-                self.stopAllNodes = len(mininet.gg)
+                try:
+                    s = ast.literal_eval(args["stopAllNodes"])
+                except ValueError:
+                    error("Option " + args["stopAllNodes"] + " is not valid")
+                    exit(1)
+                if type(s) == int:
+                    if s <= 0:
+                        error("\nPlease stopAllNodes must be > 0\n")
+                        sys.exit(1)
+                    self.stopAllNodes = s
+                    info("... limited to " + args["stopAllNodes"] + "nodes.")
+                elif type(s) == list and s:
+                    self.stopAllNodes = s
+                    info("... limited to the list of nodes:" + str(s))
+                else:
+                    error("Option " + args["stopAllNodes"] + " is not valid")
+
             self.nodeCrashed = []
         else:
             self.stopAllNodes = False
