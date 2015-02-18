@@ -297,12 +297,18 @@ if __name__ == "__main__":
         topo_list = optimal_list
     else:
         run_args = ['']*len(topo_list)
-    #print topo_list, run_args
     results = defaultdict(dict)
     for index, file_list in enumerate(topo_list):
+
+        if e.args.check_connectivity:
+            # useless but necessary
+            num_runs = len(file_list)
+        else:
+            num_runs = e.args.runs
+
         e.run_and_parse(size_list[index],
                 type_list[index], res=results,
-                topo_files=file_list[:e.args.runs],
+                topo_files=file_list[:num_runs],
                 run_args=run_args[index], auto_clean = bool(index))
         #TODO fix also size and type
     #resultSerie = defaultdict(dict)
