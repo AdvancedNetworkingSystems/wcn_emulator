@@ -18,6 +18,12 @@ class OptimizeGraphChoice:
     """ helper class to optimize the choice of the 
     graphs to run the simulations """
 
+    def __init__(self, failures=1000000):
+
+        # just an initialization number > of the size of the graph
+        self.failures = failures
+        self.shuffle = False
+
     def compute_topology_failure_maps(self, graph_dict, min_run_number):
         failure_map = defaultdict(list)
         topo_failures = {}
@@ -28,26 +34,32 @@ class OptimizeGraphChoice:
                 failure_map[idx].append(topo)
                 topo_failures[topo] = failure_number
 
-        min_fail = len(
+        max_fail = len(
                 filter(lambda z: z>min_run_number,
                 [len(y[1]) for y in sorted(
                     failure_map.items(), key = lambda x: x[0])]) 
                 )
         print "The maximum number of failures avilable with "
-        print min_run_number, "runs, is ", min_fail
+        print min_run_number, "run(s) is ", max_fail
 
         # file -> failure list
         file_dict = defaultdict(list)
 
-        print filter(lambda z: z>min_run_number,
-                [len(y[1]) for y in sorted(
-                    failure_map.items(), key = lambda x: x[0])]) 
+        min_fail = min(max_fail, self.failures)
+
+        #print filter(lambda z: z>min_run_number,
+        #        [len(y[1]) for y in sorted(
+        #            failure_map.items(), key = lambda x: x[0])]) 
 
         failure_counter = [0]*min_fail
 
         for (idx, file_list) in \
             sorted(failure_map.items(), key = lambda x: x[0])[:min_fail]:
-                random.shuffle(file_list)
+                if idx >= min_fail:
+                    break
+                if self.shuffle:
+                    # if i shuffle i can not compare opt/non-opt simulations
+                    random.shuffle(file_list)
                 for f in file_list:
                     if f in file_dict:
                         continue
@@ -77,23 +89,39 @@ class OptimizeGraphChoice:
         failure). The minimum number is taken from the runs parameter in 
         command line """
 
-        purged_graph = graph.copy()
+        core_graph = graph.copy()
+        leaf_nodes = []
+        # consider only the core graph
+        for (node, deg) in nx.degree(core_graph).items():
+            if deg == 1:
+                core_graph.remove_node(node)
+                leaf_nodes.append(node)
+        # consider only nodes that have non zero centrality (else they 
+        # are leaf nodes in the core graph, and have no impact on any
+        # route exluding the ones involving their attached leaves)
         centList =  sorted(
-                [n for n in nx.betweenness_centrality(purged_graph).items() \
+                [n for n in nx.betweenness_centrality(core_graph).items() \
                         if n[1] > 0], key = lambda x: -x[1])
-        deg_dict = purged_graph.degree()
+        deg_dict = core_graph.degree()
+
         for node, deg in deg_dict.items():
             if deg == 1:
-                purged_graph.remove_node(node)
+                core_graph.remove_node(node)
 
         fallible_nodes = []
         for idx, n in enumerate(centList):
-            gg = purged_graph.copy()
+            gg = core_graph.copy()
             gg.remove_node(n[0])
             conSize = len(nx.connected_components(gg)[0])
             if conSize == len(gg):
-                purgable_nodes = [n[0]] + \
-                        [n for n in graph.neighbors(n[0]) if graph.degree(n) == 1]
+                # we remove the node, its leaf-node neighbors in the 
+                # graph, and all the leaf-nodes attached to any node 
+                # we decided to remove in the core node
+                core_nodes_purgable = [n for n in core_graph.neighbors(n[0]) if \
+                        core_graph.degree(n) == 1]
+                leaf_node_purgable = [n for n in core_nodes_purgable if \
+                        graph.degree(n) == 1]
+                purgable_nodes = [n[0]] + core_nodes_purgable + leaf_node_purgable
                 fallible_nodes.append(purgable_nodes)
         return fallible_nodes
 
@@ -356,10 +384,10 @@ class dummyRoutingRandomTest(dummyRoutingTest):
                         error("\nPlease stopAllNodes must be > 0\n")
                         sys.exit(1)
                     self.stopAllNodes = s
-                    info("... limited to " + args["stopAllNodes"] + "nodes.")
+                    info("... limited to " + args["stopAllNodes"] + " node(s).")
                 elif type(s) == list and s:
                     self.stopAllNodes = s
-                    info("... limited to the list of nodes:" + str(s))
+                    info("... limited to the list of nodes: " + str(s))
                 else:
                     error("Option " + args["stopAllNodes"] + " is not valid")
 
