@@ -117,10 +117,10 @@ class OptimizeGraphChoice:
                 # we remove the node, its leaf-node neighbors in the 
                 # graph, and all the leaf-nodes attached to any node 
                 # we decided to remove in the core node
-                core_nodes_purgable = [n for n in core_graph.neighbors(n[0]) if \
-                        core_graph.degree(n) == 1]
-                leaf_node_purgable = [n for n in core_nodes_purgable if \
-                        graph.degree(n) == 1]
+                core_nodes_purgable = [nn for nn in core_graph.neighbors(n[0]) if \
+                        core_graph.degree(nn) == 1]
+                leaf_node_purgable = [nn for nn in core_nodes_purgable if \
+                        graph.degree(nn) == 1]
                 purgable_nodes = [n[0]] + core_nodes_purgable + leaf_node_purgable
                 fallible_nodes.append(purgable_nodes)
         return fallible_nodes
