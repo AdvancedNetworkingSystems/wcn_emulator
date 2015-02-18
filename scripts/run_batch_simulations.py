@@ -51,13 +51,18 @@ class EmulationRunner():
 
         if self.args.check_connectivity:
             try:
-                self.failures = \
-                    self.extract_simulation_parameter_from_conf("stopAllNodes", 
-                        self.args.file_name, self.args.stanza)
+                f = self.extract_simulation_parameter_from_conf(
+                            "stopAllNodes",
+                        self.args.confile, self.args.stanza)
+                if f.isdigit():
+                    self.failures = int(f)
+                else:
+                    self.failures = self.defaultFailures
             except:
                 self.failures = self.defaultFailures
 
-    def extract_simulation_parameter_from_conf(self, conf, file_name, stanza):
+    def extract_simulation_parameter_from_conf(self, conf, 
+            file_name, stanza):
         parser = InheritConfigParser()
         parser.optionxform = str
         file_name = "../" + file_name
@@ -70,7 +75,8 @@ class EmulationRunner():
         return r
 
     def run_and_parse(self, size, type, res=None, 
-            topo_files = [topology_override_string], auto_clean=False):
+            topo_files = [topology_override_string], 
+                run_args=[], auto_clean=False):
         if not self.args.parseonly and os.getuid() != 0:
             print "You should run this script as root"
             sys.exit(1)
@@ -86,12 +92,16 @@ class EmulationRunner():
             optimized = False
 
         prev_run_id = ""
-        for topo in topo_files:
+        for idx, topo in enumerate(topo_files):
             if prev_run_id:
                 self.save_environment(prev_run_id)
                 prev_run_id = ""
+            if run_args:
+                overrideConf = run_args[idx]
+            else:
+                overrideConf = ""
             command = ["./wcn_simulator.py", "-f", str(self.args.confile), \
-                    "-t", str(self.args.stanza)]
+                    "-t", str(self.args.stanza), "-o", overrideConf]
             #TODO: yes this sucks a bit...
             if topo != topology_override_string:
                 command +=  ["-g", os.path.abspath(topo)]
@@ -129,8 +139,19 @@ class EmulationRunner():
                 res[topo][runId]["optimized"] = optimized
                 res[topo][runId]["results"] = results
                 res[topo][runId]["total_fail_samples"] = total_fail_samples
-                res[topo][runId]["unrepaired_routes"] = \
+                try:
+                    res[topo][runId]["unrepaired_routes"] = \
                     sum(results[log_time_array[-1]][1:])
+                except:
+                    ff = open("/tmp/ppww.txt", "w")
+                    print >> ff, topo, runId
+                    print >> ff, "RRR", results
+                    print >> ff, "LLLL", log_time_array
+                    print >> ff, "JSONRT", jsonRt[runId]
+                    print >> ff, nodeSet
+                    print >> ff, failedNodes[runId]
+                    ff.close()
+                    exit(1)
 
         return res
 
@@ -249,8 +270,8 @@ class EmulationRunner():
             sys.exit(1)
         try:
             output = check_output(command, cwd="../")
-        except CalledProcessError:
-            print "command: ", command , " exited with non-zero value"
+        except CalledProcessError as e:
+            print "command: ", command , " exited with non-zero value:" + str(e)
             raise
         except:
             print "Could not run command ", command
@@ -260,15 +281,29 @@ if __name__ == "__main__":
     e = EmulationRunner()
     e.parse_args()
     topo_list, size_list, type_list = e.get_topo_list_from_folder()
-    #o = OptimizeGraphChoice()
-    #topo_dict = dict([(t, loadGraph(t)) for t in topo_list[0]])
-    #o.compute_topology_failure_maps(topo_dict, e.args.runs)
-    #exit()
+    run_args = []
+    
+    if e.args.check_connectivity:
+        o = OptimizeGraphChoice(e.failures)
+        optimal_list = []
+        for l in topo_list:
+            run_args_per_folder = []
+            topo_dict = dict([(t, loadGraph(t, silent=True)) for t in l])
+            f = o.compute_topology_failure_maps(topo_dict, e.args.runs)
+            optimal_list.append(f.keys())
+            for x in f.values():
+                run_args_per_folder.append("stopAllNodes=" + str(x))
+            run_args.append(run_args_per_folder)
+        topo_list = optimal_list
+    else:
+        run_args = ['']*len(topo_list)
+    #print topo_list, run_args
     results = defaultdict(dict)
     for index, file_list in enumerate(topo_list):
         e.run_and_parse(size_list[index],
-                type_list[index], res=results, topo_files=file_list[:e.args.runs],
-            auto_clean = bool(index))
+                type_list[index], res=results,
+                topo_files=file_list[:e.args.runs],
+                run_args=run_args[index], auto_clean = bool(index))
         #TODO fix also size and type
     #resultSerie = defaultdict(dict)
     for topo in results:
