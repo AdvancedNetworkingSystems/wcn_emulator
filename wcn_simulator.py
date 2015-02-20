@@ -108,7 +108,7 @@ if __name__ == '__main__':
                 "draw the graph before you run the test", int]),
             ("-g", ["graphFile", True, "",
                 "file with the topology (overrides configuration)", str]),
-            ("-s", ["shortestPaths", True, True,
+            ("-s", ["shortestPaths", False, False,
                 "fill the routing tables with the shortest route"\
                 + " to any node", int]),
             ("-o", ["overrideOption", True, "",
