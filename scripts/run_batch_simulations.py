@@ -143,15 +143,18 @@ class EmulationRunner():
                     res[topo][runId]["unrepaired_routes"] = \
                     sum(results[log_time_array[-1]][1:])
                 except:
-                    ff = open("/tmp/ppww.txt", "w")
-                    print >> ff, topo, runId
-                    print >> ff, "RRR", results
-                    print >> ff, "LLLL", log_time_array
-                    print >> ff, "JSONRT", jsonRt[runId]
-                    print >> ff, nodeSet
-                    print >> ff, failedNodes[runId]
-                    ff.close()
-                    exit(1)
+                    try:
+                        ff = open("/tmp/ERROR"+os.path.basename(topo)+"_"+str(runId)+".txt", "w")
+                        print >> ff, topo, runId
+                        print >> ff, "RRR", results
+                        print >> ff, "LLLL", log_time_array
+                        print >> ff, "JSONRT", jsonRt[runId]
+                        print >> ff, nodeSet
+                        print >> ff, failedNodes[runId]
+                        ff.close()
+                        del res[topo][runId]
+                    except:
+                        pass
 
         return res
 
