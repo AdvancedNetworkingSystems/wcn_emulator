@@ -77,10 +77,16 @@ class OptimizeGraphChoice:
 
     def get_emulation_runs_per_topology(self, graph):
         """ return a list of nodes ordered by centrality that can be removed.
-        Return only nodes in the core graph (no leaves) that can be removed
-        from the network without partitioning the network, (excluding the leaf
-        nodes attached to the node that is removed, which are obviously
-        partitioned when removing the core node). 
+        1) identify the 2-core of the network (i.e. remove leaf nodes up to
+           when there are any)
+        2) from the list of nodes in the 2-core, remove the articulation points
+            (i.e. nodes that will partition the 2-core in multiple disconnected
+            components)
+        3) for each remaining node, find the tree that is rooted on it (i.e.
+           remove node from the graph, all the disconnected components
+           that remain form such tree). 
+        4) each node + tree can fail all together.
+
         In this script this is necessary because not all the graphs support 
         the same number or run_ids. Some graph may allow 10 runs (10 failures)
         while other 8 failures. I pre-parse the topology to identify this number, 
@@ -89,40 +95,24 @@ class OptimizeGraphChoice:
         failure). The minimum number is taken from the runs parameter in 
         command line """
 
-        core_graph = graph.copy()
-        leaf_nodes = []
-        # consider only the core graph
-        for (node, deg) in nx.degree(core_graph).items():
-            if deg == 1:
-                core_graph.remove_node(node)
-                leaf_nodes.append(node)
-        # consider only nodes that have non zero centrality (else they 
-        # are leaf nodes in the core graph, and have no impact on any
-        # route exluding the ones involving their attached leaves)
-        centList =  sorted(
-                [n for n in nx.betweenness_centrality(core_graph).items() \
-                        if n[1] > 0], key = lambda x: -x[1])
-        deg_dict = core_graph.degree()
+        # FIXME remove self loops from original graphs
+        graph.remove_edges_from(graph.selfloop_edges())
+        two_core = nx.k_core(graph, 2)
+        art = [n for n in nx.articulation_points(two_core)]
+        cent_list = sorted(
+                [n for n in nx.betweenness_centrality(two_core).items() ],
+                key = lambda x: -x[1])
 
-        for node, deg in deg_dict.items():
-            if deg == 1:
-                core_graph.remove_node(node)
+        fail_candidates = [n[0] for n in cent_list if n[0] not in art]
 
         fallible_nodes = []
-        for idx, n in enumerate(centList):
-            gg = core_graph.copy()
-            gg.remove_node(n[0])
-            conSize = len(nx.connected_components(gg)[0])
-            if conSize == len(gg):
-                # we remove the node, its leaf-node neighbors in the 
-                # graph, and all the leaf-nodes attached to any node 
-                # we decided to remove in the core node
-                core_nodes_purgable = [nn for nn in core_graph.neighbors(n[0]) if \
-                        core_graph.degree(nn) == 1]
-                leaf_node_purgable = [nn for nn in core_nodes_purgable if \
-                        graph.degree(nn) == 1]
-                purgable_nodes = [n[0]] + core_nodes_purgable + leaf_node_purgable
-                fallible_nodes.append(purgable_nodes)
+        for n in fail_candidates:
+            gg = graph.copy()
+            gg.remove_node(n)
+            comp = nx.connected_components(gg)
+            isolated_nodes = [x for component in comp[1:] for x in component]
+            fallible_nodes.append([n] + isolated_nodes) 
+
         return fallible_nodes
 
 
