@@ -43,6 +43,14 @@ class ResultsComparer():
                 results = self.json[topo_file][runId]["results"]
                 s = sorted(results.keys(), key = lambda x: float(x))
 
+                self.optimized = self.json[topo_file][runId]["optimized"]
+
+                if sum(results[s[-1]][1:]):
+                    print "Graph:", topo_file, "run id:", runId, \
+                            "optimized:",self.optimized, \
+                            "has unrepaired routes, skipping."
+                    continue
+
                 if not s:
                     continue
                 min_time = float(s[0])
@@ -55,8 +63,6 @@ class ResultsComparer():
                 self.data[g_type][size]['x'][runId].append(failed_node)
                 self.data[g_type][size]['y'][runId].append(failures*frequency)
                 self.data[g_type][size]['topo_file'][runId].append(topo_file)
-                self.optimized = self.json[topo_file][runId]["optimized"]
-                self.unrepaired_routes = sum(results[s[-1]][1:])
                 self.simulation_time = self.json["time"]
 
     def print_raw_data(self):
