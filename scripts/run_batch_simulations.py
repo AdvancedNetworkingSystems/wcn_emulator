@@ -143,18 +143,15 @@ class EmulationRunner():
                     res[topo][runId]["unrepaired_routes"] = \
                     sum(results[log_time_array[-1]][1:])
                 except:
-                    try:
-                        ff = open("/tmp/ERROR"+os.path.basename(topo)+"_"+str(runId)+".txt", "w")
-                        print >> ff, topo, runId
-                        print >> ff, "RRR", results
-                        print >> ff, "LLLL", log_time_array
-                        print >> ff, "JSONRT", jsonRt[runId]
-                        print >> ff, nodeSet
-                        print >> ff, failedNodes[runId]
-                        ff.close()
-                        del res[topo][runId]
-                    except:
-                        pass
+                    ff = open("/tmp/ERROR"+os.path.basename(topo)+"_"+str(runId)+".txt", "w")
+                    print >> ff, topo, runId
+                    print >> ff, "RRR", results
+                    print >> ff, "LLLL", log_time_array
+                    print >> ff, "JSONRT", jsonRt[runId]
+                    print >> ff, nodeSet
+                    print >> ff, failedNodes[runId]
+                    ff.close()
+                    del res[topo][runId]
 
         return res
 
@@ -290,13 +287,13 @@ if __name__ == "__main__":
         o = OptimizeGraphChoice(e.failures)
         optimal_list = []
         for l in topo_list:
-            run_args_per_folder = []
+            run_args_per_topo = []
             topo_dict = dict([(t, loadGraph(t, silent=True)) for t in l])
             f = o.compute_topology_failure_maps(topo_dict, e.args.runs)
             optimal_list.append(f.keys())
             for x in f.values():
-                run_args_per_folder.append("stopAllNodes=" + str(x))
-            run_args.append(run_args_per_folder)
+                run_args_per_topo.append("stopAllNodes=" + str(x))
+            run_args.append(run_args_per_topo)
         topo_list = optimal_list
     else:
         run_args = ['']*len(topo_list)
