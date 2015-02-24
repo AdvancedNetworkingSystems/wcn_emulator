@@ -61,14 +61,14 @@ class OptimizeGraphChoice:
                     # if i shuffle i can not compare opt/non-opt simulations
                     random.shuffle(file_list)
                 for f in file_list:
+                    if failure_counter[idx] >=  min_run_number:
+                        break
                     if f in file_dict:
                         continue
                     rem_runs = range(idx, min(topo_failures[f], min_fail))
                     file_dict[f] = rem_runs
                     for r in rem_runs:
                         failure_counter[r] += 1
-                    if failure_counter[idx] >=  min_run_number:
-                        break
 
         for f,runs in sorted(file_dict.items(), key = lambda x: len(x[1])):
             print f, [1 if x in runs else 0 for x in range(min_fail)]
@@ -159,14 +159,18 @@ class dummyRoutingTest(MininetTest):
         info("*** Launching dummyRouting test\n")
         info("Data folder: "+self.prefix+"\n")
 
+        run_list = []
+
         if self.stopAllNodes:
             if type(self.stopAllNodes) == int:
                 self.centList = self.getCentrality()[:self.stopAllNodes]
+                run_list = range(self.stopAllNodes)
             elif type(self.stopAllNodes) == list:
                 for idx in self.stopAllNodes:
                     self.centList.append(self.getCentrality()[idx])
+                run_list = self.stopAllNodes
 
-        for runid in range(len(self.centList)):
+        for runid in run_list:
             info("\nStarting run " + str(runid) + "\n")
             self.runId = str(runid)
             if self.stopAllNodes:
