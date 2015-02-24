@@ -27,7 +27,8 @@ class resultParser():
                 j = json.load(f)
             except Exception as e:
                 print "NOK", str(e)
-                sys.exit(1)
+                print topoFile
+                return {},0,0,0,0,0
             #nodeIP = ".".join(j["node"].split(":")[0].split(".")[:3])
             nodeIP = j["node"].split(":")[0]
             rt = j["log"]
@@ -148,7 +149,7 @@ if __name__ == "__main__":
     results = {}
     for runId in jsonRt:
         results[runId] = p.parseAllRuns(jsonRt[runId], nodeSet, 
-                failedNodes[runId], silent=True)
+                failedNodes[runId], silent=False)
 
     for runId in results:
         for time in sorted(results[runId]):
