@@ -55,6 +55,7 @@ class MininetTest(object):
     def killAll(self, sig = signal.SIGKILL):
         for pid in self.pendingProc.keys():
             self.sendSig(pid, sig)
+            sleep(0.1)
             try:
                 #check if process still exists
                 self.sendSig(pid, 0)
@@ -62,7 +63,7 @@ class MininetTest(object):
                 # process is not running 
                 continue
             else:
-                # now it's dead
+                # now it's going to die
                 self.sendSig(pid, signal.SIGTERM)
 
         self.pendingProc.clear()
