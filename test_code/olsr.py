@@ -29,9 +29,6 @@ class OLSRTest(dummyRoutingRandomTest):
             *reduce(lambda x, y: x + y, params.items()))
 
 
-    def save_config_file(self, host, args):
-        return 
-
     def launch_ping(self, host, dest_array, run_id=0):
 
         for idx, ip in enumerate(dest_array):
@@ -157,7 +154,6 @@ class OLSRTest(dummyRoutingRandomTest):
             if self.TcInterval:
                 args += " -tcint " + str(self.TcInterval)
 
-            
             launch_pid = self.launch_OLSR(h, args)
 
             if self.dump:
