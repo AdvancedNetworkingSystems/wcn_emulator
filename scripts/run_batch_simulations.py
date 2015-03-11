@@ -4,6 +4,8 @@ import sys
 sys.path.append("../")
 sys.path.append("../test_code/")
 sys.path.append('../community_networks_analysis/')
+import matplotlib
+matplotlib.use("Agg")
 
 import os
 import time
@@ -251,6 +253,11 @@ class EmulationRunner():
 
         if self.args.graphfolder:
             for folder in self.args.graphfolder:
+                if os.path.isfile(folder):
+                    topo_files.append([folder])
+                    size = [topology_override_string]
+                    type_label = [topology_override_string]
+                    continue
                 topo_files.append(glob.glob(
                     folder + "*.edges"))
                 type_label.append(folder.split("/")[-3])
@@ -282,7 +289,6 @@ if __name__ == "__main__":
     e.parse_args()
     topo_list, size_list, type_list = e.get_topo_list_from_folder()
     run_args = []
-    
     if e.args.check_connectivity:
         o = OptimizeGraphChoice(e.failures)
         optimal_list = []
