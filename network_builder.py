@@ -70,6 +70,13 @@ class PowerNet(Mininet):
 	packets2 = int(pstr2.split("\n")[0])
         return packets1+packets2
 
+    def linkSentBytes(self,link):
+        pstr1 = link.intf1.node.cmd("ifconfig ",link.intf1.name ,"| grep -Eo 'TX bytes:[0-9]+' | cut -d':' -f 2")
+        pstr2 = link.intf2.node.cmd("ifconfig ",link.intf2.name ,"| grep -Eo 'TX bytes:[0-9]+' | cut -d':' -f 2")
+	bytes1 = int(pstr1.split("\n")[0].split(" ")[0])
+	bytes2 = int(pstr2.split("\n")[0].split(" ")[0])
+        return bytes2+bytes1
+
     def hostSentPackets(self,host):
         sent_packets = 0
         sent_bytes = 0
@@ -103,6 +110,10 @@ class PowerNet(Mininet):
 
 class GraphNet(PowerNet):
     def __init__(self,edges_file,draw=True,**params):
+        if "link_opts" in params.keys():
+            self.link_opts = params["link_opts"]
+            del params["link_opts"]
+
         super(GraphNet,self).__init__(**params)
         info("\nReading "+edges_file+"\n")
 
@@ -129,11 +140,19 @@ class GraphNet(PowerNet):
             # htp: Hierarchical Token Bucket rate limiter
 #            quality_params = {"bw":10,"delay":'5ms', "loss":100-100.0/e[2]['weight'], "use_htb":True}
             quality_params = {}
-            quality_params["bw"] = 10
-#            quality_params["delay"] = '1.496824ms'
-#            quality_params["jitter"] = '2.826534ms'
-#            quality_params["delay_distribution"] = 'guifi_m1.496824_s2.826534'
-#            quality_params["loss"] = 100*((1-(1.0/(e[2]['weight'])))**5)
+            quality_params.update(self.link_opts)
+            #quality_params["bw"] = 10
+            #quality_params["delay"] = '0.515ms'
+            #quality_params["jitter"] = '0.284ms'
+            #quality_params["delay_distribution"] = 'wifi_m0.515_s0.284'
+            if "loss" in quality_params.keys():
+                if quality_params["loss"] == "wifi_loss":
+                    quality_params["loss"] = 100*((1-(1.0/(e[2]['weight'])))**7) 
+                else:
+                    quality_params["loss"] = int(quality_params["loss"])
+# the number of retransmisison (4) derives from a parameter of the 802.11 
+# standard: dot11LongRetryLink (for Long Packets, are longer than 
+# dot11RTSthreshold)
             quality_params["use_htb"] = True
             self.insertLink(self.get(e[0]),self.get(e[1]),quality_params)
 
@@ -158,7 +177,7 @@ class GraphNet(PowerNet):
                 )
 
     def setShortestRoutes(self):
-        paths = nx.shortest_path(self.gg,weight='weight')
+        paths = nx.all_pairs_dijkstra_path(self.gg, weight='weight')
         for node1 in paths.keys():
             host1 = self.get(node1)
             debug("Starting node: "+node1+'\n')

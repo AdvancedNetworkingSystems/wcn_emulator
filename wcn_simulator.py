@@ -79,6 +79,21 @@ class configurationFile():
                 return None
         return r
 
+
+def link_conf(conf):
+    link_opts = {}
+    if conf.getConfigurations("link_bw"):
+        link_opts["bw"] = int(conf.getConfigurations("link_bw"))
+    if conf.getConfigurations("link_mean_delay"):
+        link_opts["delay"] = (conf.getConfigurations("link_mean_delay"))
+    if conf.getConfigurations("link_delay_sd"):
+        link_opts["jitter"] = (conf.getConfigurations("link_delay_sd"))
+    if conf.getConfigurations("link_delay_distribution"):
+        link_opts["delay_distribution"] = (conf.getConfigurations("link_delay_distribution"))
+    if conf.getConfigurations("link_loss"):
+        link_opts["loss"] = (conf.getConfigurations("link_loss"))
+    return link_opts
+
 if __name__ == '__main__':
     setLogLevel('info')
     need = [
@@ -115,12 +130,15 @@ if __name__ == '__main__':
             sys.exit(1)
     drawGraph = P.getParam("drawGraph")
 
-    net = GraphNet(networkGraph, draw = drawGraph)
+    link_opts = link_conf(C)
+
+    net = GraphNet(networkGraph, draw = drawGraph, link_opts = link_opts)
     net.start()
     net.enableForwarding()
     net.setShortestRoutes()
     #CLI(net)
-    testPath = testName+"_"+str(int(time()))
+    graphname = networkGraph.split('/')[-1].split('.')[0]
+    testPath = testName + "_" + graphname + "_" + str(int(time())) 
     for i in range(int(C.getConfigurations("times"))):
         info("+++++++ Round: "+str(i+1) + '\n')
         test = C.className(net, testPath, C.confParams)

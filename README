@@ -1,0 +1,43 @@
+WCN emulator is a front-end for mininet which
+setups experiment on a given (networkx) network
+
+------------Troubleshooting------------------
+If something fails system may remain unstable.
+In this case try typing:
+$> sudo mn -c
+
+----------------How to-----------------------
+Use a custom delay distribution for the links
+---------------------------------------------
+Through network_builder.py is possible to set
+some parameters of the links, e.g., loss,
+bandwidth, mean delay, delay jitter and delay
+distribution.
+Available delay distributions are placed in
+/usr/lib/tc/ and the defaults one are normal,
+pareto, paretonormal and experimental.
+
+Given sample delay values is possible to build
+a custom distribution and use it in mininet.
+(http://piao-tech.blogspot.it/2009/10/how-to-
+create-netem-distribution-tables.html)
+
+1) git clone git://git.kernel.org/pub/scm/\
+   linux/kernel/git/shemminger/iproute2.git
+2) compile these netem utilities:
+   cd iproute2/netem
+   gcc -o maketable maketable.c -lm
+   gcc -o stats stats.c -lm
+3) fill data.txt with samples from the
+   distribution (in ms), e.g.,
+   ping -c10 google.com | grep -Eo 'time=[0-9.]+'|\
+   grep -Eo '[0-9.]+' > data.txt
+4) build a netem distribution
+   ./maketable data.txt > mydist.dist
+5) put mydist.dist in /usr/lib/tc/
+6) compute mean and standard deviation (sigma)
+   ./stats data.txt
+7) instruct the network builder with these:
+   quality_params["delay"] = '<mean>ms'
+   quality_params["jitter"] = '<sigma>ms' 
+   quality_params["delay_distribution"] = 'mydist' 

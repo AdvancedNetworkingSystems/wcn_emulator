@@ -28,6 +28,13 @@ class MininetTest(object):
         host_proc = Process(host.pid)
         host_ps = set(host_proc.get_children())
         debug("Sending cmd: \n\t"+str(" ".join(args))+"\n")
+
+        # disable bg process output
+        tmp_wait = host.waiting
+        host.waiting = False
+        host.sendCmd(*(("set +m",)))
+        host.waiting = tmp_wait
+
         if force_multiple_processes:
             host.waiting = False
         host.sendCmd(*(args+("&",)))
