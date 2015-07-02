@@ -109,7 +109,7 @@ class OptimizeGraphChoice:
         for n in fail_candidates:
             gg = graph.copy()
             gg.remove_node(n)
-            comp = nx.connected_components(gg)
+            comp = list(nx.connected_components(gg))
             isolated_nodes = [x for component in comp[1:] for x in component]
             fallible_nodes.append([n] + isolated_nodes) 
 
