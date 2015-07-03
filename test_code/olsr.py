@@ -70,7 +70,10 @@ class OLSRTest(dummyRoutingRandomTest):
                 for idx in self.stopAllNodes:
                     self.centList.append(self.getCentrality()[idx])
 
-        for run_id in range(len(self.centList)):
+        run_ids = range(len(self.centList))
+        if not run_ids:
+            run_ids = [0]
+        for run_id in run_ids:
             info("\nStarting run " + str(run_id) + "\n")
             if self.stopAllNodes:
                 self.nodeCrashed = self.centList.pop(0)
@@ -86,18 +89,18 @@ class OLSRTest(dummyRoutingRandomTest):
                 time.sleep(10)
                 info("\nWARNING: run_id " + str(run_id) +
                      " could not start, retrying...\n")
-                if not self.startRun():
+                if not self.startRun(run_id):
                     error("\nERROR: run_id " + str(run_id) +
                           " could not start!" +
                           "please check the logs\n")
                     sys.exit(1)
 
             eventDict = {
-                self.startLog: ["Start logging \n", self.start_ping,
-                                {"exclude": self.nodeCrashed, "run_id": run_id}
+                self.startLog: ["Start logging ",
+                                self.sendSignal, {"sig": signal.SIGUSR1}
                                 ],
                 self.stopLog: ["Stopping logging ",
-                               self.sendSignal, {"sig": signal.SIGINT}
+                               self.sendSignal, {"sig": signal.SIGUSR2}
                                ],
                 self.stopNode: ["Stopping node(s) " + str(self.nodeCrashed) +
                                 "\n", self.sendSignal,
@@ -105,7 +108,6 @@ class OLSRTest(dummyRoutingRandomTest):
                                  "hostName": self.nodeCrashed}
                                 ]
             }
-            eventDict = {}
 
             eventList = []
             relativeTime = 0
@@ -132,7 +134,7 @@ class OLSRTest(dummyRoutingRandomTest):
         o = OptimizeGraphChoice()
         return o.get_emulation_runs_per_topology(self.graph)
 
-    def startRun(self):
+    def startRun(self, run_id=0):
 
         rNode = ""
         host_list = self.getAllHosts()
@@ -146,7 +148,7 @@ class OLSRTest(dummyRoutingRandomTest):
             olsr_conf_file = self.prefix + h.name + ".conf"
             olsr_lock_file = "/var/run/" + h.name + ".log"
             f = open(olsr_conf_file, "w")
-            print >> f, self.conf_file % (olsr_lock_file, intf_list)
+            print >> f, self.conf_file % (olsr_lock_file, run_id, intf_list)
             f.close()
             args = "-f " + os.path.abspath(olsr_conf_file)
             # CLI(self.mininet)
@@ -232,7 +234,9 @@ class OLSRTest(dummyRoutingRandomTest):
         Hna6
         {
         }
-        LoadPlugin "../olsrd/lib/dumprt/olsrd_dumprt.so.0.0"{}
+        LoadPlugin "../olsrd/lib/dumprt/olsrd_dumprt.so.0.0"{
+        PlParam "run_id" "%d"
+        }
 
         InterfaceDefaults {
         }
