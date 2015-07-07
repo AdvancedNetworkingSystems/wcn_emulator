@@ -51,6 +51,8 @@ class resultParser():
                     timeBasedRoute[runId][logDump["time"]] = {}
                     timeBasedRoute[runId][logDump["time"]][nodeIP] = logDump["RT"]
             except KeyError:
+                print "ERROR: topo file", topoFile, "on run_id", runId,\
+                      "contins wrong keys"
                 del jsonRt[runId]
             nodeSet.add(str(nodeIP))
             #print topoFile, failedNodes, nodeSet
@@ -69,6 +71,7 @@ class resultParser():
                 ns.remove(failedNode)
                 failedNodeSet.add(failedNode)
 
+        print "Failed nodes ", failedNodeSet
 
         nl = list(ns)
         routesOk = 0
@@ -78,9 +81,10 @@ class resultParser():
                 if i == j:
                     continue
                 dIP = nl[j]
+                print "routing from", sIP, "to", dIP
                 try:
                     route = navigateRoutingTables(jsonRtPurged, sIP,
-                        dIP, [], 0, silent=silent)
+                        dIP, [], 0, silent, use_base_ip=True)
                 except KeyError:
                     errors += 1
                     if not silent:
@@ -110,14 +114,16 @@ class resultParser():
                         if node not in failedNodes or \
                                 (node in failedNodes and \
                                 failedNodes[node] > rt["time"]):
-                            # this node has failed
+                            # something did not work in this run
                             idToPurge.append(logId)
                             break
         for idx in idToPurge:
+            print "WARNING: Purged run", idx
             del jsonRt[idx]
 
         for logId, rt in sorted(jsonRt.items(),
                 key = lambda x: int(x[0])):
+            print "===========", logId, "=========="
             ret = self.checkRoutingTables(
                     jsonRt[logId], nodeSet, failedNodes, silent=silent)
             retDict[jsonRt[logId]["time"]] = ret

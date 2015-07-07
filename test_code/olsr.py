@@ -63,20 +63,22 @@ class OLSRTest(dummyRoutingRandomTest):
         info("*** Launching OLSR test\n")
         info("Data folder: "+self.prefix+"\n")
 
+        stopNodeList = []
         if self.stopAllNodes:
-            if type(self.stopAllNodes) == int:
-                self.centList = self.getCentrality()[:self.stopAllNodes]
-            elif type(self.stopAllNodes) == list:
-                for idx in self.stopAllNodes:
-                    self.centList.append(self.getCentrality()[idx])
+            stopNodeList = self.getCentrality()[:self.stopAllNodes]
+        elif self.stopList:
+            stopNodeList = [number_to_host(i) for i in self.stopList]
 
-        run_ids = range(len(self.centList))
+        run_ids = range(len(stopNodeList))
         if not run_ids:
+            # do at least one run
             run_ids = [0]
         for run_id in run_ids:
             info("\nStarting run " + str(run_id) + "\n")
-            if self.stopAllNodes:
-                self.nodeCrashed = self.centList.pop(0)
+            if stopNodeList:
+                self.nodeCrashed = stopNodeList.pop(0)
+            else:
+                self.nodeCrashed = None
 
             if not self.startRun():
                 # some times process are not killed in time, UDP
@@ -96,18 +98,20 @@ class OLSRTest(dummyRoutingRandomTest):
                     sys.exit(1)
 
             eventDict = {
-                self.startLog: ["Start logging ",
+                self.startLog: ["start/stop logging ",
                                 self.sendSignal, {"sig": signal.SIGUSR1}
                                 ],
-                self.stopLog: ["Stopping logging ",
-                               self.sendSignal, {"sig": signal.SIGUSR2}
-                               ],
-                self.stopNode: ["Stopping node(s) " + str(self.nodeCrashed) +
+                self.stopLog: ["Start/stop logging ",
+                               self.sendSignal, {"sig": signal.SIGUSR1}
+                               ]
+                }
+
+            if self.nodeCrashed:
+                eventDict[self.stopTime] =  ["Stopping node(s) " + str(self.nodeCrashed) +
                                 "\n", self.sendSignal,
-                                {"sig": signal.SIGTERM,
+                                {"sig": signal.SIGUSR2,
                                  "hostName": self.nodeCrashed}
                                 ]
-            }
 
             eventList = []
             relativeTime = 0
@@ -145,10 +149,16 @@ class OLSRTest(dummyRoutingRandomTest):
         for h in host_list:
             intf = h.intfList()
             intf_list = ' '.join(["\"" + i.name + "\"" for i in intf])
+
+            # set the main IP of the host to the one ending with .1
+            main_ip = ""
+
             olsr_conf_file = self.prefix + h.name + ".conf"
+            olsr_json_file = self.prefix + h.name + ".json"
             olsr_lock_file = "/var/run/" + h.name + ".log"
             f = open(olsr_conf_file, "w")
-            print >> f, self.conf_file % (olsr_lock_file, run_id, intf_list)
+            print >> f, self.conf_file % (olsr_lock_file, run_id,
+                                          olsr_json_file, intf_list)
             f.close()
             args = "-f " + os.path.abspath(olsr_conf_file)
             # CLI(self.mininet)
@@ -197,6 +207,17 @@ class OLSRTest(dummyRoutingRandomTest):
         for (h, ip_list) in destinations.items():
                 self.launch_ping(h, ip_list, run_id=run_id)
 
+    def number_to_host(self, host_number):
+
+        host_list = self.getAllHosts()
+        for host in host_list:
+            number = int(host.name.split("_")[0][1:])
+            if host_number == number:
+                return host
+        print "ERROR: no host number:", number, "in host_list:"
+        print "  ", self.getAllHosts()
+        return None
+
     def get_random_destination(self):
 
         host_list = self.getAllHosts()
@@ -213,6 +234,7 @@ class OLSRTest(dummyRoutingRandomTest):
                         self.sendSig(pid, sig)
             # send to all
             else:
+                print "sending signal to all hosts:", sig
                 self.sendSig(pid, sig)
 
     def __init__(self, mininet, name, args):
@@ -221,9 +243,11 @@ class OLSRTest(dummyRoutingRandomTest):
 
         self.mininet = mininet
         self.centList = []
+        self.stopNodes = []
+        self.stopNodeList = []
 
         self.conf_file = """
-        #DebugLevel  1
+        DebugLevel  7
         IpVersion 4
         FIBMetric "flat"
         LinkQualityFishEye  0
@@ -236,6 +260,8 @@ class OLSRTest(dummyRoutingRandomTest):
         }
         LoadPlugin "../olsrd/lib/dumprt/olsrd_dumprt.so.0.0"{
         PlParam "run_id" "%d"
+        PlParam "log_file" "%s"
+        PlParam "log_interval_msec" "100"
         }
 
         InterfaceDefaults {
@@ -261,4 +287,22 @@ class OLSRTest(dummyRoutingRandomTest):
         else:
             self.TcInterval = 0
 
+        if "stopAllNodes" in args.keys():
+            self.stopAllNodes = int(args["stopAllNodes"])
+        else:
+            self.stopAllNodes = []
 
+        if "stopList" in args.keys():
+            self.stopList = args["stopAllNodes"].split(",")
+        else:
+            self.stopList = []
+
+        # TODO import parseTime from dummyrouting
+        if "stopTime" in args.keys():
+            self.stopTime = float(args["stopTime"])
+        elif self.stopAllNodes or self.stopList:
+            print "ERROR: you set one of stopAllNodes/stopList" +\
+                  "but did not set stopTime"
+            exit()
+        else:
+            self.stopTime = 0

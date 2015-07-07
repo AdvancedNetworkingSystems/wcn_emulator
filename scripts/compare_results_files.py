@@ -25,6 +25,7 @@ class ResultsComparer():
         self.data = defaultdict(dict)
 
     def parse_results(self):
+        """ FIXME describe the format of the JSON files here """
         for topo_file in self.json:
             if topo_file in ['command', 'time']:
                 continue
