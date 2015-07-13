@@ -1,10 +1,13 @@
 
 import sys
 sys.path.append('../')
+import os
+sys.path.append('scripts/pop-routing/')
 from network_builder import *
 import random
 import time
 from dummyrouting import dummyRoutingRandomTest
+from compute_theoretical_values import ComputeTheoreticalValues
 
 import signal
 
@@ -63,24 +66,23 @@ class OLSRTest(dummyRoutingRandomTest):
         info("*** Launching OLSR test\n")
         info("Data folder: "+self.prefix+"\n")
 
-        stopNodeList = []
+        self.stopNodeList = []
         if self.stopAllNodes:
-            stopNodeList = self.getCentrality()[:self.stopAllNodes]
+            self.stopNodeList = self.getCentrality()[:self.stopAllNodes]
         elif self.stopList:
-            stopNodeList = [number_to_host(i) for i in self.stopList]
-
-        run_ids = range(len(stopNodeList))
+            self.stopNodeList = [[self.number_to_host(i) for i in self.stopList]]
+        run_ids = range(len(self.stopNodeList))
         if not run_ids:
             # do at least one run
             run_ids = [0]
         for run_id in run_ids:
             info("\nStarting run " + str(run_id) + "\n")
-            if stopNodeList:
-                self.nodeCrashed = stopNodeList.pop(0)
+            if self.stopNodeList:
+                self.nodeCrashed = self.stopNodeList.pop(0)
             else:
                 self.nodeCrashed = None
 
-            if not self.startRun():
+            if not self.startRun(run_id=run_id):
                 # some times process are not killed in time, UDP
                 # ports are still occupied and the next run can not
                 # start correctly. I kill everything, wait some time, try
@@ -107,11 +109,13 @@ class OLSRTest(dummyRoutingRandomTest):
                 }
 
             if self.nodeCrashed:
-                eventDict[self.stopTime] =  ["Stopping node(s) " + str(self.nodeCrashed) +
-                                "\n", self.sendSignal,
+                eventDict[self.stopTime] = ["Stopping node(s) " + str(self.nodeCrashed) +
+                                " at time " + str(self.stopTime) + "\n", 
+                                self.sendSignal,
                                 {"sig": signal.SIGUSR2,
                                  "hostName": self.nodeCrashed}
                                 ]
+
 
             eventList = []
             relativeTime = 0
@@ -134,31 +138,92 @@ class OLSRTest(dummyRoutingRandomTest):
             self.killAll()
             time.sleep(2)
 
-    def get_centrality(self):
-        o = OptimizeGraphChoice()
-        return o.get_emulation_runs_per_topology(self.graph)
+
+    def getCentrality(self):
+
+        node_centrality_posteriori = {}
+        centrality = {}
+        for n in self.graph.nodes():
+            gg = self.graph.copy()
+            edges = self.graph.edges([n]) 
+            gg.remove_node(n)
+            # compute the connected components
+            # WARNING: connected_components should return a list 
+            # sorted by size, largest first. It does not, so i resort them
+            unsorted_comp = list(nx.connected_components(gg))
+            comp = sorted(unsorted_comp, key = lambda x: -len(x))
+            # re-add the node
+            gg.add_node(n)
+            # re-add the edges to nodes in the main component
+            for (fr, to) in edges:
+                if fr in comp[0]:
+                    gg.add_edge(fr, n)
+                if to in comp[0]:
+                    gg.add_edge(n, to)
+            # now compute the centrality. This tells how important is the node
+            # for the main connected component. If this is 0, it is not worth
+            # to remove this node
+            cent = nx.betweenness_centrality(gg)[n]
+            isolated_nodes = [x for component in comp[1:] for x in component]
+            node_centrality_posteriori[n] = [cent, [n] + isolated_nodes]
+            centrality[n] = cent
+        sorted_cent = [x[0] for x in
+                sorted(node_centrality_posteriori.items(), key=lambda x: -x[1][0])]
+        return [node_centrality_posteriori[k][1] for k in sorted_cent]
 
     def startRun(self, run_id=0):
 
         rNode = ""
         host_list = self.getAllHosts()
 
+        # default values
+        hello_timer = 1
+        tc_timer = 3
+
         if rNode:
             info("\nChosen node " + str(rNode) + " to fail\n")
 
-        for h in host_list:
+        if self.popRouting:
+            c = ComputeTheoreticalValues(graph_file=None, graph=self.graph,
+                    cH=hello_timer, cTC=tc_timer)
+            for h in c.Hi:
+                print c.Hi[h], c.TCi[h]
+        h_load_pop = 0
+        h_load_nopop = 0
+        tc_load_pop = 0
+        tc_load_nopop = 0
+        #for h in host_list:
+        #    h_load_pop += len(self.graph[h.name])/c.Hi[h.name]
+        #    h_load_nopop += len(self.graph[h.name])/hello_timer
+        #    tc_load_pop += len(self.graph.edges())/c.TCi[h.name]
+        #    tc_load_nopop += len(self.graph.edges())/tc_timer
+        #print "XXXXXXXXX POP, h,tc", h_load_pop, tc_load_pop
+        #print "XXXXXXXXX NOPOP, h,tc", h_load_nopop, tc_load_nopop
+        for idx, h in enumerate(host_list):
             intf = h.intfList()
             intf_list = ' '.join(["\"" + i.name + "\"" for i in intf])
 
             # set the main IP of the host to the one ending with .1
             main_ip = ""
 
+            log_folder = self.logPrefix + "OLSR-log-" + str(self.runId) + "/"
+            try:
+                os.makedirs(log_folder)
+            except:
+                pass
             olsr_conf_file = self.prefix + h.name + ".conf"
-            olsr_json_file = self.prefix + h.name + ".json"
+            olsr_json_file = log_folder + h.name
             olsr_lock_file = "/var/run/" + h.name + ".log"
             f = open(olsr_conf_file, "w")
+            if self.popRouting:
+                hello_timer = c.Hi[h.name]
+                tc_timer = c.TCi[h.name]
+            hello_validity = hello_timer * 3
+            tc_validity = tc_timer * 3
             print >> f, self.conf_file % (olsr_lock_file, run_id,
-                                          olsr_json_file, intf_list)
+                                          olsr_json_file, intf_list,
+                                          hello_timer, hello_validity,
+                                          tc_timer, tc_validity)
             f.close()
             args = "-f " + os.path.abspath(olsr_conf_file)
             # CLI(self.mininet)
@@ -213,8 +278,8 @@ class OLSRTest(dummyRoutingRandomTest):
         for host in host_list:
             number = int(host.name.split("_")[0][1:])
             if host_number == number:
-                return host
-        print "ERROR: no host number:", number, "in host_list:"
+                return host.name
+        print "ERROR: no host number", host_number, "in host_list:"
         print "  ", self.getAllHosts()
         return None
 
@@ -247,7 +312,7 @@ class OLSRTest(dummyRoutingRandomTest):
         self.stopNodeList = []
 
         self.conf_file = """
-        DebugLevel  7
+        DebugLevel  1
         IpVersion 4
         FIBMetric "flat"
         LinkQualityFishEye  0
@@ -261,7 +326,7 @@ class OLSRTest(dummyRoutingRandomTest):
         LoadPlugin "../olsrd/lib/dumprt/olsrd_dumprt.so.0.0"{
         PlParam "run_id" "%d"
         PlParam "log_file" "%s"
-        PlParam "log_interval_msec" "100"
+        PlParam "log_interval_msec" "300"
         }
 
         InterfaceDefaults {
@@ -269,8 +334,27 @@ class OLSRTest(dummyRoutingRandomTest):
 
         Interface %s
         {
+        HelloInterval       %f
+        HelloValidityTime   %f
+        TcInterval          %f
+        TcValidityTime      %f
         }
         """
+        if "logPrefix" in args.keys():
+            self.logPrefix = args["logPrefix"]
+        else:
+            self.logPrefix = "/tmp/"
+
+        if "runId" in args.keys():
+            self.runId = args["runId"]
+        else:
+            self.runId = 0
+
+        if "popRouting" in args.keys() and\
+                args['popRouting'] == 'True':
+            self.popRouting = True
+        else:
+            self.popRouting = False
 
         if "NumPing" in args.keys():
             self.NumPing = int(args["NumPing"])
@@ -293,7 +377,7 @@ class OLSRTest(dummyRoutingRandomTest):
             self.stopAllNodes = []
 
         if "stopList" in args.keys():
-            self.stopList = args["stopAllNodes"].split(",")
+            self.stopList = map(int, args["stopList"].split(","))
         else:
             self.stopList = []
 
