@@ -17,6 +17,7 @@ from subprocess import check_output, CalledProcessError, call
 from collections import defaultdict
 import json
 import numpy as np
+import zipfile
 
 from inherit_config_parser import InheritConfigParser
 from measure_breakage_time import resultParser
@@ -45,8 +46,8 @@ class EmulationRunner():
             default="conf/dummyrouting.ini", type=str)
         parser.add_argument("-t", dest="stanza", required=True,
                 help="name of the configuration to run", type=str)
-        parser.add_argument("-p", dest="parseonly", action="store_true",
-                help="do not run the simulation, only parse results")
+        parser.add_argument("-p", dest="parseonly", action="store", type=str,
+                help="do not run the simulation, only parse results", default="")
         parser.add_argument("-c", dest="check_connectivity", action="store_true",
                 help="select graphs in order to have a minimum number " +\
                         "of repetitions per run_id (see code)")
@@ -101,38 +102,100 @@ class EmulationRunner():
         newFolder = (newFolderList - currentFolderList).pop() + "/"
         return newFolder
 
+    def parse_only(self):
+        runFolders = set([x[0] for x in list(os.walk(self.args.parseonly))])
+        runFolders.remove(self.args.parseonly)
+        print runFolders
+        # I expect the result folder to contain sub-folders, each one
+        # named like ****-runId/ and containing the data for a specific
+        # runId.
+        res = {}
+        try:
+            self.extract_simulation_parameter_from_conf("popRouting",
+                                                        str(self.args.confile),
+                                                        str(self.args.stanza))
+            optimized = True
+        except:
+            optimized = False
+
+        tempRes = defaultdict(dict)
+        failedReads = []
+        for folder in runFolders:
+            runId = int(folder.split("-")[-1])
+            files, unzipped = self.unzip_files(folder + "/")
+            failedReads += self.parse_results(folder + "/", tempRes, runId)
+        for failureId in tempRes:
+                tt = tempRes[failureId]
+                res[failureId] = {}
+                res[failureId]["signalling"] = np.average(
+                   [b["signalling"] for b in tt.values()])
+                res[failureId]["failures"] = np.average(
+                   [b["failures"] for b in tt.values()])
+        res["failedReads"] = failedReads
+        res["pop-enabled"] = optimized
+        return res
+
+
+    def unzip_files(self, resultFolder):
+        files = glob.glob(resultFolder + "*.json")
+        unzipped = False
+        print resultFolder
+        if not files:
+            zipped_files = glob.glob(resultFolder + "*.json.zip")
+            if not zipped_files:
+                print "ERROR: can not read results folder"
+                return
+            unzipped = True
+            for f in zipped_files:
+                print f
+                #z = zipfile.ZipFile(f, "r")
+                #z.extractall()
+                #z.close()
+            files = glob.glob(resultFolder + "*.json")
+        return files, unzipped
+
+
+    def clean_zipfiles(self, files, unzipped):
+        for f in files:
+            if not unzipped:
+                z = zipfile.ZipFile(f+".zip", "w")
+                z.write(f, os.path.basename(f))
+                z.close()
+        for f in files:
+            os.remove(f)
+
+
     def parse_results(self, resultFolder, tempRes, runId):
-        #if prev_run_id:
-        #    self.save_environment(prev_run_id)
-        #    prev_run_id = ""
-
-        #if not self.args.parseonly:
-        #    compress_environment(folder=newFolder)
-
-        #if not self.args.parseonly and not auto_clean:
-        #    self.clean_environment()
-        #    auto_clean=True
-        #elif auto_clean:
-        #    self.clean_environment(auto=True)
 
         p = resultParser()
         failedReads = []
-        try:
-            jsonRt, nodeSet, failedNodes, signallingSent,\
-                    logFrequency = p.readTopology(resultFolder)
-        except:
-            # TODO write this in the .results file
-            print "=========== ERROR ==========="
-            print "could not read json files from folder: "
-            print resultFolder
-            print "skipping this data set"
-            print "============================="
-            failedReads.append(resultFolder)
-            return
-        for failureId in jsonRt:
-            total_fail_samples = 0
-            results = p.parseAllRuns(jsonRt[failureId], nodeSet, 
-                    failedNodes[failureId], silent=True)
+        failure_ids = set()
+        total_fail_samples = 0
+        files, unzipped = self.unzip_files(resultFolder)
+
+        for f in files:
+            idx = f.split("_")[-1].split(".")[0]
+            failure_ids.add(idx)
+        for failureId_str in list(failure_ids):
+            failureId = int(failureId_str)
+            print "=============== Analysing failureId:", failureId
+            try:
+                jsonRt, nodeSet, failedNodes, signallingSent,\
+                       logFrequency = p.readTopology(resultFolder, 
+                               matchPath="_"+failureId_str)
+            except:
+                # TODO write this in the .results file
+                print "=========== ERROR ==========="
+                print "could not read json files from folder: "
+                print resultFolder
+                print "skipping this data set"
+                print "============================="
+                failedReads.append(resultFolder)
+                return
+ 
+            print [type(t) for t in jsonRt.keys()]
+            results = p.parseAllRuns(jsonRt[int(failureId)], nodeSet, 
+                    failedNodes[int(failureId)], silent=True)
             failures = 0
             log_time_array = sorted(results)
             for tt in log_time_array:
@@ -145,7 +208,9 @@ class EmulationRunner():
             tempRes[failureId][runId]["logFrequency"] = logFrequency
             tempRes[failureId][runId]["results"] = results
             tempRes[failureId][runId]["total_fail_samples"] = total_fail_samples
-            #res[topo][failureId]["sigPerSec"] = sigPerSec
+
+        self.clean_zipfiles(files, unzipped)
+
         return failedReads
 
     def run_and_parse(self, size, type, res=None,
@@ -251,20 +316,6 @@ class EmulationRunner():
             t.add(f)
         t.close()
 
-    def compress_environment(self, folder=""):
-        commands = []
-        log_files = glob.glob(self.pathPrefix+"*")
-        dump_files = glob.glob("../"+self.args.stanza+"*")
-        c = []
-        if log_files:
-            commands.append(["rm", "-rf"]+log_files)
-        if dump_files:
-            commands.append(["zip "]+dump_files)
-        for c in commands:
-            call(c)
-
-
-
     def clean_environment(self, auto=False):
         commands = []
         log_files = glob.glob(self.pathPrefix+"*")
@@ -316,8 +367,6 @@ class EmulationRunner():
             size = [topology_override_string]
             topo_files = [[topology_override_string]]
         return topo_files, size, type_label
-        
-
 
     def execute_run(self, command):
 
@@ -354,20 +403,24 @@ if __name__ == "__main__":
     else:
         run_args = ['']*len(topo_list)
     results = defaultdict(dict)
-    for index, file_list in enumerate(topo_list):
+    if not e.args.parseonly:
+        for index, file_list in enumerate(topo_list):
+            if e.args.check_connectivity:
+                # useless but necessary
+                num_graphs = len(file_list)
+            else:
+                num_graphs = e.args.graphs
+            e.run_and_parse(size_list[index],
+                    type_list[index], res=results,
+                    topo_files=file_list[:num_graphs],
+                    run_args=run_args[index], 
+                    auto_clean = bool(index), num_runs=e.args.runs)
+    else:
+        e.command = "parseonly"
+        results = e.parse_only()
 
-        if e.args.check_connectivity:
-            # useless but necessary
-            num_graphs = len(file_list)
-        else:
-            num_graphs = e.args.graphs
+    e.save_results(results)
 
-        e.run_and_parse(size_list[index],
-                type_list[index], res=results,
-                topo_files=file_list[:num_graphs],
-                run_args=run_args[index], 
-                auto_clean = bool(index), num_runs=e.args.runs)
-        #TODO fix also size and type
     #resultSerie = defaultdict(dict)
     #for topo in results:
     #    for runId in results[topo]:
@@ -380,5 +433,4 @@ if __name__ == "__main__":
     #        #resultSerie[topo]['failures'] = r['failures']
     #        #resultSerie[topo]['signalling'] = r['signalling']
     #        #resultSerie[topo]['sigpersec'] = r['sigpersec']
-    e.save_results(results)
     #print resultSerie
