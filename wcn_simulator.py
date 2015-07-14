@@ -76,7 +76,8 @@ class configurationFile():
             self.confParams[name] = value
 
         if overrideOption:
-            overrideConf = StringIO.StringIO("[DEFAULT]\n"+ overrideOption)
+            options = overrideOption.replace(",", "\n")
+            overrideConf = StringIO.StringIO("[DEFAULT]\n" + options + "\n")
             tmpParser = ConfigParser.ConfigParser()
             tmpParser.optionxform = str
             tmpParser.readfp(overrideConf)
@@ -112,7 +113,7 @@ if __name__ == '__main__':
                 "fill the routing tables with the shortest route"\
                 + " to any node", int]),
             ("-o", ["overrideOption", True, "",
-                "some string option to override the ini file", str]),
+                "comma separated list of options to override in the ini file (ex: a=10,b=100)", str]),
           ]
 
     P = conf(os.path.basename(__file__),need, opt)
