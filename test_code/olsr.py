@@ -167,9 +167,10 @@ class OLSRTest(dummyRoutingRandomTest):
             isolated_nodes = [x for component in comp[1:] for x in component]
             node_centrality_posteriori[n] = [cent, [n] + isolated_nodes]
             centrality[n] = cent
-        sorted_cent = [x[0] for x in
-                sorted(node_centrality_posteriori.items(), key=lambda x: -x[1][0])]
-        return [node_centrality_posteriori[k][1] for k in sorted_cent]
+        betw = [x for x in nx.betweenness_centrality(self.graph).items()\
+                if x[1] > 0 and node_centrality_posteriori[x[0]][0] > 0]
+
+        return [node_centrality_posteriori[k[0]][1] for k in sorted(betw, key=lambda x: -x[1])]
 
     def startRun(self, run_id=0):
 
@@ -213,7 +214,7 @@ class OLSRTest(dummyRoutingRandomTest):
                 pass
             olsr_conf_file = self.prefix + h.name + ".conf"
             olsr_json_file = log_folder + h.name
-            olsr_lock_file = "/var/run/" + h.name + ".log"
+            olsr_lock_file = "/var/run/" + h.name + str(time.time()) + ".lock"
             f = open(olsr_conf_file, "w")
             if self.popRouting:
                 hello_timer = c.Hi[h.name]
