@@ -72,6 +72,7 @@ class OLSRTest(dummyRoutingRandomTest):
         elif self.stopList:
             self.stopNodeList = [[self.number_to_host(i) for i in self.stopList]]
         run_ids = range(len(self.stopNodeList))
+
         if not run_ids:
             # do at least one run
             run_ids = [0]
@@ -178,8 +179,8 @@ class OLSRTest(dummyRoutingRandomTest):
         host_list = self.getAllHosts()
 
         # default values
-        hello_timer = 1
-        tc_timer = 3
+        hello_timer = self.HelloInterval
+        tc_timer = self.TcInterval
 
         if rNode:
             info("\nChosen node " + str(rNode) + " to fail\n")
@@ -187,12 +188,15 @@ class OLSRTest(dummyRoutingRandomTest):
         if self.popRouting:
             c = ComputeTheoreticalValues(graph_file=None, graph=self.graph,
                     cH=hello_timer, cTC=tc_timer)
-            for h in c.Hi:
-                print c.Hi[h], c.TCi[h]
-        h_load_pop = 0
-        h_load_nopop = 0
-        tc_load_pop = 0
-        tc_load_nopop = 0
+            cent = nx.betweenness_centrality(self.graph)
+            deg = nx.degree(self.graph)
+            for (h, cc) in sorted(cent.items(), key = lambda x: -x[1]):
+                print deg[h],",", cent[h], ",", c.Hi[h], ",", c.TCi[h]
+
+        # h_load_pop = 0
+        # h_load_nopop = 0
+        # tc_load_pop = 0
+        # tc_load_nopop = 0
         #for h in host_list:
         #    h_load_pop += len(self.graph[h.name])/c.Hi[h.name]
         #    h_load_nopop += len(self.graph[h.name])/hello_timer
@@ -227,11 +231,6 @@ class OLSRTest(dummyRoutingRandomTest):
                                           tc_timer, tc_validity)
             f.close()
             args = "-f " + os.path.abspath(olsr_conf_file)
-            # CLI(self.mininet)
-            if self.HelloInterval:
-                args += " -hint " + str(self.HelloInterval)
-            if self.TcInterval:
-                args += " -tcint " + str(self.TcInterval)
 
             launch_pid = self.launch_OLSR(h, args)
 
@@ -365,12 +364,12 @@ class OLSRTest(dummyRoutingRandomTest):
         if "HelloInterval" in args.keys():
             self.HelloInterval = float(args["HelloInterval"])
         else:
-            self.HelloInterval = 0
+            self.HelloInterval = 2
 
         if "TcInterval" in args.keys():
             self.TcInterval = float(args["TcInterval"])
         else:
-            self.TcInterval = 0
+            self.TcInterval = 5
 
         if "stopAllNodes" in args.keys():
             self.stopAllNodes = int(args["stopAllNodes"])
