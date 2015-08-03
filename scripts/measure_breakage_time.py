@@ -6,7 +6,7 @@ sys.path.append('../community_networks_analysis')
 from misclibs import navigateRoutingTables, LoopError
 from collections import defaultdict, Counter
 import glob
-import json
+import simplejson as json
 import copy
 
 class resultParser():
@@ -41,8 +41,8 @@ class resultParser():
             #nodeIP = ".".join(j["node"].split(":")[0].split(".")[:3])
             nodeIP = j["node"].split(":")[0]
             rt = j["log"]
-            # number of samples per second
-            logFrequency = j["logFrequency"]
+            # interval between two samples in seconds
+            logFrequency = float(j["logFrequency"])/1000
             helloTimers.append(float(j["hello_timer"]))
             tcTimers.append(float(j["tc_timer"]))
             # number of loss in a second
