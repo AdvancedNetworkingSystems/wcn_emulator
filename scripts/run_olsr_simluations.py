@@ -18,6 +18,8 @@ from collections import defaultdict
 import json
 import numpy as np
 import zipfile
+import numpy as np
+import matplotlib.pyplot as plt
 
 from inherit_config_parser import InheritConfigParser
 from measure_breakage_time import resultParser
@@ -29,6 +31,7 @@ topology_override_string = "no_topology_override_see_config_file"
 class EmulationRunner():
 
     def __init__(self):
+        self.homeFolder = "/home/leonardo/tmp/"
         self.pathPrefix = ""
         self.args = None
         self.run_dict = []
@@ -110,19 +113,10 @@ class EmulationRunner():
         # named like ****-runId/ and containing the data for a specific
         # runId.
         res = {}
-        try:
-            self.extract_simulation_parameter_from_conf("popRouting",
-                                                        str(self.args.confile),
-                                                        str(self.args.stanza))
-            optimized = True
-        except:
-            optimized = False
-
         tempRes = defaultdict(dict)
         failedReads = []
         for folder in runFolders:
             runId = int(folder.split("-")[-1])
-            files, unzipped = self.unzip_files(folder + "/")
             failedReads += self.parse_results(folder + "/", tempRes, runId)
         for failureId in tempRes:
                 tt = tempRes[failureId]
@@ -132,14 +126,12 @@ class EmulationRunner():
                 res[failureId]["failures"] = np.average(
                    [b["failures"] for b in tt.values()])
         res["failedReads"] = failedReads
-        res["pop-enabled"] = optimized
         return res
 
 
     def unzip_files(self, resultFolder):
         files = glob.glob(resultFolder + "*.json")
         unzipped = False
-        print resultFolder
         if not files:
             zipped_files = glob.glob(resultFolder + "*.json.zip")
             if not zipped_files:
@@ -148,9 +140,9 @@ class EmulationRunner():
             unzipped = True
             for f in zipped_files:
                 print f
-                #z = zipfile.ZipFile(f, "r")
-                #z.extractall()
-                #z.close()
+                z = zipfile.ZipFile(f, "r")
+                z.extractall(path=resultFolder)
+                z.close()
             files = glob.glob(resultFolder + "*.json")
         return files, unzipped
 
@@ -159,7 +151,7 @@ class EmulationRunner():
         for f in files:
             if not unzipped:
                 z = zipfile.ZipFile(f+".zip", "w")
-                z.write(f, os.path.basename(f))
+                z.write(f, os.path.basename(f), zipfile.ZIP_DEFLATED)
                 z.close()
         for f in files:
             os.remove(f)
@@ -172,11 +164,17 @@ class EmulationRunner():
         failure_ids = set()
         total_fail_samples = 0
         files, unzipped = self.unzip_files(resultFolder)
+        all_runs_results = defaultdict(list)
 
         for f in files:
             idx = f.split("_")[-1].split(".")[0]
             failure_ids.add(idx)
-        for failureId_str in list(failure_ids):
+        num_plots = len(failure_ids)
+        plt.figure(1, figsize=(5, 3*num_plots))
+        temp_log = open("/tmp/temp_log.txt", "w")
+        print list(failure_ids)
+        #for idx, failureId_str in enumerate(sorted(list(failure_ids), key= int)):
+        for idx, failureId_str in enumerate(list(failure_ids)):
             failureId = int(failureId_str)
             print "=============== Analysing failureId:", failureId
             try:
@@ -193,14 +191,34 @@ class EmulationRunner():
                 failedReads.append(resultFolder)
                 return
  
-            print [type(t) for t in jsonRt.keys()]
             results = p.parseAllRuns(jsonRt[int(failureId)], nodeSet, 
                     failedNodes[int(failureId)], silent=True)
             failures = 0
             log_time_array = sorted(results)
+            all_runs_results[failureId_str] = [[],[],[],[],[]]
+            print >> temp_log, "#failure Id:", failureId_str 
+            print >> temp_log, "time,", "broken routes,","loops,", "total errors" 
+            first_time = 0
             for tt in log_time_array:
-                failures += sum(results[tt][1:3])
+                if not first_time:
+                    first_time = float(tt)
+                all_runs_results[failureId_str][0].append(float(tt) - first_time)
+                all_runs_results[failureId_str][1].append(results[tt][1])
+                all_runs_results[failureId_str][2].append(results[tt][2])
+                all_runs_results[failureId_str][3].append(sum(results[tt][1:3]))
+                all_runs_results[failureId_str][4].append(results[tt][0])
+                failures += sum(results[tt][1:3])*logFrequency
                 total_fail_samples += 1
+                print >> temp_log, tt - first_time, ",", results[tt][1], ",", results[tt][2], ",", sum(results[tt][1:3])
+            plt.subplot(num_plots, 1, idx+1)
+            plt.plot(all_runs_results[failureId_str][0], 
+                     all_runs_results[failureId_str][1], 'r--',
+                     all_runs_results[failureId_str][0], 
+                     all_runs_results[failureId_str][2], 'b--',
+                     all_runs_results[failureId_str][0], 
+                     all_runs_results[failureId_str][3], 'y--')
+            print >> temp_log, "" 
+            print >> temp_log, "" 
             tempRes[failureId][runId] = {}
             tempRes[failureId][runId]["signalling"] = signallingSent
             tempRes[failureId][runId]["failures"] = failures
@@ -208,7 +226,10 @@ class EmulationRunner():
             tempRes[failureId][runId]["logFrequency"] = logFrequency
             tempRes[failureId][runId]["results"] = results
             tempRes[failureId][runId]["total_fail_samples"] = total_fail_samples
+            plt.savefig("/tmp/pp.png")
 
+        temp_log.close()
+        self.plot_all_runs(all_runs_results)
         self.clean_zipfiles(files, unzipped)
 
         return failedReads
@@ -219,22 +240,22 @@ class EmulationRunner():
         if not self.args.parseonly and os.getuid() != 0:
             print "You should run this script as root"
             sys.exit(1)
-        if self.args.parseonly:
-            #fixme
-            print "Do something here, unimplemented"
-            exit()
 
-        self.pathPrefix = "/tmp/OLSR-log_" + self.randomFileExtension + "/"
+        self.pathPrefix = self.homeFolder + "OLSR-log_" +\
+            self.randomFileExtension + "/"
         # TODO check the output f next function
         os.mkdir(self.pathPrefix)
 
         if res:
             res = defaultdict(dict)
         try:
-            self.extract_simulation_parameter_from_conf("popRouting",
-                                                        str(self.args.confile),
-                                                        str(self.args.stanza))
-            optimized = True
+            p = self.extract_simulation_parameter_from_conf("popRouting",
+                     str(self.args.confile),
+                     str(self.args.stanza))
+            if p == 'True':
+                optimized = True
+            else:
+                optimized = False
         except:
             optimized = False
         failedReads = []
@@ -248,14 +269,19 @@ class EmulationRunner():
             # per run, indexed per runIf
             for failureId in tempRes:
                 tt = tempRes[failureId]
-                res[topo][failureId] = {}
-                res[topo][failureId]["signalling"] = np.average(
+                res[failureId]["signalling"] = np.average(
                    [b["signalling"] for b in tt.values()])
-                res[topo][failureId]["failures"] = np.average(
+                res[failureId]["failures"] = np.average(
                    [b["failures"] for b in tt.values()])
         res["failedReads"] = failedReads
         res["pop-enabled"] = optimized
         return res
+
+    def plot_all_runs(self, results):
+        """ for each run we plot a gigantic file 
+        summarising all the runs """
+
+         
 
     def save_results(self, results):
         results["command"] = " ".join(self.command)
@@ -317,9 +343,11 @@ class EmulationRunner():
         t.close()
 
     def clean_environment(self, auto=False):
+        print "clean_environment function must be reworked"
+        exit(1)
         commands = []
         log_files = glob.glob(self.pathPrefix+"*")
-        dump_files = glob.glob("../"+self.args.stanza+"*")
+        dump_files = glob.glob(self.homeFolder + self.args.stanza+"*")
         c = []
         user_input = 'n'
         if log_files:
@@ -376,6 +404,7 @@ class EmulationRunner():
         try:
             print "XXXXXX", command
             output = check_output(command, cwd="../")
+
         except CalledProcessError as e:
             print "command: ", command , " exited with non-zero value:" + str(e)
             raise
