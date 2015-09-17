@@ -21,7 +21,7 @@ class MininetTest(object):
     def getAllHosts(self):
         return self.net.values()
 
-    def bgCmd(self,host,force_multiple_processes,*args):
+    def bgCmd(self, host, force_multiple_processes, *args):
         # here it's a little workaround for tracing the resulting pid
         # it launch the new process using the mininet interface
         # but it check the newly created process id using psutil
@@ -40,7 +40,8 @@ class MininetTest(object):
         host.sendCmd(*(args+("&",)))
         sleep(0.5)
         try :
-            pid = (set(host_proc.get_children()).difference(host_ps)).pop().pid
+            pid = (set(host_proc.get_children()).difference(host_ps)).\
+                    pop().pid
             info("BGProcess: "+str(pid)+"; ")
             self.pendingProc[pid] = host
         except:
@@ -48,18 +49,30 @@ class MininetTest(object):
             return None
         return pid
 
-    def sendSig(self,pid,sig=signal.SIGTERM):
+    def sendSig(self, pid, sig=signal.SIGTERM):
+        if sig == signal.SIGTERM or sig == signal.SIGKILL:
+            info("Sending signal to BGProcess: "+str(pid)+"; ")
         try:
-            info("Killing BGProcess: "+str(pid)+"; ")
             os.kill( pid, sig )
-        except OSError:
-            error("Error while killing process "+str(pid))
+        except OSError as e:
+            error("Error while sending " + str(sig) + " to process "+str(pid) + " ")
+            error("\nWith error " + str(e))
             pass
 
-    def killAll(self):
+    def killAll(self, sig = signal.SIGKILL):
         for pid in self.pendingProc.keys():
-            self.sendSig(pid,signal.SIGKILL)
-            self.pendingProc[pid].monitor() # wait exiting
+            self.sendSig(pid, sig)
+            sleep(0.1)
+            try:
+                #check if process still exists
+                self.sendSig(pid, 0)
+            except OSError:
+                # process is not running 
+                continue
+            else:
+                # now it's going to die
+                self.sendSig(pid, signal.SIGTERM)
+
         self.pendingProc.clear()
         info("\n")
         for host in self.net.values():
