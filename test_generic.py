@@ -4,6 +4,7 @@ import os
 from random import sample
 from psutil import Process
 from time import sleep
+import psutil
 
 from mininet.log import info, error, debug, output 
 
@@ -42,7 +43,7 @@ class MininetTest(object):
         try :
             pid = (set(host_proc.get_children()).difference(host_ps)).\
                     pop().pid
-            info("BGProcess: "+str(pid)+"; ")
+            info("Launching BGProcess: "+str(pid)+"\n")
             self.pendingProc[pid] = host
         except:
             info("*** Unable to launch command:\n\t "+str(" ".join(args)))
@@ -51,7 +52,7 @@ class MininetTest(object):
 
     def sendSig(self, pid, sig=signal.SIGTERM):
         if sig == signal.SIGTERM or sig == signal.SIGKILL:
-            info("Sending signal to BGProcess: "+str(pid)+"; ")
+            info("Sending signal " + str(sig) + " to BGProcess: "+str(pid)+"\n")
         try:
             os.kill( pid, sig )
         except OSError as e:
@@ -59,20 +60,14 @@ class MininetTest(object):
             error("\nWith error " + str(e))
             pass
 
-    def killAll(self, sig = signal.SIGKILL):
+    def killAll(self, sig=signal.SIGTERM):
         for pid in self.pendingProc.keys():
             self.sendSig(pid, sig)
             sleep(0.1)
-            try:
-                #check if process still exists
-                self.sendSig(pid, 0)
-            except OSError:
-                # process is not running 
-                continue
-            else:
+            # check if process still exists
+            if psutil.pid_exists(pid):
                 # now it's going to die
-                self.sendSig(pid, signal.SIGTERM)
-
+                self.sendSig(pid, signal.SIGKILL)
         self.pendingProc.clear()
         info("\n")
         for host in self.net.values():
