@@ -46,8 +46,28 @@ class pingRandomTest(pingTest):
 
         duration = int(args["duration"])
         super(pingRandomTest, self).__init__(mininet, duration)
-        h =  self.getHostSample(1)
         self.destination = self.getHostSample(1)[0].defaultIntf().ip
         self.setPrefix(name)
+
+class pingFullRandomTest(pingTest):
+
+    def __init__(self, mininet, name, args):
+
+        duration = int(args["duration"])
+        super(pingFullRandomTest, self).__init__(mininet, duration)
+        self.setPrefix(name)
+
+
+    def runTest(self):
+        info("*** Launching Ping Full Random test\n")
+        info("Data folder: "+self.prefix+"\n")
+
+        for h in self.getAllHosts():
+            self.destination = self.getHostSample(1)[0].defaultIntf().ip
+            self.launchPing(h)
+
+        info("Waiting completion...\n")
+        sleep(self.duration)
+        self.killAll()
 
 
