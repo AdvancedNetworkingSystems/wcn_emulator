@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 import sys
+from inherit_config_parser import InheritConfigParser
 import ConfigParser
 import inspect
 
 sys.path.append('test_code')
 
+import StringIO
 from os import path
 from time import time
 
@@ -22,18 +24,19 @@ class conf(parameters):
 class configurationFile():
 
     mandatoryOptions = {"testModule":None
-            , "testClass":None, "times":1}
+            , "testClass":None}
     confParams = {}
     className = None
-    def __init__(self, fileName, stanza):
-        # check if filename esists
-        try:
-            fd =  open(fileName, "r")
-        except IOError:
+    def __init__(self, fileName, stanza, overrideOption=""):
+        """ receives the configuration fileName and the stanza to be 
+        parsed """
+
+        if not path.isfile(fileName):
             error("Can not open the configuration file: " + fileName\
                 + "\n")
             sys.exit(1)
-        self.parser = ConfigParser.SafeConfigParser()
+        self.parser = InheritConfigParser()
+        self.parser.optionxform = str
         self.parser.read(fileName)
 
         self.testName = stanza 
@@ -58,7 +61,7 @@ class configurationFile():
             errorString = "ERROR: no " \
                 + self.mandatoryOptions['testClass'] \
                 + " simulation class is present in "\
-                + moduleName + "\n"
+                + moduleName.replace(".","/")+".py" + "\n"
             error(errorString)
             sys.exit(1)
 
@@ -67,6 +70,16 @@ class configurationFile():
 
         for name, value in self.parser.items(self.testName):
             self.confParams[name] = value
+
+        if overrideOption:
+            options = overrideOption.replace(",", "\n")
+            overrideConf = StringIO.StringIO("[DEFAULT]\n" + options + "\n")
+            tmpParser = ConfigParser.ConfigParser()
+            tmpParser.optionxform = str
+            tmpParser.readfp(overrideConf)
+            for name, value in tmpParser.defaults().items():
+                print name, value
+                self.confParams[name] = value
 
     def getConfigurations(self, name, raiseError=False):
         try:
@@ -100,13 +113,18 @@ if __name__ == '__main__':
             ("-f", ["configFile", True, "",
                 "file with the available configurations", str]),
             ("-t", ["testName", True, "",
-                "base name for test output", str])
+                "name of the configuration to run", str])
            ]
     opt = [
             ("-d", ["drawGraph", False, False,
                 "draw the graph before you run the test", int]),
             ("-g", ["graphFile", True, "",
-                "file with the topology (overrides configuration)", str])
+                "file with the topology (overrides configuration)", str]),
+            ("-s", ["shortestPaths", False, False,
+                "fill the routing tables with the shortest route"\
+                + " to any node", int]),
+            ("-o", ["overrideOption", True, "",
+                "comma separated list of options to override in the ini file (ex: a=10,b=100)", str]),
           ]
 
     P = conf(path.basename(__file__),need, opt)
@@ -117,10 +135,7 @@ if __name__ == '__main__':
 
     configFile = P.getParam("configFile")
     testName = P.getParam("testName")
-    C = configurationFile(configFile, testName)
-    #import code
-    #code.interact(local=locals())
-    # parse the conf file
+    C = configurationFile(configFile, testName, P.getParam("overrideOption"))
     networkGraph = P.getParam("graphFile")
     if networkGraph == "":
         networkGraph = C.getConfigurations("graphDefinition")
@@ -135,11 +150,19 @@ if __name__ == '__main__':
     net = GraphNet(networkGraph, draw = drawGraph, link_opts = link_opts)
     net.start()
     net.enableForwarding()
+
+    if P.getParam("shortestPaths") == True:
+        net.setShortestRoutes()
     net.setShortestRoutes()
     #CLI(net)
     graphname = networkGraph.split('/')[-1].split('.')[0]
     testPath = testName + "_" + graphname + "_" + str(int(time())) 
-    for i in range(int(C.getConfigurations("times"))):
+    repeat = C.getConfigurations("times")
+    if repeat == None:
+        repeat = 1
+    else:
+        repeat = int(repeat)
+    for i in range(repeat):
         info("+++++++ Round: "+str(i+1) + '\n')
         test = C.className(net, testPath, C.confParams)
         test.runTest()
