@@ -41,7 +41,7 @@ class PowerNet(Mininet):
     def getNodeAddrs(self,node):
         r = []
         for intf in node.intfList():
-            if intf.link:
+            if intf.link and intf.ip:
                 r.append(intf.ip)
         return r
 
@@ -95,7 +95,7 @@ class PowerNet(Mininet):
             received_bytes += int(re.findall(r'\d+',host.cmd("ifconfig "+intf +" | grep -Eo 'RX bytes:[0-9]+' | cut -d':' -f 2"))[0])
             received_packets += int(re.findall(r'\d+',host.cmd("ifconfig "+intf +" | grep -Eo 'RX packets:[0-9]+' | cut -d':' -f 2"))[0])
         return (received_packets,received_bytes)
-        
+
     def sentPackets(self):
         # if you experience assertion errors, you should
         # try to make sleep the mininet thread for a second
@@ -132,7 +132,7 @@ class GraphNet(PowerNet):
         # add nodes
         for n in self.gg.nodes():
             self.addHost(n)
-            self.hosts_port[n] = 1 
+            self.hosts_port[n] = 1
 
         # add edges
         for e in self.gg.edges(data=True):
@@ -147,11 +147,11 @@ class GraphNet(PowerNet):
             #quality_params["delay_distribution"] = 'wifi_m0.515_s0.284'
             if "loss" in quality_params.keys():
                 if quality_params["loss"] == "wifi_loss":
-                    quality_params["loss"] = 100*((1-(1.0/(e[2]['weight'])))**7) 
+                    quality_params["loss"] = 100*((1-(1.0/(e[2]['weight'])))**7)
                 else:
                     quality_params["loss"] = int(quality_params["loss"])
-# the number of retransmisison (4) derives from a parameter of the 802.11 
-# standard: dot11LongRetryLink (for Long Packets, are longer than 
+# the number of retransmisison (4) derives from a parameter of the 802.11
+# standard: dot11LongRetryLink (for Long Packets, are longer than
 # dot11RTSthreshold)
             quality_params["use_htb"] = True
             self.insertLink(self.get(e[0]),self.get(e[1]),quality_params)
@@ -190,12 +190,12 @@ class GraphNet(PowerNet):
                         debug("\tNextHop node: "+nextHop.name+'\n')
                         dsts = self.getNodeAddrs(self.get(node2))
                         intfs = host1.connectionsTo(nextHop)
-                        nextAddrs = [ couple[1].ip for couple in intfs ]
+                        nextAddrs = [ couple[1].ip for couple in intfs if couple[1].ip ]
                         rintf = intfs[0][0] # WARNING we just consider one link
                         for dst in dsts:
                             for addr in nextAddrs:
+                                debug("\tip route add "+str(dst)+" via "+str(addr)+'\n')
                                 host1.cmd("ip route add "+dst+" via "+addr+" dev "+rintf.name)
-                                debug("\tip route add "+dst+" via "+addr+'\n')
                     else :
                         host2 = self.get(node2)
                         intfs = [ couple[0] for couple in host1.connectionsTo(host2) ]
