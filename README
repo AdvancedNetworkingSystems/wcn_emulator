@@ -37,7 +37,7 @@ create-netem-distribution-tables.html)
 5) put mydist.dist in /usr/lib/tc/
 6) compute mean and standard deviation (sigma)
    ./stats data.txt
-7) instruct the network builder with these:
-   quality_params["delay"] = '<mean>ms'
-   quality_params["jitter"] = '<sigma>ms' 
-   quality_params["delay_distribution"] = 'mydist' 
+7) use the following configuration parameters:
+   link_mean_delay = <mean>ms
+   link_delay_sd = <sigma>ms
+   link_delay_distribution = mydist 
