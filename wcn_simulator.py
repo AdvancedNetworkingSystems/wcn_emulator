@@ -153,7 +153,6 @@ if __name__ == '__main__':
 
     if P.getParam("shortestPaths") == True:
         net.setShortestRoutes()
-    net.setShortestRoutes()
     #CLI(net)
     graphname = networkGraph.split('/')[-1].split('.')[0]
     testPath = testName + "_" + graphname + "_" + str(int(time())) 
