@@ -1,3 +1,3 @@
 [submodule "community_networks_analysis"]
 	path = community_networks_analysis
-	url = https://github.com/leonardomaccari/community_networks_analysis.git
+	url = https://ans.disi.unitn.it/redmine/community-networks-analyser.git

@@ -95,7 +95,7 @@ class PowerNet(Mininet):
             received_bytes += int(re.findall(r'\d+',host.cmd("ifconfig "+intf +" | grep -Eo 'RX bytes:[0-9]+' | cut -d':' -f 2"))[0])
             received_packets += int(re.findall(r'\d+',host.cmd("ifconfig "+intf +" | grep -Eo 'RX packets:[0-9]+' | cut -d':' -f 2"))[0])
         return (received_packets,received_bytes)
-
+        
     def sentPackets(self):
         # if you experience assertion errors, you should
         # try to make sleep the mininet thread for a second
@@ -109,23 +109,27 @@ class PowerNet(Mininet):
         return (sent_packets,sent_bytes)
 
 class GraphNet(PowerNet):
-    def __init__(self,edges_file,draw=True,**params):
+    def __init__(self, edges_file, draw=True, **params):
         if "link_opts" in params.keys():
             self.link_opts = params["link_opts"]
             del params["link_opts"]
 
-        super(GraphNet,self).__init__(**params)
+        super(GraphNet, self).__init__(**params)
         info("\nReading "+edges_file+"\n")
 
         g = loadGraph(edges_file, connected=True)
 
         nodeCounter = 0
         nodeMap = {}
+        # mininet bails if host names are longer than 10 chars
+        max_name_len = 10 - len(str(len(g))) - 2
         for name in g.nodes():
-            nodeMap[name] = "h"+str(name)+"_"+str(nodeCounter)
+            # remove unprintable chars from name
+            nodeMap[name] = "h" + filter(str.isalnum, str(name))[-max_name_len:]\
+                            + "_" + str(nodeCounter)
             nodeCounter += 1
 
-        self.gg = nx.relabel_nodes(g,nodeMap)
+        self.gg = nx.relabel_nodes(g, nodeMap)
 
         self.hosts_port = {}
 
@@ -147,14 +151,15 @@ class GraphNet(PowerNet):
             #quality_params["delay_distribution"] = 'wifi_m0.515_s0.284'
             if "loss" in quality_params.keys():
                 if quality_params["loss"] == "wifi_loss":
-                    quality_params["loss"] = 100*((1-(1.0/(e[2]['weight'])))**7)
+                    quality_params["loss"] = \
+                        100*((1-(1.0/(e[2]['weight'])))**7)
                 else:
-                    quality_params["loss"] = int(quality_params["loss"])
-# the number of retransmisison (4) derives from a parameter of the 802.11
-# standard: dot11LongRetryLink (for Long Packets, are longer than
-# dot11RTSthreshold)
+                    quality_params["loss"] = float(quality_params["loss"])
+            # the number of retransmisison (4) derives from a parameter of the
+            # 802.11 standard: dot11LongRetryLink (for Long Packets, are longer
+            # than dot11RTSthreshold)
             quality_params["use_htb"] = True
-            self.insertLink(self.get(e[0]),self.get(e[1]),quality_params)
+            self.insertLink(self.get(e[0]), self.get(e[1]), quality_params)
 
         if draw:
             showGraph(self.gg)
@@ -163,18 +168,16 @@ class GraphNet(PowerNet):
         port = self.hosts_port[node.name]
         addr = "10.0."+node.name.split('_')[-1]+"."+str(port)+"/8"
         self.hosts_port[node.name] += 1
-        return addr,port
+        return addr, port
 
     def insertLink(self, n1, n2, quality_params={}):
         addr1, port1 = self.pickHostAddrPort(n1)
         addr2, port2 = self.pickHostAddrPort(n2)
-
-        self.addLink(n1, n2,  \
-                port1 = port1, \
-                port2 = port2, \
-                params1=dict([('ip',addr1)] + quality_params.items()), \
-                params2=dict([('ip',addr2)] + quality_params.items()) \
-                )
+        self.addLink(n1, n2,
+                     port1=port1,
+                     port2=port2,
+                     params1=dict([('ip', addr1)] + quality_params.items()),
+                     params2=dict([('ip', addr2)] + quality_params.items()))
 
     def setShortestRoutes(self):
         paths = nx.all_pairs_dijkstra_path(self.gg, weight='weight')
@@ -183,8 +186,8 @@ class GraphNet(PowerNet):
             debug("Starting node: "+node1+'\n')
             debug("\tpaths: "+str(paths[node1])+'\n')
             for node2 in paths[node1].keys():
-                if node2 != node1 :
-                    if len(paths[node1][node2])>2:
+                if node2 != node1:
+                    if len(paths[node1][node2]) > 2:
                         debug("\tDestination node: "+node2+'\n')
                         nextHop = self.get(paths[node1][node2][1])
                         debug("\tNextHop node: "+nextHop.name+'\n')
@@ -196,6 +199,7 @@ class GraphNet(PowerNet):
                             for addr in nextAddrs:
                                 debug("\tip route add "+str(dst)+" via "+str(addr)+'\n')
                                 host1.cmd("ip route add "+dst+" via "+addr+" dev "+rintf.name)
+                                debug("\tip route add "+dst+" via "+addr+'\n')
                     else :
                         host2 = self.get(node2)
                         intfs = [ couple[0] for couple in host1.connectionsTo(host2) ]
