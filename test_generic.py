@@ -1,19 +1,20 @@
-
 import signal
-import os 
+import os
+import multiprocessing as mp
 from random import sample
 from psutil import Process
 from time import sleep
 
-from mininet.log import info, error, debug, output 
+from mininet.log import info, error, debug, output
+from logsys import log_sys_resources
 
 class MininetTest(object):
     def __init__(self, mininet, path, duration):
         self.net = mininet
-        self.pendingProc = {} 
+        self.pendingProc = {}
         self.duration = duration
         self.prefix = ''
-    
+
     def getHostSample(self, num):
         hosts = sample(self.net.values(), num)
         return hosts[:num]
@@ -77,3 +78,11 @@ class MininetTest(object):
                 os.chmod(os.path.join(root, dir), 0777)
             for file in files:
                 os.chmod(os.path.join(root, file), 0777)
+
+    def wait(self, time, log_resources=None, log_interval=1):
+        if (log_resources):
+            p = mp.Process(target=log_sys_resources,
+                           args=(self.prefix, log_resources, log_interval))
+            p.start()
+        sleep(time)
+        p.terminate()

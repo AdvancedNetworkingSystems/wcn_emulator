@@ -37,7 +37,7 @@ class pingTest(MininetTest):
             self.launchPing(h)
 
         info("Waiting completion...\n")
-        sleep(self.duration)
+        self.wait(self.duration, log_resources={'net': 'netusage.csv'})
         self.killAll()
 
 class pingRandomTest(pingTest):
