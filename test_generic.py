@@ -27,7 +27,7 @@ class MininetTest(object):
         # it launch the new process using the mininet interface
         # but it check the newly created process id using psutil
         host_proc = Process(host.pid)
-        host_ps = set(host_proc.get_children())
+        host_ps = set(host_proc.children())
         debug("Sending cmd: \n\t"+str(" ".join(args))+"\n")
 
         # disable bg process output
@@ -41,7 +41,7 @@ class MininetTest(object):
         host.sendCmd(*(args+("&",)))
         sleep(0.5)
         try :
-            pid = (set(host_proc.get_children()).difference(host_ps)).pop().pid
+            pid = (set(host_proc.children()).difference(host_ps)).pop().pid
             info("BGProcess: "+str(pid)+"; ")
             self.pendingProc[pid] = host
         except:
