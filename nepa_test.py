@@ -7,6 +7,7 @@ import ConfigParser
 import inspect
 
 sys.path.append('test_code')
+sys.path.insert(0, './')
 
 from time import time
 
