@@ -22,6 +22,16 @@ class MininetTest(object):
     def getAllHosts(self):
         return self.net.values()
 
+    def execute(self, host, force_multiple_processes, *args):
+
+        tmp_wait = host.waiting
+
+        if force_multiple_processes:
+            host.waiting = False
+        ret = host.cmd(*(args))
+        host.waiting = tmp_wait
+        return ret
+
     def bgCmd(self,host,force_multiple_processes,*args):
         # here it's a little workaround for tracing the resulting pid
         # it launch the new process using the mininet interface
@@ -56,6 +66,16 @@ class MininetTest(object):
         except OSError:
             error("Error while killing process "+str(pid))
             pass
+
+    def killProc(self,pid,sig=signal.SIGTERM,wait=False):
+        active_procs = self.pendingProc.keys()
+        if active_procs.count(pid) == 1:
+            self.sendSig(pid, sig)
+            if wait:
+                self.pendingProc[pid].monitor()
+            del self.pendingProc[pid]
+        else:
+            error("killProc: process %d not found" % pid)
 
     def killAll(self):
         for pid in self.pendingProc.keys():
