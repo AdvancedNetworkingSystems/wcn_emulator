@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 import sys
+from os import path
+# add the nepa_test directory to sys path
+sys.path.append(path.dirname(sys.argv[0]))
 import inherit_config_parser
 import ConfigParser
 import inspect
 import StringIO
 
 sys.path.append('test_code')
+sys.path.insert(0, './')
 
-from os import path
 from time import time
 
 from parameters_parser import parameters
