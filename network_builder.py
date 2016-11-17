@@ -11,7 +11,8 @@ from mininet.node import CPULimitedHost
 from mininet.link import TCLink
 
 from os import path
-sys.path.append('%s/community_networks_analysis' % path.dirname(sys.argv[0]))
+sys.path.append('%s/community_networks_analysis' %
+                path.dirname(path.realpath(__file__)))
 
 from gengraphs import loadGraph
 from misclibs import showGraph
