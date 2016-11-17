@@ -10,7 +10,8 @@ from mininet.log import info, error, debug, output
 from mininet.node import CPULimitedHost
 from mininet.link import TCLink
 
-sys.path.append('community_networks_analysis')
+from os import path
+sys.path.append('%s/community_networks_analysis' % path.dirname(sys.argv[0]))
 
 from gengraphs import loadGraph
 from misclibs import showGraph
