@@ -55,7 +55,7 @@ class pingNode0Test(pingTest):
     def __init__(self, mininet, name, args):
 
         duration = int(args["duration"])
-        super(pingRandomTest, self).__init__(mininet, duration)
-        self.destination = self.net.value()[0].defaultIntf().ip
+        super(pingNode0Test, self).__init__(mininet, duration)
+        self.destination = self.net.values()[0].defaultIntf().ip
         self.setPrefix(name)
 
