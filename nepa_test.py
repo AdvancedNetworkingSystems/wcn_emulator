@@ -12,6 +12,7 @@ from time import time
 from parameters_parser import parameters
 from network_builder import *
 from test_code import *
+from mininet.log import setLogLevel
 
 
 class conf(parameters):
