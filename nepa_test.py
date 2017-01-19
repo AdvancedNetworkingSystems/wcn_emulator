@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+import inherit_config_parser
 import ConfigParser
 import inspect
 
@@ -13,33 +14,31 @@ from network_builder import *
 from test_code import *
 
 
-
 class conf(parameters):
     def checkCorrectness(self):
         self.checkNeededParams()
         return True
 
-class configurationFile():
 
-    mandatoryOptions = {"testModule":None
-            , "testClass":None, "times":1}
+class ConfigurationFile():
+
+    mandatoryOptions = {"testModule": None, "testClass": None, "times": 1}
     confParams = {}
     className = None
-    def __init__(self, fileName, stanza):
+
+    def __init__(self, fileName, stanza, overrideOption=""):
         # check if filename esists
-        try:
-            fd =  open(fileName, "r")
-        except IOError:
-            error("Can not open the configuration file: " + fileName\
-                + "\n")
+        if not path.isfile(fileName):
+            error("Can not open the configuration file: " + fileName + "\n")
             sys.exit(1)
-        self.parser = ConfigParser.SafeConfigParser()
+        self.parser = inherit_config_parser.InheritConfigParser()
+        self.parser.optionxform = str
         self.parser.read(fileName)
 
-        self.testName = stanza 
+        self.testName = stanza
         if stanza not in self.parser.sections():
-            error("Can not find configuration " + stanza \
-                    + " in file " + fileName + "\n")
+            error("Can not find configuration " + stanza
+                  + " in file " + fileName + "\n")
             sys.exit(1)
         for o in self.mandatoryOptions:
             self.mandatoryOptions[o] = \
@@ -63,10 +62,20 @@ class configurationFile():
             sys.exit(1)
 
         self.className = getattr(sys.modules[moduleName],
-            self.mandatoryOptions['testClass'])
+                                 self.mandatoryOptions['testClass'])
 
         for name, value in self.parser.items(self.testName):
             self.confParams[name] = value
+
+        if overrideOption:
+            options = overrideOption.replace(",", "\n")
+            overrideConf = StringIO.StringIO("[DEFAULT]\n" + options + "\n")
+            tmpParser = ConfigParser.ConfigParser()
+            tmpParser.optionxform = str
+            tmpParser.readfp(overrideConf)
+            for name, value in tmpParser.defaults().items():
+                print name, value
+                self.confParams[name] = value
 
     def getConfigurations(self, name, raiseError=False):
         try:
@@ -89,58 +98,60 @@ def link_conf(conf):
     if conf.getConfigurations("link_delay_sd"):
         link_opts["jitter"] = (conf.getConfigurations("link_delay_sd"))
     if conf.getConfigurations("link_delay_distribution"):
-        link_opts["delay_distribution"] = (conf.getConfigurations("link_delay_distribution"))
+        link_opts["delay_distribution"] = \
+            (conf.getConfigurations("link_delay_distribution"))
     if conf.getConfigurations("link_loss"):
         link_opts["loss"] = (conf.getConfigurations("link_loss"))
     return link_opts
 
+
 def nepa_test():
     setLogLevel('info')
     need = [
-            ("-f", ["configFile", True, "",
-                "file with the available configurations", str]),
-            ("-t", ["testName", True, "",
-                "base name for test output", str])
-           ]
+        ("-f", ["configFile", True, "",
+         "file with the available configurations", str]),
+        ("-t", ["testName", True, "",
+         "base name for test output", str])
+        ]
     opt = [
-            ("-d", ["drawGraph", False, False,
-                "draw the graph before you run the test", int]),
-            ("-g", ["graphFile", True, "",
-                "file with the topology (overrides configuration)", str])
-          ]
+        ("-d", ["drawGraph", False, False,
+         "draw the graph before you run the test", int]),
+        ("-g", ["graphFile", True, "",
+         "file with the topology (overrides configuration)", str]),
+        ("-o", ["overrideOption", True, "",
+         "comma separated list of options to override in the ini file \
+         (ex: a=10,b=100)", str]),
+        ]
 
-    P = conf(path.basename(__file__),need, opt)
+    P = conf(path.basename(__file__), need, opt)
     P.parseArgs()
-    if P.checkCorrectness() == False:
+    if not P.checkCorrectness():
         P.printUsage()
         sys.exit(1)
 
     configFile = P.getParam("configFile")
     testName = P.getParam("testName")
-    C = configurationFile(configFile, testName)
-    #import code
-    #code.interact(local=locals())
+    C = ConfigurationFile(configFile, testName, P.getParam("overrideOption"))
     # parse the conf file
     networkGraph = P.getParam("graphFile")
     if networkGraph == "":
         networkGraph = C.getConfigurations("graphDefinition")
-        if networkGraph == None:
-            error("No graph topology specified in config file or command " + \
-                "line!\n")
+        if not networkGraph:
+            error("No graph topology specified in conf file or command line!\n")
             sys.exit(1)
     drawGraph = P.getParam("drawGraph")
 
     link_opts = link_conf(C)
 
-    net = GraphNet(networkGraph, draw = drawGraph, link_opts = link_opts)
+    net = GraphNet(networkGraph, draw=drawGraph, link_opts=link_opts)
     net.start()
     net.enableForwarding()
     enableShortestRoutes = C.getConfigurations("enableShortestRoutes")
-    if enableShortestRoutes == None or enableShortestRoutes.lower() == "true":
+    if not enableShortestRoutes or enableShortestRoutes.lower() == "true":
         net.setShortestRoutes()
-    #CLI(net)
+    # CLI(net)
     graphname = networkGraph.split('/')[-1].split('.')[0]
-    testPath = testName + "_" + graphname + "_" + str(int(time())) 
+    testPath = testName + "_" + graphname + "_" + str(int(time()))
     for i in range(int(C.getConfigurations("times"))):
         info("+++++++ Round: "+str(i+1) + '\n')
         test = C.className(net, testPath, C.confParams)
