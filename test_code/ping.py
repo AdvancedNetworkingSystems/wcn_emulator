@@ -34,7 +34,8 @@ class pingTest(MininetTest):
         info("Data folder: "+self.prefix+"\n")
 
         for h in self.getAllHosts():
-            self.launchPing(h)
+            if h.defaultIntf().ip != self.destination:
+                self.launchPing(h)
 
         info("Waiting completion...\n")
         self.wait(self.duration, log_resources={'net': 'netusage.csv'})
@@ -46,8 +47,15 @@ class pingRandomTest(pingTest):
 
         duration = int(args["duration"])
         super(pingRandomTest, self).__init__(mininet, duration)
-        h =  self.getHostSample(1)
         self.destination = self.getHostSample(1)[0].defaultIntf().ip
         self.setPrefix(name)
 
+class pingNode0Test(pingTest):
+
+    def __init__(self, mininet, name, args):
+
+        duration = int(args["duration"])
+        super(pingRandomTest, self).__init__(mininet, duration)
+        self.destination = self.net.value()[0].defaultIntf().ip
+        self.setPrefix(name)
 
