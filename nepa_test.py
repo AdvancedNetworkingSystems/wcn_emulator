@@ -11,6 +11,7 @@ from time import time
 from parameters_parser import parameters
 from network_builder import *
 from test_code import *
+from mininet.log import setLogLevel
 
 
 
@@ -36,7 +37,7 @@ class configurationFile():
         self.parser = ConfigParser.SafeConfigParser()
         self.parser.read(fileName)
 
-        self.testName = stanza 
+        self.testName = stanza
         if stanza not in self.parser.sections():
             error("Can not find configuration " + stanza \
                     + " in file " + fileName + "\n")
@@ -140,7 +141,7 @@ def nepa_test():
         net.setShortestRoutes()
     #CLI(net)
     graphname = networkGraph.split('/')[-1].split('.')[0]
-    testPath = testName + "_" + graphname + "_" + str(int(time())) 
+    testPath = testName + "_" + graphname + "_" + str(int(time()))
     for i in range(int(C.getConfigurations("times"))):
         info("+++++++ Round: "+str(i+1) + '\n')
         test = C.className(net, testPath, C.confParams)
