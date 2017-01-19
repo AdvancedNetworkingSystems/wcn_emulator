@@ -94,7 +94,7 @@ def link_conf(conf):
         link_opts["loss"] = (conf.getConfigurations("link_loss"))
     return link_opts
 
-if __name__ == '__main__':
+def nepa_test():
     setLogLevel('info')
     need = [
             ("-f", ["configFile", True, "",
@@ -148,3 +148,6 @@ if __name__ == '__main__':
     net.stop()
     test.changePermissions()
     info("*** Done with experiment: " + testName + "\n")
+
+if __name__ == "__main__":
+    nepa_test()
