@@ -135,7 +135,9 @@ if __name__ == '__main__':
     net = GraphNet(networkGraph, draw = drawGraph, link_opts = link_opts)
     net.start()
     net.enableForwarding()
-    net.setShortestRoutes()
+    enableShortestRoutes = C.getConfigurations("enableShortestRoutes")
+    if enableShortestRoutes == None or enableShortestRoutes.lower() == "true":
+        net.setShortestRoutes()
     #CLI(net)
     graphname = networkGraph.split('/')[-1].split('.')[0]
     testPath = testName + "_" + graphname + "_" + str(int(time())) 
