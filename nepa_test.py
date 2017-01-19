@@ -3,6 +3,7 @@ import sys
 import inherit_config_parser
 import ConfigParser
 import inspect
+import StringIO
 
 sys.path.append('test_code')
 
