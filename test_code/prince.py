@@ -66,6 +66,20 @@ class princeTest(MininetTest):
         	}
         }
         """
+    def launch_sniffer(self, host):
+
+        cmd = "tcpdump -i any -n -X -e "
+
+        logfile = self.prefix + host.name + "-dump.log"
+
+        params = {}
+        params['>'] = logfile
+        params['2>'] = logfile
+
+        return self.bgCmd(host, True, cmd,
+                          *reduce(lambda x, y: x + y, params.items()))
+
+
 
     def launchOLSR(self, host, args):
         cmd = "../olsrd/olsrd " + args
@@ -136,6 +150,7 @@ class princeTest(MininetTest):
 
             launch_pid = self.launchOLSR(h, args_olsr)
             launch_pid = self.launchPrince(h, args_prince)
+            self.launch_sniffer(h)
 
             if h.defaultIntf().ip != self.destination:
                 self.launchPing(h)

@@ -23,17 +23,18 @@ def load_json(json_file):
 
     G = nx.Graph()
     cost_label = ""
-    if "metric" in netjson_net and netjson_net["metric"] == "ETX":
+    if "metric" in netjson_net and netjson_net["metric"] == "ff_dat_metric":
         cost_label = "cost"
     for node in netjson_net["nodes"]:
-        G.add_node(node["id"])
+        if node["properties"]["type"] == "local" or node["properties"]["type"] == "node":
+            G.add_node(node["id"])
     for link in netjson_net["links"]:
-        if cost_label:
-            cost = float(link["cost"])
-        else:
-            cost = 1.0
-        G.add_edge(link["source"], link["target"],
-                   {"weight": cost})
+        if link["properties"]["type"] == "local" or link["properties"]["type"] == "node":
+            if cost_label:
+                cost = float(link["cost"])
+            else:
+                cost = 1.0
+            G.add_edge(link["source"], link["target"],{"weight": cost})
     return G
 
 
