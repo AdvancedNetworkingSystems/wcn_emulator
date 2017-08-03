@@ -1,13 +1,13 @@
 
 import sys
-sys.path.append('../')
 from network_builder import *
 from os import kill, path, makedirs
 from matplotlib.pyplot import ion
 from random import sample, randint
 import time
-
 from test_generic import *
+sys.path.append('../')
+
 
 class princeTest(MininetTest):
 
@@ -17,18 +17,15 @@ class princeTest(MininetTest):
         self.centList = []
         self.stopNodes = []
         self.stopNodeList = []
+        self.graph = mininet.gg
         self.olsr_conf_template = """
         DebugLevel  1
         IpVersion 4
         FIBMetric "flat"
         LinkQualityFishEye  0
         LockFile "%s"
-        Hna4
-        {
-        }
-        Hna6
-        {
-        }
+        Hna4{}
+        Hna6{}
 
         LoadPlugin "../olsrd/lib/netjson/olsrd_netjson.so.1.1"{
             PlParam "accept" "0.0.0.0"
@@ -40,32 +37,31 @@ class princeTest(MininetTest):
             PlParam "port" "1234"
         }
 
-        InterfaceDefaults {
-        }
+        InterfaceDefaults {}
 
-        Interface %s
-        {
-        }
+        Interface %s {}
         """
 
         self.prince_conf_template = """
         {
-        	"proto": {
-        		"protocol": "olsr",
-        		"host": "%s",
-        		"port": 2010,
-        		"timer_port": 1234,
-        		"refresh": 5
-        	},
-        	"graph-parser": {
-        		"heuristic": 1,
-        		"weights": 1,
-        		"recursive": 0,
-        		"stop_unchanged": 0,
-        		"multithreaded": 0
-        	}
+            "proto": {
+                "protocol": "olsr",
+                "host": "%s",
+                "port": 2010,
+                "timer_port": 1234,
+                "refresh": 5
+            },
+            "graph-parser": {
+                "heuristic": 1,
+                "weights": 1,
+                "recursive": 0,
+                "stop_unchanged": 0,
+                "multithreaded": 0
+            }
         }
         """
+        self.stopNodeList = self.getCentrality()
+
     def launch_sniffer(self, host):
 
         cmd = "tcpdump -i any -n -X -e "
@@ -78,8 +74,6 @@ class princeTest(MininetTest):
 
         return self.bgCmd(host, True, cmd,
                           *reduce(lambda x, y: x + y, params.items()))
-
-
 
     def launchOLSR(self, host, args):
         cmd = "../olsrd/olsrd " + args
@@ -96,8 +90,7 @@ class princeTest(MininetTest):
         return self.bgCmd(host, True, cmd,
                           *reduce(lambda x, y: x + y, params.items()))
 
-
-    def launchPrince(self,host, args):
+    def launchPrince(self, host, args):
         cmd = "../poprouting/output/prince " + args
 
         log_str = "Host " + host.name + " launching command:\n"
@@ -112,10 +105,8 @@ class princeTest(MininetTest):
         return self.bgCmd(host, True, cmd,
                           *reduce(lambda x, y: x + y, params.items()))
 
-
     def launchPing(self, host):
-
-        idps = randint(0,100)
+        idps = randint(0, 100)
         logfile = self.prefix + host.name.split('_')[0] + \
             "-" + str(idps) + "_ping_$(date +%s).log"
 
@@ -125,12 +116,18 @@ class princeTest(MininetTest):
         params['2>'] = logfile
 
         return self.bgCmd(host, True, cmd,
-            *reduce(lambda x, y: x + y, params.items()) )
+                          *reduce(lambda x, y: x + y, params.items()))
 
     def runTest(self):
         info("*** Launching Prince test\n")
-        info("Data folder: "+self.prefix+"\n")
+        info("Data folder: " + self.prefix + "\n")
+        self.setupNetwork(poprouting=True)
+        self.performTests()
+        info("Waiting completion...\n")
+        self.wait(float(self.duration), log_resources={'net': 'netusage.csv'})
+        self.tearDownNetwork()
 
+    def setupNetwork(self, poprouting, dump=False):
         for idx, h in enumerate(self.getAllHosts()):
             intf = h.intfList()
             intf_list = ' '.join(["\"" + i.name + "\"" for i in intf])
@@ -147,18 +144,61 @@ class princeTest(MininetTest):
             f_prince.close()
             args_prince = os.path.abspath(prince_conf_file)
 
-
             launch_pid = self.launchOLSR(h, args_olsr)
-            launch_pid = self.launchPrince(h, args_prince)
-            self.launch_sniffer(h)
+            if poprouting:
+                launch_pid = self.launchPrince(h, args_prince)
+            if dump:
+                self.launch_sniffer(h)
 
-            if h.defaultIntf().ip != self.destination:
-                self.launchPing(h)
-
-        info("Waiting completion...\n")
-        self.wait(float(self.duration), log_resources={'net': 'netusage.csv'})
+    def tearDownNetwork(self):
         self.killAll()
 
+    def performTests(self):
+        for idx, h in enumerate(self.getAllHosts()):
+            if h.defaultIntf().ip != self.destination:
+                self.launchPing(h)
+        #self.wait(float(self.killwait))
+        self.nodeCrashed = self.stopNodeList.pop(0)
+        if self.nodeCrashed:
+            eventDict[self.stopTime] = ["Stopping node(s) " + str(self.nodeCrashed) +
+                                        " at time " + str(self.stopTime) + "\n",
+                                        self.sendSignal,
+                                        {"sig": signal.SIGUSR2,
+                                        "hostName": self.nodeCrashed}
+                                        ]
+
+
+    def getCentrality(self):
+        node_centrality_posteriori = {}
+        centrality = {}
+        for n in self.graph.nodes():
+            gg = self.graph.copy()
+            edges = self.graph.edges([n])
+            gg.remove_node(n)
+            # compute the connected components
+            # WARNING: connected_components should return a list
+            # sorted by size, largest first. It does not, so i resort them
+            unsorted_comp = list(nx.connected_components(gg))
+            comp = sorted(unsorted_comp, key=lambda x: -len(x))
+            # re-add the node
+            gg.add_node(n)
+            # re-add the edges to nodes in the main component
+            for (fr, to) in edges:
+                if fr in comp[0]:
+                    gg.add_edge(fr, n)
+                if to in comp[0]:
+                    gg.add_edge(n, to)
+            # now compute the centrality. This tells how important is the node
+            # for the main connected component. If this is 0, it is not worth
+            # to remove this node
+            cent = nx.betweenness_centrality(gg)[n]
+            isolated_nodes = [x for component in comp[1:] for x in component]
+            node_centrality_posteriori[n] = [cent, [n] + isolated_nodes]
+            centrality[n] = cent
+        betw = [x for x in nx.betweenness_centrality(self.graph).items()
+                if x[1] > 0 and node_centrality_posteriori[x[0]][0] > 0]
+
+        return [node_centrality_posteriori[k[0]][1] for k in sorted(betw, key=lambda x: -x[1])]
 
 
 class princeRandomTest(princeTest):
@@ -166,6 +206,8 @@ class princeRandomTest(princeTest):
     def __init__(self, mininet, name, args):
 
         duration = int(args["duration"])
+        self.killwait = int(args["kill_wait"])
         super(princeRandomTest, self).__init__(mininet, duration)
+        self.kill = self.getHostSample(1)[0].defaultIntf().ip
         self.destination = self.getHostSample(1)[0].defaultIntf().ip
         self.setPrefix(name)
