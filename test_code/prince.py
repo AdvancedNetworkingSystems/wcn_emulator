@@ -157,16 +157,23 @@ class princeTest(MininetTest):
         for idx, h in enumerate(self.getAllHosts()):
             if h.defaultIntf().ip != self.destination:
                 self.launchPing(h)
-        #self.wait(float(self.killwait))
+        self.wait(float(self.killwait))
         self.nodeCrashed = self.stopNodeList.pop(0)
         if self.nodeCrashed:
-            eventDict[self.stopTime] = ["Stopping node(s) " + str(self.nodeCrashed) +
-                                        " at time " + str(self.stopTime) + "\n",
-                                        self.sendSignal,
-                                        {"sig": signal.SIGUSR2,
-                                        "hostName": self.nodeCrashed}
-                                        ]
+            print "Killing " + str(self.nodeCrashed) + "\n"
+            self.sendSignal(signal.SIGKILL, self.nodeCrashed)
 
+    def sendSignal(self, sig, hostName=""):
+        for pid, h in self.pendingProc.items():
+            if hostName:
+                for host in hostName:
+                    if host == h.name:
+                        print "sending signal to host:", host, ", pid", pid
+                        self.sendSig(pid, sig)
+            # send to all
+            else:
+                print "sending signal to all hosts:", sig
+                self.sendSig(pid, sig)
 
     def getCentrality(self):
         node_centrality_posteriori = {}

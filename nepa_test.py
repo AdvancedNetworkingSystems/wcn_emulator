@@ -139,23 +139,27 @@ def nepa_test():
     C = ConfigurationFile(configFile, testName, P.getParam("overrideOption"))
     # parse the conf file
     networkGraph = P.getParam("graphFile")
+    graph_kind = C.getConfigurations("graph_kind")
+    graph_size = C.getConfigurations("graph_size")
     if networkGraph == "":
         networkGraph = C.getConfigurations("graphDefinition")
         if not networkGraph:
-            error("No graph topology specified in conf file or command line!\n")
-            sys.exit(1)
+            print("No graph topology specified in conf file or command line! Will generate a " + graph_kind + " Graph\n")
     drawGraph = P.getParam("drawGraph")
 
     link_opts = link_conf(C)
 
-    net = GraphNet(networkGraph, draw=drawGraph, link_opts=link_opts)
+    net = GraphNet(networkGraph, draw=drawGraph, link_opts=link_opts, graph_size=graph_size, graph_kind=graph_kind)
     net.start()
     net.enableForwarding()
     enableShortestRoutes = C.getConfigurations("enableShortestRoutes")
     if not enableShortestRoutes or enableShortestRoutes.lower() == "true":
         net.setShortestRoutes()
     # CLI(net)
-    graphname = networkGraph.split('/')[-1].split('.')[0]
+    if networkGraph:
+        graphname = networkGraph.split('/')[-1].split('.')[0]
+    else:
+        graphname = graph_kind + str(graph_size)
     testPath = testName + "_" + graphname + "_" + str(int(time()))
     for i in range(int(C.getConfigurations("times"))):
         info("+++++++ Round: "+str(i+1) + '\n')

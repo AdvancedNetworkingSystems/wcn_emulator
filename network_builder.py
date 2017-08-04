@@ -1,7 +1,6 @@
 import re
 import networkx as nx
 import graph_utils as gu
-
 from mininet.net import Mininet
 from mininet.node import OVSController
 from mininet.node import CPULimitedHost
@@ -114,10 +113,18 @@ class GraphNet(PowerNet):
             self.link_opts = params["link_opts"]
             del params["link_opts"]
 
+        if "graph_kind" in params.keys():
+            graph_kind = params["graph_kind"]
+            del params["graph_kind"]
+            graph_size = int(params["graph_size"])
+            del params["graph_size"]
         super(GraphNet, self).__init__(**params)
-        info("\nReading "+edges_file+"\n")
+        if edges_file:
+            info("\nReading " + edges_file + "\n")
+            g = gu.loadGraph(edges_file, connected=True)
+        else:
+            g = gu.generate_graph(gkind=graph_kind, size=graph_size)
 
-        g = gu.loadGraph(edges_file, connected=True)
 
         nodeCounter = 0
         nodeMap = {}

@@ -105,4 +105,5 @@ class MininetTest(object):
                            args=(self.prefix, log_resources, log_interval))
             p.start()
         sleep(time)
-        p.terminate()
+        if log_resources:
+            p.terminate()

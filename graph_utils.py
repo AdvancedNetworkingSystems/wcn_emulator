@@ -1,6 +1,18 @@
 import json
 import sys
 import networkx as nx
+from graph_lib.graph_generator import Gen
+
+
+def generate_graph(gkind, size):
+    ge = Gen()
+    if gkind == "CN":
+        ge.genCNGraph(N=int(size / 3))
+    elif gkind == "NPART":
+        ge.genMeshGraph(N=size)
+    else:
+        ge.genGraph(graphKind=gkind, numNodes=size)
+    return ge.graph
 
 
 def load_json(json_file):
@@ -34,7 +46,7 @@ def load_json(json_file):
                 cost = float(link["cost"])
             else:
                 cost = 1.0
-            G.add_edge(link["source"], link["target"],{"weight": cost})
+            G.add_edge(link["source"], link["target"], {"weight": cost})
     return G
 
 
