@@ -45,26 +45,41 @@ class princeTest(MininetTest):
         self.prince_conf_template = """
         {
             "proto": {
-                "protocol": "olsr",
+                "protocol": "test",
                 "host": "%s",
                 "port": 2010,
                 "timer_port": 1234,
-                "refresh": 5
+                "refresh": 1,
+                "log_file": "%s"
             },
             "graph-parser": {
-                "heuristic": 1,
-                "weights": 1,
+                "heuristic": %i,
+                "weights": %i,
                 "recursive": 0,
                 "stop_unchanged": 0,
                 "multithreaded": 0
             }
         }
         """
+
+        self.olsr2_conf_template = """
+        [global]
+            plugin remotecontrol
+            lockfile %s
+            fork false
+        [telnet]
+            bindto  127.0.0.1
+            port 2009
+
+        [interface=lo]
+        """
+
         self.stopNodeList = self.getCentrality()
 
     def launch_sniffer(self, host):
+        dumpfile = self.prefix + host.name + "-dump.cap"
 
-        cmd = "tcpdump -i any -n -X -e "
+        cmd = "tcpdump -i any -n -X -e -w "+ dumpfile
 
         logfile = self.prefix + host.name + "-dump.log"
 
@@ -89,14 +104,13 @@ class princeTest(MininetTest):
 
         return self.bgCmd(host, True, cmd,
                           *reduce(lambda x, y: x + y, params.items()))
-
-    def launchPrince(self, host, args):
-        cmd = "../poprouting/output/prince " + args
+    def launchOONF(self, host, args):
+        cmd = "../OONF/build/olsrd2_static " + args
 
         log_str = "Host " + host.name + " launching command:\n"
         info(log_str)
         info(cmd + "\n")
-        logfile = self.prefix + host.name + "_prince.log"
+        logfile = self.prefix + host.name + "_olsr2.log"
 
         params = {}
         params['>'] = logfile
@@ -104,6 +118,18 @@ class princeTest(MininetTest):
 
         return self.bgCmd(host, True, cmd,
                           *reduce(lambda x, y: x + y, params.items()))
+
+    def launchPrince(self, host, args):
+        logfile = self.prefix + host.name + "_prince.log"
+        cmd = "../poprouting/output/prince " + args;
+
+        log_str = "Host " + host.name + " launching command:\n"
+        info(log_str)
+        info(cmd + "\n")
+        #params = {}
+        #params['>'] = logfile
+        #params['2>'] = logfile
+        return self.bgCmd(host, True, cmd);
 
     def launchPing(self, host):
         idps = randint(0, 100)
@@ -121,8 +147,9 @@ class princeTest(MininetTest):
     def runTest(self):
         info("*** Launching Prince test\n")
         info("Data folder: " + self.prefix + "\n")
-        self.setupNetwork(poprouting=True)
-        self.performTests()
+        self.setupNetwork(poprouting=True, dump=True)
+        if self.killwait>0:
+            self.performTests()
         info("Waiting completion...\n")
         self.wait(float(self.duration), log_resources={'net': 'netusage.csv'})
         self.tearDownNetwork()
@@ -131,27 +158,44 @@ class princeTest(MininetTest):
         for idx, h in enumerate(self.getAllHosts()):
             intf = h.intfList()
             intf_list = ' '.join(["\"" + i.name + "\"" for i in intf])
-            olsr_conf_file = self.prefix + h.name + "_olsr.conf"
-            olsr_lock_file = "/var/run/" + h.name + str(time.time()) + ".lock"
-            f_olsr = open(olsr_conf_file, "w")
-            print >> f_olsr, self.olsr_conf_template % (olsr_lock_file, intf_list)
-            f_olsr.close()
-            args_olsr = "-f " + os.path.abspath(olsr_conf_file)
+            if self.olsr is 2:
+                olsr_conf_file = self.prefix + h.name + "_olsr2.conf"
+                olsr_lock_file = "/var/run/" + h.name + str(time.time()) + ".lock"
+                f_olsr = open(olsr_conf_file, "w")
+                print >> f_olsr, self.olsr2_conf_template % (olsr_lock_file)
+                for inf in h.intfList():
+                    print >> f_olsr, "[interface=%s]\n" % (inf)
+                f_olsr.close()
+                args_olsr = "-l " + os.path.abspath(olsr_conf_file)
+                launch_pid = self.launchOONF(h, args_olsr)
+            elif self.olsr is 1:
+                olsr_conf_file = self.prefix + h.name + "_olsr.conf"
+                olsr_lock_file = "/var/run/" + h.name + str(time.time()) + ".lock"
+                f_olsr = open(olsr_conf_file, "w")
+                print >> f_olsr, self.olsr_conf_template % (olsr_lock_file, intf_list)
+                f_olsr.close()
+                args_olsr = "-f " + os.path.abspath(olsr_conf_file)
+                launch_pid = self.launchOLSR(h, args_olsr)
 
             prince_conf_file = self.prefix + h.name + "_prince.json"
             f_prince = open(prince_conf_file, "w")
-            print >> f_prince, self.prince_conf_template % (h.defaultIntf().ip)
+            logfile = os.path.abspath(self.prefix + h.name + "_prince.log")
+            with open(logfile, "w+") as fh:
+                fh.close()
+            os.chmod(logfile, 0o777)
+            print >> f_prince, self.prince_conf_template % (h.defaultIntf().ip, logfile, self.heuristic, self.weights)
             f_prince.close()
             args_prince = os.path.abspath(prince_conf_file)
 
-            launch_pid = self.launchOLSR(h, args_olsr)
             if poprouting:
                 launch_pid = self.launchPrince(h, args_prince)
             if dump:
                 self.launch_sniffer(h)
+            nx.write_adjlist(self.graph, self.prefix+"topology.adj")
 
     def tearDownNetwork(self):
         self.killAll()
+
 
     def performTests(self):
         for idx, h in enumerate(self.getAllHosts()):
@@ -211,10 +255,25 @@ class princeTest(MininetTest):
 class princeRandomTest(princeTest):
 
     def __init__(self, mininet, name, args):
-
         duration = int(args["duration"])
         self.killwait = int(args["kill_wait"])
         super(princeRandomTest, self).__init__(mininet, duration)
         self.kill = self.getHostSample(1)[0].defaultIntf().ip
         self.destination = self.getHostSample(1)[0].defaultIntf().ip
         self.setPrefix(name)
+        self.heuristic=1
+        self.weights=0
+        self.olsr=2
+
+class princeNoHeuristic(princeTest):
+
+    def __init__(self, mininet, name, args):
+        duration = int(args["duration"])
+        self.killwait = int(args["kill_wait"])
+        super(princeNoHeuristic, self).__init__(mininet, duration)
+        self.kill = self.getHostSample(1)[0].defaultIntf().ip
+        self.destination = self.getHostSample(1)[0].defaultIntf().ip
+        self.setPrefix(name)
+        self.heuristic=0
+        self.weights=0
+        self.olsr=1

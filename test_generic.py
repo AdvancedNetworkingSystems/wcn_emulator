@@ -78,10 +78,12 @@ class MininetTest(object):
             error("killProc: process %d not found" % pid)
 
     def killAll(self):
+        from subprocess import call
         for pid in self.pendingProc.keys():
             self.sendSig(pid,signal.SIGKILL)
-            self.pendingProc[pid].monitor() # wait exiting
+            #self.pendingProc[pid].monitor() # wait exiting
         self.pendingProc.clear()
+        call(["killall", "olsrd"]) #BAD TRICK to be sure olsrd die
         info("\n")
         for host in self.net.values():
             host.waiting = False

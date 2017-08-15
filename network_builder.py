@@ -6,7 +6,7 @@ from mininet.node import OVSController
 from mininet.node import CPULimitedHost
 from mininet.link import TCLink
 from mininet.log import info, debug
-
+import matplotlib.pyplot as plt
 
 class PowerNet(Mininet):
     def __init__(self, **params):
@@ -169,10 +169,12 @@ class GraphNet(PowerNet):
 
         if draw:
             nx.draw(self.gg)
+            plt.show()
 
     def pickHostAddrPort(self, node):
         port = self.hosts_port[node.name]
         addr = "10.0."+node.name.split('_')[-1]+"."+str(port)+"/8"
+        print node.name.split('_')[-1]
         self.hosts_port[node.name] += 1
         return addr, port
 
