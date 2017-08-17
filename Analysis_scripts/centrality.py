@@ -16,7 +16,10 @@ def main():
 def get_mean_centrality(nodename):
     with open(nodename+"_prince.log") as f:
         values=np.loadtxt(f)
-        return np.mean(values[-5:,4])
+        #import pdb; pdb.set_trace()
+        if values.shape[0]>6:
+            return np.mean(values[-5:,4])
+    return 0
     #print content[-5:0]
 
 if __name__ == "__main__":

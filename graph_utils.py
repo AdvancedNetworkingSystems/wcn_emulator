@@ -7,13 +7,21 @@ from graph_lib.graph_generator import Gen
 def generate_graph(gkind, size):
     ge = Gen()
     if gkind == "CN":
-        ge.genCNGraph(N=int(size / 3))
+        ge.genCNGraph(N=int(size), T=size*2)
     elif gkind == "NPART":
         ge.genMeshGraph(N=size)
     else:
         ge.genGraph(graphKind=gkind, numNodes=size)
     return ge.graph
 
+
+def save_netjson(graph, path):
+    ge = Gen()
+    nj = ge.composeNetJson(graph)
+    with open(path + "/topolgy.json", 'w') as outfile:
+        json.dump(nj, outfile)
+        return True
+    return False
 
 def load_json(json_file):
     """ import a json file in NetJSON format, convert to Graph class

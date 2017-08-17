@@ -4,6 +4,7 @@ from network_builder import *
 from os import kill, path, makedirs
 from matplotlib.pyplot import ion
 from random import sample, randint
+from mininet.util import pmonitor
 import time
 from test_generic import *
 sys.path.append('../')
@@ -32,6 +33,11 @@ class princeTest(MininetTest):
             PlParam "port" "2010"
         }
 
+        LoadPlugin "../olsrd/lib/jsoninfo/olsrd_jsoninfo.so.1.1"{
+            PlParam "accept" "0.0.0.0"
+            PlParam "port" "2009"
+        }
+
         LoadPlugin "../olsrd/lib/poprouting/olsrd_poprouting.so.0.1"{
             PlParam "accept" "0.0.0.0"
             PlParam "port" "1234"
@@ -47,9 +53,9 @@ class princeTest(MininetTest):
             "proto": {
                 "protocol": "test",
                 "host": "%s",
-                "port": 2010,
+                "port": 2009,
                 "timer_port": 1234,
-                "refresh": 1,
+                "refresh": 10,
                 "log_file": "%s"
             },
             "graph-parser": {
@@ -79,7 +85,7 @@ class princeTest(MininetTest):
     def launch_sniffer(self, host):
         dumpfile = self.prefix + host.name + "-dump.cap"
 
-        cmd = "tcpdump -i any -n -X -e -w "+ dumpfile
+        cmd = "tcpdump -i any -n -X -e -w " + dumpfile
 
         logfile = self.prefix + host.name + "-dump.log"
 
@@ -104,6 +110,7 @@ class princeTest(MininetTest):
 
         return self.bgCmd(host, True, cmd,
                           *reduce(lambda x, y: x + y, params.items()))
+
     def launchOONF(self, host, args):
         cmd = "../OONF/build/olsrd2_static " + args
 
@@ -120,16 +127,18 @@ class princeTest(MininetTest):
                           *reduce(lambda x, y: x + y, params.items()))
 
     def launchPrince(self, host, args):
-        logfile = self.prefix + host.name + "_prince.log"
-        cmd = "../poprouting/output/prince " + args;
+        logfile = self.prefix + host.name + "_prince_out.log"
+        cmd = "exec ../poprouting/output/prince " + args
 
         log_str = "Host " + host.name + " launching command:\n"
         info(log_str)
         info(cmd + "\n")
-        #params = {}
-        #params['>'] = logfile
-        #params['2>'] = logfile
-        return self.bgCmd(host, True, cmd);
+        params = {}
+        params['>'] = logfile
+        params['2>'] = logfile
+
+        return self.bgCmd(host, True, cmd,
+                          *reduce(lambda x, y: x + y, params.items()))
 
     def launchPing(self, host):
         idps = randint(0, 100)
@@ -148,13 +157,14 @@ class princeTest(MininetTest):
         info("*** Launching Prince test\n")
         info("Data folder: " + self.prefix + "\n")
         self.setupNetwork(poprouting=True, dump=True)
-        if self.killwait>0:
+        if self.killwait > 0:
             self.performTests()
         info("Waiting completion...\n")
         self.wait(float(self.duration), log_resources={'net': 'netusage.csv'})
         self.tearDownNetwork()
 
     def setupNetwork(self, poprouting, dump=False):
+        self.princes = {}
         for idx, h in enumerate(self.getAllHosts()):
             intf = h.intfList()
             intf_list = ' '.join(["\"" + i.name + "\"" for i in intf])
@@ -188,14 +198,14 @@ class princeTest(MininetTest):
             args_prince = os.path.abspath(prince_conf_file)
 
             if poprouting:
-                launch_pid = self.launchPrince(h, args_prince)
+                self.princes[h] = self.launchPrince(h, args_prince)
             if dump:
                 self.launch_sniffer(h)
-            nx.write_adjlist(self.graph, self.prefix+"topology.adj")
+            nx.write_adjlist(self.graph, self.prefix + "topology.adj")
+            gu.save_netjson(self.graph, self.prefix)
 
     def tearDownNetwork(self):
         self.killAll()
-
 
     def performTests(self):
         for idx, h in enumerate(self.getAllHosts()):
@@ -261,9 +271,10 @@ class princeRandomTest(princeTest):
         self.kill = self.getHostSample(1)[0].defaultIntf().ip
         self.destination = self.getHostSample(1)[0].defaultIntf().ip
         self.setPrefix(name)
-        self.heuristic=1
-        self.weights=0
-        self.olsr=2
+        self.heuristic = 1
+        self.weights = 0
+        self.olsr = 2
+
 
 class princeNoHeuristic(princeTest):
 
@@ -274,6 +285,6 @@ class princeNoHeuristic(princeTest):
         self.kill = self.getHostSample(1)[0].defaultIntf().ip
         self.destination = self.getHostSample(1)[0].defaultIntf().ip
         self.setPrefix(name)
-        self.heuristic=0
-        self.weights=0
-        self.olsr=1
+        self.heuristic = 0
+        self.weights = 0
+        self.olsr = 1
