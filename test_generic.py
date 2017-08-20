@@ -8,6 +8,7 @@ from time import sleep
 from mininet.log import info, error, debug, output
 from logsys import log_sys_resources
 
+
 class MininetTest(object):
     def __init__(self, mininet, path, duration):
         self.net = mininet
@@ -32,13 +33,13 @@ class MininetTest(object):
         host.waiting = tmp_wait
         return ret
 
-    def bgCmd(self,host,force_multiple_processes,*args):
+    def bgCmd(self, host, force_multiple_processes, *args):
         # here it's a little workaround for tracing the resulting pid
         # it launch the new process using the mininet interface
         # but it check the newly created process id using psutil
         host_proc = Process(host.pid)
         host_ps = set(host_proc.children())
-        debug("Sending cmd: \n\t"+str(" ".join(args))+"\n")
+        debug("Sending cmd: \n\t" + str(" ".join(args)) + "\n")
 
         # disable bg process output
         tmp_wait = host.waiting
@@ -48,26 +49,26 @@ class MininetTest(object):
 
         if force_multiple_processes:
             host.waiting = False
-        host.sendCmd(*(args+("&",)))
+        host.sendCmd(*(args + ("&",)))
         sleep(0.5)
-        try :
+        try:
             pid = (set(host_proc.children()).difference(host_ps)).pop().pid
-            info("BGProcess: "+str(pid)+"; ")
+            info("BGProcess: " + str(pid) + "; ")
             self.pendingProc[pid] = host
         except:
-            info("*** Unable to launch command:\n\t "+str(" ".join(args)))
+            info("*** Unable to launch command:\n\t " + str(" ".join(args)))
             return None
         return pid
 
-    def sendSig(self,pid,sig=signal.SIGTERM):
+    def sendSig(self, pid, sig=signal.SIGTERM):
         try:
-            info("Killing BGProcess: "+str(pid)+"; ")
-            os.kill( pid, sig )
+            info("Killing BGProcess: " + str(pid) + "; ")
+            os.kill(pid, sig)
         except OSError:
-            error("Error while killing process "+str(pid))
+            error("Error while killing process " + str(pid))
             pass
 
-    def killProc(self,pid,sig=signal.SIGTERM,wait=False):
+    def killProc(self, pid, sig=signal.SIGTERM, wait=False):
         active_procs = self.pendingProc.keys()
         if active_procs.count(pid) == 1:
             self.sendSig(pid, sig)
@@ -80,10 +81,10 @@ class MininetTest(object):
     def killAll(self):
         from subprocess import call
         for pid in self.pendingProc.keys():
-            self.sendSig(pid,signal.SIGKILL)
-            #self.pendingProc[pid].monitor() # wait exiting
+            self.sendSig(pid, signal.SIGKILL)
+            # self.pendingProc[pid].monitor() # wait exiting
         self.pendingProc.clear()
-        call(["killall", "olsrd"]) #BAD TRICK to be sure olsrd die
+        call(["killall", "olsrd"])  # BAD TRICK to be sure olsrd die
         info("\n")
         for host in self.net.values():
             host.waiting = False

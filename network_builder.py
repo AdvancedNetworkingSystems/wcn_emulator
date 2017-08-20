@@ -1,6 +1,5 @@
 import re
 import networkx as nx
-import graph_utils as gu
 from mininet.net import Mininet
 from mininet.node import OVSController
 from mininet.node import CPULimitedHost
@@ -108,7 +107,7 @@ class PowerNet(Mininet):
 
 
 class GraphNet(PowerNet):
-    def __init__(self, edges_file, draw=True, **params):
+    def __init__(self, graph, **params):
         if "link_opts" in params.keys():
             self.link_opts = params["link_opts"]
             del params["link_opts"]
@@ -119,24 +118,17 @@ class GraphNet(PowerNet):
             graph_size = int(params["graph_size"])
             del params["graph_size"]
         super(GraphNet, self).__init__(**params)
-        if edges_file:
-            info("\nReading " + edges_file + "\n")
-            g = gu.loadGraph(edges_file, connected=True)
-        else:
-            g = gu.generate_graph(gkind=graph_kind, size=graph_size)
-
-
         nodeCounter = 0
         nodeMap = {}
         # mininet bails if host names are longer than 10 chars
-        max_name_len = 10 - len(str(len(g))) - 2
-        for name in g.nodes():
+        max_name_len = 10 - len(str(len(graph))) - 2
+        for name in graph.nodes():
             # remove unprintable chars from name
             nodeMap[name] = "h" + filter(str.isalnum, str(name))[-max_name_len:]\
                             + "_" + str(nodeCounter)
             nodeCounter += 1
 
-        self.gg = nx.relabel_nodes(g, nodeMap)
+        self.gg = nx.relabel_nodes(graph, nodeMap)
 
         self.hosts_port = {}
 
@@ -166,10 +158,6 @@ class GraphNet(PowerNet):
             # than dot11RTSthreshold)
             quality_params["use_htb"] = True
             self.insertLink(self.get(e[0]), self.get(e[1]), quality_params)
-
-        if draw:
-            nx.draw(self.gg)
-            plt.show()
 
     def pickHostAddrPort(self, node):
         port = self.hosts_port[node.name]

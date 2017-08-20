@@ -1,173 +1,95 @@
 #!/usr/bin/env python
 import sys
+import graph_utils as gu
+import networkx as nx
+from config import conf, ConfigurationFile
 from os import path
-# add the nepa_test directory to sys path
-sys.path.append(path.dirname(sys.argv[0]))
-import inherit_config_parser
-import ConfigParser
-import inspect
-import StringIO
-
-sys.path.append('test_code')
-sys.path.insert(0, './')
-
 from time import time
-
 from parameters_parser import parameters
 from network_builder import *
 from test_code import *
 from mininet.log import setLogLevel
+# add the nepa_test directory to sys path
+sys.path.append(path.dirname(sys.argv[0]))
+sys.path.append('test_code')
+sys.path.insert(0, './')
 
 
-class conf(parameters):
-    def checkCorrectness(self):
-        self.checkNeededParams()
-        return True
+class Nepa():
+    def generate_topology(self, graph_kind):
+        print("No graph topology specified in conf file or command line! Will generate a " + graph_kind + " Graph\n")
+        graph_size = self.C.getConfigurations("graph_size")
+        self.g = gu.generate_graph(gkind=graph_kind, size=int(graph_size))
+        self.graphname = graph_kind + str(graph_size)
 
+    def load_topology(self, graphFile):
+        info("\nReading " + graphFile + "\n")
+        self.g = gu.loadGraph(graphFile, connected=True)
+        self.graphname = graphFile.split('/')[-1].split('.')[0]
 
-class ConfigurationFile():
-
-    mandatoryOptions = {"testModule": None, "testClass": None, "times": 1}
-    confParams = {}
-    className = None
-
-    def __init__(self, fileName, stanza, overrideOption=""):
-        # check if filename esists
-        if not path.isfile(fileName):
-            error("Can not open the configuration file: " + fileName + "\n")
-            sys.exit(1)
-        self.parser = inherit_config_parser.InheritConfigParser()
-        self.parser.optionxform = str
-        self.parser.read(fileName)
-
-        self.testName = stanza
-        if stanza not in self.parser.sections():
-            error("Can not find configuration " + stanza
-                  + " in file " + fileName + "\n")
-            sys.exit(1)
-        for o in self.mandatoryOptions:
-            self.mandatoryOptions[o] = \
-                self.getConfigurations(o, raiseError=True)
-
-        moduleName = "test_code." + self.mandatoryOptions['testModule']
-        if moduleName not in sys.modules:
-            errorString = "ERROR: no " \
-                + self.mandatoryOptions['testModule'] \
-                + " module  has been loaded!\n"
-            error(errorString)
-            sys.exit(1)
-
-        if self.mandatoryOptions['testClass'] not in \
-                zip(*inspect.getmembers(sys.modules[moduleName]))[0]:
-            errorString = "ERROR: no " \
-                + self.mandatoryOptions['testClass'] \
-                + " simulation class is present in "\
-                + moduleName + "\n"
-            error(errorString)
-            sys.exit(1)
-
-        self.className = getattr(sys.modules[moduleName],
-                                 self.mandatoryOptions['testClass'])
-
-        for name, value in self.parser.items(self.testName):
-            self.confParams[name] = value
-
-        if overrideOption:
-            options = overrideOption.replace(",", "\n")
-            overrideConf = StringIO.StringIO("[DEFAULT]\n" + options + "\n")
-            tmpParser = ConfigParser.ConfigParser()
-            tmpParser.optionxform = str
-            tmpParser.readfp(overrideConf)
-            for name, value in tmpParser.defaults().items():
-                print name, value
-                self.confParams[name] = value
-
-    def getConfigurations(self, name, raiseError=False):
-        try:
-            r = self.parser.get(self.testName, name)
-        except ConfigParser.NoOptionError:
-            if raiseError:
-                error("No option \'" + name + "\' found!\n")
-                sys.exit()
-            else:
-                return None
-        return r
-
-
-def link_conf(conf):
-    link_opts = {}
-    if conf.getConfigurations("link_bw"):
-        link_opts["bw"] = int(conf.getConfigurations("link_bw"))
-    if conf.getConfigurations("link_mean_delay"):
-        link_opts["delay"] = (conf.getConfigurations("link_mean_delay"))
-    if conf.getConfigurations("link_delay_sd"):
-        link_opts["jitter"] = (conf.getConfigurations("link_delay_sd"))
-    if conf.getConfigurations("link_delay_distribution"):
-        link_opts["delay_distribution"] = \
-            (conf.getConfigurations("link_delay_distribution"))
-    if conf.getConfigurations("link_loss"):
-        link_opts["loss"] = (conf.getConfigurations("link_loss"))
-    return link_opts
-
-
-def nepa_test():
-    setLogLevel('info')
-    need = [
-        ("-f", ["configFile", True, "",
-         "file with the available configurations", str]),
-        ("-t", ["testName", True, "",
-         "base name for test output", str])
+    def nepa_test(self):
+        setLogLevel('info')
+        need = [
+            ("-f", ["configFile", True, "",
+             "file with the available configurations", str]),
+            ("-t", ["testName", True, "",
+             "base name for test output", str])
         ]
-    opt = [
-        ("-d", ["drawGraph", False, False,
-         "draw the graph before you run the test", int]),
-        ("-g", ["graphFile", True, "",
-         "file with the topology (overrides configuration)", str]),
-        ("-o", ["overrideOption", True, "",
-         "comma separated list of options to override in the ini file \
-         (ex: a=10,b=100)", str]),
+        opt = [
+            ("-d", ["drawGraph", False, False,
+             "draw the graph before you run the test", int]),
+            ("-g", ["graphFile", True, "",
+             "file with the topology (overrides configuration)", str]),
+            ("-o", ["overrideOption", True, "",
+             "comma separated list of options to override in the ini file \
+             (ex: a=10,b=100)", str]),
         ]
 
-    P = conf(path.basename(__file__), need, opt)
-    P.parseArgs()
-    if not P.checkCorrectness():
-        P.printUsage()
-        sys.exit(1)
+        P = conf(path.basename(__file__), need, opt)
+        P.parseArgs()
+        if not P.checkCorrectness():
+            P.printUsage()
+            sys.exit(1)
 
-    configFile = P.getParam("configFile")
-    testName = P.getParam("testName")
-    C = ConfigurationFile(configFile, testName, P.getParam("overrideOption"))
-    # parse the conf file
-    networkGraph = P.getParam("graphFile")
-    graph_kind = C.getConfigurations("graph_kind")
-    graph_size = C.getConfigurations("graph_size")
-    if networkGraph == "":
-        networkGraph = C.getConfigurations("graphDefinition")
-        if not networkGraph:
-            print("No graph topology specified in conf file or command line! Will generate a " + graph_kind + " Graph\n")
-    drawGraph = P.getParam("drawGraph")
+        configFile = P.getParam("configFile")
+        testName = P.getParam("testName")
+        graphFile = P.getParam("graphFile")
+        drawGraph = P.getParam("drawGraph")
+        self.C = ConfigurationFile(configFile, testName, P.getParam("overrideOption"))
+        graphDef = self.C.getConfigurations("graphDefinition")
+        graphKind = self.C.getConfigurations("graph_kind")
+        enableShortestRoutes = self.C.getConfigurations("enableShortestRoutes")
 
-    link_opts = link_conf(C)
+        if graphKind:
+            self.generate_topology(graphKind)
+        elif graphFile:
+            self.load_topology(graphFile)
+        elif graphDef:
+            self.load_topology(graphDef)
+        else:
+            print("A source for the graph must be specified")
 
-    net = GraphNet(networkGraph, draw=drawGraph, link_opts=link_opts, graph_size=graph_size, graph_kind=graph_kind)
-    net.start()
-    net.enableForwarding()
-    enableShortestRoutes = C.getConfigurations("enableShortestRoutes")
-    if not enableShortestRoutes or enableShortestRoutes.lower() == "true":
-        net.setShortestRoutes()
-    # CLI(net)
-    if networkGraph:
-        graphname = networkGraph.split('/')[-1].split('.')[0]
-    else:
-        graphname = graph_kind + str(graph_size)
-    testPath = testName + "_" + graphname + "_" + str(int(time()))
-    for i in range(int(C.getConfigurations("times"))):
-        info("+++++++ Round: "+str(i+1) + '\n')
-        test = C.className(net, testPath, C.confParams)
-        test.runTest()
-    net.stop()
-    test.changePermissions()
-    info("*** Done with experiment: " + testName + "\n")
+        if drawGraph:
+            nx.draw(self.gg)
+            plt.show()
+
+        link_opts = self.C.link_conf()
+        net = GraphNet(self.g, link_opts=link_opts)
+        net.start()
+        net.enableForwarding()
+        if not enableShortestRoutes or enableShortestRoutes.lower() == "true":
+            net.setShortestRoutes()
+        # CLI(net)
+
+        testPath = testName + "_" + self.graphname + "_" + str(int(time()))
+        for i in range(int(self.C.getConfigurations("times"))):
+            info("+++++++ Round: " + str(i + 1) + '\n')
+            test = self.C.className(net, testPath, self.C.confParams)
+            test.runTest()
+        net.stop()
+        test.changePermissions()
+        info("*** Done with experiment: " + testName + "\n")
 
 if __name__ == "__main__":
-    nepa_test()
+    N = Nepa()
+    N.nepa_test()
