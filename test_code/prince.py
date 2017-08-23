@@ -28,8 +28,8 @@ class princeTest(MininetTest):
                 "protocol": "test",
                 "host": "%s",
                 "port": 2009,
-                "timer_port": 2009,
-                "refresh": 1,
+                "timer_port": 1234,
+                "refresh": 5,
                 "log_file": "%s"
             },
             "graph-parser": {
@@ -98,8 +98,22 @@ class princeTest(MininetTest):
                 pid = self.launchPrince(host)
             if dump:
                 self.launch_sniffer(host)
+            self.dumpNeigh(host)
             nx.write_adjlist(self.graph, self.prefix + "topology.adj")
             gu.save_netjson(self.graph, self.prefix)
+
+    def dumpNeigh(self, host):
+        idps = randint(0, 100)
+        logfile = self.prefix + host.name.split('_')[0] + \
+            "-" + str(idps) + "_neigh_$(date +%s).log"
+
+        cmd = "./dumpNeigh.sh"
+        params = {}
+        params['>'] = logfile
+        params['2>'] = logfile
+
+        return self.bgCmd(host, True, cmd,
+                          *reduce(lambda x, y: x + y, params.items()))
 
     def performTests(self):
         None  # to implement in subclass
@@ -229,6 +243,11 @@ class princeOLSR(princeTest):
         #    PlParam "accept" "0.0.0.0"
         #    PlParam "port" "2010"
         #}
+
+        LoadPlugin "../olsrd/lib/txtinfo/olsrd_txtinfo.so.1.1"{
+            PlParam "accept" "0.0.0.0"
+            PlParam "port" "2008"
+        }
 
         LoadPlugin "../olsrd/lib/jsoninfo/olsrd_jsoninfo.so.1.1"{
             PlParam "accept" "0.0.0.0"
