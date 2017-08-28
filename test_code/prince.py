@@ -259,7 +259,12 @@ class princeOLSR(princeTest):
             PlParam "port" "1234"
         }
 
-        InterfaceDefaults {}
+        InterfaceDefaults {
+            TcInterval 5.0
+            TcValidityTime  500.0
+            HelloInterval   2.0
+            HelloValidityTime 20.0
+        }
 
         Interface %s {}
         """
