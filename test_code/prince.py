@@ -29,7 +29,7 @@ class princeTest(MininetTest):
                 "host": "%s",
                 "port": 2009,
                 "timer_port": 1234,
-                "refresh": 5,
+                "refresh": 1,
                 "log_file": "%s"
             },
             "graph-parser": {
@@ -44,17 +44,8 @@ class princeTest(MininetTest):
 
     def launch_sniffer(self, host):
         dumpfile = self.prefix + host.name + "-dump.cap"
-
-        cmd = "tcpdump -i any -n -X -e -w " + dumpfile
-
-        logfile = self.prefix + host.name + "-dump.log"
-
-        params = {}
-        params['>'] = logfile
-        params['2>'] = logfile
-
-        return self.bgCmd(host, True, cmd,
-                          *reduce(lambda x, y: x + y, params.items()))
+        cmd = "tcpdump -i any -n -X -e -w %s" % (dumpfile)
+        return self.bgCmd(host, True, cmd)
 
     def launchPrince(self, host):
         prince_conf_file = self.prefix + host.name + "_prince.json"
@@ -82,21 +73,22 @@ class princeTest(MininetTest):
     def runTest(self):
         info("*** Launching Prince test\n")
         info("Data folder: " + self.prefix + "\n")
-        self.setupNetwork(poprouting=True, dump=True)
+        plt.show()
+        self.setupNetwork()
         self.performTests()
         info("Waiting completion...\n")
         self.wait(float(self.duration), log_resources={'net': 'netusage.csv'})
         self.tearDownNetwork()
         self.analyzeResults()
 
-    def setupNetwork(self, poprouting, dump=False):
+    def setupNetwork(self):
         for idx, host in enumerate(self.getAllHosts()):
             intf = host.intfList()
             self.intf_list = ' '.join(["\"" + i.name + "\"" for i in intf])
             launch_pid = self.launchRouting(host)
-            if poprouting:
+            if self.poprouting:
                 pid = self.launchPrince(host)
-            if dump:
+            if self.dump:
                 self.launch_sniffer(host)
             self.dumpNeigh(host)
             nx.write_adjlist(self.graph, self.prefix + "topology.adj")
@@ -157,71 +149,6 @@ class princeTest(MininetTest):
                 print "sending signal to all hosts:", sig
                 self.sendSig(pid, sig)
 
-
-class crashPingTest(princeTest):
-    def __init__(self, mininet, name, args):
-        duration = int(args["duration"])
-        self.setPrefix(name)
-        super(princeRandomTest, self).__init__(mininet, duration)
-        self.killwait = int(args["kill_wait"])
-        self.kill = self.getHostSample(1)[0].defaultIntf().ip
-        self.destination = self.getHostSample(1)[0].defaultIntf().ip
-        self.stopNodeList = self.getCentrality()
-
-    def performTests(self):
-        for idx, h in enumerate(self.getAllHosts()):
-            if h.defaultIntf().ip != self.destination:
-                self.launchPing(h)
-        self.wait(float(self.killwait))
-        self.nodeCrashed = self.stopNodeList.pop(0)
-        if self.nodeCrashed:
-            print "Killing " + str(self.nodeCrashed) + "\n"
-            self.sendSignal(signal.SIGKILL, self.nodeCrashed)
-
-    def launchPing(self, host):
-        idps = randint(0, 100)
-        logfile = self.prefix + host.name.split('_')[0] + \
-            "-" + str(idps) + "_ping_$(date +%s).log"
-
-        cmd = "ping " + self.destination
-        params = {}
-        params['>'] = logfile
-        params['2>'] = logfile
-
-        return self.bgCmd(host, True, cmd,
-                          *reduce(lambda x, y: x + y, params.items()))
-
-    def getCentrality(self):
-        node_centrality_posteriori = {}
-        centrality = {}
-        for n in self.graph.nodes():
-            gg = self.graph.copy()
-            edges = self.graph.edges([n])
-            gg.remove_node(n)
-            # compute the connected components
-            # WARNING: connected_components should return a list
-            # sorted by size, largest first. It does not, so i resort them
-            unsorted_comp = list(nx.connected_components(gg))
-            comp = sorted(unsorted_comp, key=lambda x: -len(x))
-            # re-add the node
-            gg.add_node(n)
-            # re-add the edges to nodes in the main component
-            for (fr, to) in edges:
-                if fr in comp[0]:
-                    gg.add_edge(fr, n)
-                if to in comp[0]:
-                    gg.add_edge(n, to)
-            # now compute the centrality. This tells how important is the node
-            # for the main connected component. If this is 0, it is not worth
-            # to remove this node
-            cent = nx.betweenness_centrality(gg)[n]
-            isolated_nodes = [x for component in comp[1:] for x in component]
-            node_centrality_posteriori[n] = [cent, [n] + isolated_nodes]
-            centrality[n] = cent
-        betw = [x for x in nx.betweenness_centrality(self.graph).items()
-                if x[1] > 0 and node_centrality_posteriori[x[0]][0] > 0]
-
-        return [node_centrality_posteriori[k[0]][1] for k in sorted(betw, key=lambda x: -x[1])]
 
 
 class princeOLSR(princeTest):
@@ -295,6 +222,8 @@ class princeHeuristic(princeOLSR):
         super(princeHeuristic, self).__init__(mininet, name, args)
         self.heuristic = 1
         self.weights = 1
+        self.poprouting = 1
+        self.dump = 1
 
 
 class princeNoHeuristic(princeOLSR):
@@ -302,10 +231,31 @@ class princeNoHeuristic(princeOLSR):
         super(princeNoHeuristic, self).__init__(mininet, name, args)
         self.heuristic = 0
         self.weights = 0
+        self.poprouting = 1
+        self.dump = 1
 
 
+class princeTimers(princeOLSR):
+    def __init__(self, mininet, name, args):
+        super(princeTimers, self).__init__(mininet, name, args)
+        self.poprouting = 0
+        self.dump = 1
 
+    def analyzeResults(self):
+        None
 
+    def performTests(self):
+        self.wait(30)
+        timer = 5.0
+        cmd = "echo \"/HelloTimer=%f\" | nc 127.0.0.1 1234" % (timer,)
+        params = {}
+        for idx, host in enumerate(self.getAllHosts()):
+            logfile = self.prefix + host.name + "_netcat.log"
+            params['>'] = logfile
+            params['2>'] = logfile
+            print "Setting hello timer to host %s to 10.00" % host
+            self.bgCmd(host, True, cmd,
+                       *reduce(lambda x, y: x + y, params.items()))
 
 
 class princeOONF(princeTest):
@@ -348,3 +298,65 @@ class princeOONF(princeTest):
 
         return self.bgCmd(host, True, cmd,
                           *reduce(lambda x, y: x + y, params.items()))
+
+
+
+class crashPingTest(princeNoHeuristic):
+    def __init__(self, mininet, name, args):
+        super(crashPingTest, self).__init__(mininet, name, args)
+        self.killwait = int(args["kill_wait"])
+        self.kill = self.getHostSample(1)[0].defaultIntf().ip
+        #self.destination = self.getHostSample(1)[0].defaultIntf().ip
+        #self.stopNodeList = self.getCentrality()
+
+    def performTests(self):
+        self.wait(float(self.killwait))
+        self.nodeCrashed = "h2_2"
+        if self.nodeCrashed:
+            print "Killing " + str(self.nodeCrashed) + "\n"
+            self.sendSignal(signal.SIGKILL, hostName=[self.nodeCrashed])
+
+    def launchPing(self, host):
+        idps = randint(0, 100)
+        logfile = self.prefix + host.name.split('_')[0] + \
+            "-" + str(idps) + "_ping_$(date +%s).log"
+
+        cmd = "ping " + self.destination
+        params = {}
+        params['>'] = logfile
+        params['2>'] = logfile
+
+        return self.bgCmd(host, True, cmd,
+                          *reduce(lambda x, y: x + y, params.items()))
+
+    def getCentrality(self):
+        node_centrality_posteriori = {}
+        centrality = {}
+        for n in self.graph.nodes():
+            gg = self.graph.copy()
+            edges = self.graph.edges([n])
+            gg.remove_node(n)
+            # compute the connected components
+            # WARNING: connected_components should return a list
+            # sorted by size, largest first. It does not, so i resort them
+            unsorted_comp = list(nx.connected_components(gg))
+            comp = sorted(unsorted_comp, key=lambda x: -len(x))
+            # re-add the node
+            gg.add_node(n)
+            # re-add the edges to nodes in the main component
+            for (fr, to) in edges:
+                if fr in comp[0]:
+                    gg.add_edge(fr, n)
+                if to in comp[0]:
+                    gg.add_edge(n, to)
+            # now compute the centrality. This tells how important is the node
+            # for the main connected component. If this is 0, it is not worth
+            # to remove this node
+            cent = nx.betweenness_centrality(gg)[n]
+            isolated_nodes = [x for component in comp[1:] for x in component]
+            node_centrality_posteriori[n] = [cent, [n] + isolated_nodes]
+            centrality[n] = cent
+        betw = [x for x in nx.betweenness_centrality(self.graph).items()
+                if x[1] > 0 and node_centrality_posteriori[x[0]][0] > 0]
+
+        return [node_centrality_posteriori[k[0]][1] for k in sorted(betw, key=lambda x: -x[1])]

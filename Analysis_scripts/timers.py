@@ -16,16 +16,16 @@ def process_folder(folder):
     results = np.zeros([len(g.nodes()), 2])
     ctv = ComputeTheoreticalValues(graph=g)
     #conv_i = find_convergence(folder, g)
-    conv_i = -10
+    conv_i = 5
     bcs = nx.betweenness_centrality(g, endpoints=True)
     i = 0
     print "\n\n%s converged at %d\n" % (folder, conv_i)
-    print "Node\tHello NX\tPrince+olsrv1"
+    #print "Node\tHello NX\tPrince+olsrv1"
     with open(folder[:-1] + "_result_hello.dat", "w") as f:
         for node in g.nodes():
-            mean_hello = get_mean_hello(folder + node, conv_i)
-            results[i, :] = [ctv.Hi[node], mean_hello]
-            print >> f, "%s\t%f\t%f" % (node, ctv.Hi[node], mean_hello)
+            mean_hello = get_mean_tc(folder + node, conv_i)
+            results[i, :] = [ctv.TCi[node], mean_hello]
+            print >> f, "%s\t%f\t%f" % (node, ctv.TCi[node], mean_hello)
             i += 1
     print np.max((np.diff(results, 1)[:].transpose() / np.abs(results)[:, 1])*100)
 
@@ -37,6 +37,12 @@ def get_mean_hello(nodename, conv_i):
             return np.mean(values[-conv_i:, 2])
     return 0
 
+def get_mean_tc(nodename, conv_i):
+    with open(nodename + "_prince.log") as f:
+        values = np.loadtxt(f)
+        if values.shape[0] > 5:
+            return np.mean(values[-conv_i:, 1])
+    return 0
 
 def find_convergence(folder, g):
         base_val = 2

@@ -70,7 +70,7 @@ class Nepa():
             print("A source for the graph must be specified")
 
         if drawGraph:
-            nx.draw(self.gg)
+            nx.draw(self.g)
             plt.show()
 
         link_opts = self.C.link_conf()

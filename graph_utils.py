@@ -46,10 +46,20 @@ def load_json(json_file):
     if "metric" in netjson_net and netjson_net["metric"] == "ff_dat_metric":
         cost_label = "cost"
     for node in netjson_net["nodes"]:
-        if node["properties"]["type"] == "local" or node["properties"]["type"] == "node":
+        if "properties" in node:
+            if node["properties"]["type"] == "local" or node["properties"]["type"] == "node":
+                G.add_node(node["id"])
+        else:
             G.add_node(node["id"])
     for link in netjson_net["links"]:
-        if link["properties"]["type"] == "local" or link["properties"]["type"] == "node":
+        if "properties" in link:
+            if link["properties"]["type"] == "local" or link["properties"]["type"] == "node":
+                if cost_label:
+                    cost = float(link["cost"])
+                else:
+                    cost = 1.0
+                G.add_edge(link["source"], link["target"], {"weight": cost})
+        else:
             if cost_label:
                 cost = float(link["cost"])
             else:
