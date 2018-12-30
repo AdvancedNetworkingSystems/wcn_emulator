@@ -9,10 +9,30 @@ from parameters_parser import parameters
 from network_builder import *
 from test_code import *
 from mininet.log import setLogLevel
+import csv
+import numpy as np
 # add the nepa_test directory to sys path
 sys.path.append(path.dirname(sys.argv[0]))
 sys.path.append('test_code')
 sys.path.insert(0, './')
+
+
+def mean_val(subpath, size):
+    with open("%s/result.dat" % (subpath), "w") as fw:
+        breaks = []
+        for i in range(size):
+            with open("%s/h%d_%d/breakage.dat" % (subpath, i, i)) as f:
+                data = []
+                reader = csv.reader(f)
+                for row in reader:
+                    d = {}
+                    d['timestamp'] = int(row[0])
+                    d['correct'] = int(row[1])
+                    data.append(d)
+                m_route = max(data, key=lambda x: x['correct'])['correct']
+                stable = sorted([d['timestamp'] for d in data if d['correct'] == m_route])
+                diff = [x1 - x2 for (x1, x2) in zip(stable[1:], stable[:-1])]
+                print >> fw, max(diff)
 
 
 class Nepa():
@@ -68,28 +88,41 @@ class Nepa():
             self.load_topology(graphDef)
         else:
             print("A source for the graph must be specified")
+        params = [(0, 0, "NOPOP"), (1, 0, "POP"), (1, 1, "POPPEN")]  # (poprouting, cutpoint)
+        testPath = "%s_%s_%d" % (testName, self.graphname, time())
+        kill_nodes = self.C.getConfigurations("kill_nodes")
+        if not kill_nodes:
+            kill_nodes = self.g.nodes()
+        else:
+            kill_nodes = map(int, kill_nodes[1:-1].split(','))
 
-        if drawGraph:
-            nx.draw(self.g)
-            plt.show()
+        for p in params:
+            self.C.confParams['poprouting'] = p[0]
+            self.C.confParams['cutpoint_pen'] = p[1]
+            subPath = "%s/%s" % (testPath, p[2])
+            for n in kill_nodes:
+                kill_node = "h%d_%d" % (n, n)
+                if drawGraph:
+                    nx.draw(self.g)
+                    plt.show()
 
-        link_opts = self.C.link_conf()
-        net = GraphNet(self.g, link_opts=link_opts)
-        net.start()
-        net.enableForwarding()
-        if not enableShortestRoutes or enableShortestRoutes.lower() == "true":
-            net.setShortestRoutes()
-        # CLI(net)
-
-        testPath = testName + "_" + self.graphname + "_" + str(int(time()))
-        for i in range(int(self.C.getConfigurations("times"))):
-            info("+++++++ Round: " + str(i + 1) + '\n')
-            test = self.C.className(net, testPath, self.C.confParams)
-            test.runTest()
-        net.stop()
-        test.changePermissions()
+                link_opts = self.C.link_conf()
+                net = GraphNet(self.g, link_opts=link_opts)
+                net.start()
+                net.enableForwarding()
+                if not enableShortestRoutes or enableShortestRoutes.lower() == "true":
+                    net.setShortestRoutes()
+                # CLI(net)
+                runPath = "%s/%s" %(subPath, kill_node)
+                for i in range(int(self.C.getConfigurations("times"))):
+                    info("+++++++ Round: " + str(i + 1) + '\n')
+                    test = self.C.className(mininet=net, kill=kill_node, name=runPath, args=self.C.confParams)
+                    test.runTest()
+                net.stop()
+                test.changePermissions()
+            info("*** Done with subcase %s" % (p[2]))
+            mean_val(subPath, len(self.g.nodes()))
         info("*** Done with experiment: " + testName + "\n")
-
 if __name__ == "__main__":
     N = Nepa()
     N.nepa_test()

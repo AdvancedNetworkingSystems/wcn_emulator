@@ -90,7 +90,7 @@ class MininetTest(object):
             host.waiting = False
 
     def setPrefix(self, name):
-        self.prefix = str(name) + '_' + str(self.duration) + '/'
+        self.prefix = str(name) + '/'
         if not os.path.exists(self.prefix):
                 os.makedirs(self.prefix)
 
