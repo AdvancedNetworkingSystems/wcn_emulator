@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import networkx as nx
 import sys
 from collections import defaultdict, Counter
 import itertools as it
@@ -83,7 +83,6 @@ class resultParser():
 
             self.nodeSet.add(str(node_id))
             self.routing_tables[str(node_id)][timestamp] = jsonRt
-        print self.id_ip
 
     def reorder_logs(self):
         logWindow = {}
@@ -154,10 +153,15 @@ if __name__ == "__main__":
         sys.exit(1)
 
     pathPrefix = sys.argv[1]
-
+    
     p = resultParser()
-    p.read_topologies_from_node(pathPrefix)
+    p.read_topologies_from_node(pathPrefix+ "/rtables/")
     p.reorder_logs()
+    graph = nx.read_adjlist(pathPrefix + "/topology.adj")
+    graph.remove_node(sys.argv[2])
+    p.cc_list = []
+    for cc in nx.connected_components(graph):
+        p.cc_list.append(map(lambda x: p.id_ip[x], cc))
     if len(sys.argv) > 2:
         p.killed_node = sys.argv[2]
     p.navigate_all_timestamps()

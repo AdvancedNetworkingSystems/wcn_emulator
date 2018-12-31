@@ -17,7 +17,7 @@ sys.path.append('test_code')
 sys.path.insert(0, './')
 
 
-def mean_val(subpath, size):
+def mean_val(subpath, size, wait):
     with open("%s/result.dat" % (subpath), "w") as fw:
         breaks = []
         for i in range(size):
@@ -29,10 +29,13 @@ def mean_val(subpath, size):
                     d['timestamp'] = int(row[0])
                     d['correct'] = int(row[1])
                     data.append(d)
-                m_route = max(data, key=lambda x: x['correct'])['correct']
-                stable = sorted([d['timestamp'] for d in data if d['correct'] == m_route])
-                diff = [x1 - x2 for (x1, x2) in zip(stable[1:], stable[:-1])]
-                print >> fw, max(diff)
+                m_route = max(data, key=lambda x: x['correct'])['correct'] #Search for the max number of route (right one)
+                filtered = data[wait:-10] #Remove all the data before the wait time and the last 10 seconds
+                stable = sorted([d['timestamp'] for d in filtered if d['correct'] != m_route])  # filter all about the fluctuations
+                longest_seq = max(np.split(stable, np.where(np.diff(stable) != 1)[0]+1), key=len).tolist()    
+                print >> fw, len(longest_seq)
+                # diff = [x1 - x2 - 1 for (x1, x2) in zip(stable[1:], stable[:-1])] #make a vector of differences
+                # print >> fw, max(diff)
 
 
 class Nepa():
