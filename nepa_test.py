@@ -139,7 +139,7 @@ class Nepa():
                     test.changePermissions()
                 info("*** Done with subcase %s" % (p[2]))
                 mean_val(subPath, int(self.C.confParams['kill_wait']))
-            with open(multitestpath + "/result.dat", "w") as fw:
+            with open(multitestpath + "/result.dat", 'a') as fw:
                 means = mean_exp(testPath)
                 print >> fw, "%f,%f,%f" % (means[0], means[1], means[2])
         info("*** Done with experiment: " + testName + "\n")

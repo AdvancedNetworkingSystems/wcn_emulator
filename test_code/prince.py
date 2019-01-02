@@ -195,7 +195,7 @@ class princeOLSR(princeTest):
             PlParam "port" "2009"
         }
 
-        LoadPlugin "../olsrd/lib/poprouting/olsrd_poprouting.so.0.1"{
+        LoadPlugin "../olsrd/lib/poprouting/olsrd_poprouting.so.1.0"{
             PlParam "accept" "0.0.0.0"
             PlParam "port" "1234"
         }
