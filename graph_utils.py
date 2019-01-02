@@ -9,7 +9,7 @@ def generate_graph(gkind, size):
     if gkind == "CN":
         ge.genCNGraph(N=int(size), T=size*2)
     elif gkind == "NPART":
-        ge.genMeshGraph(N=size)
+        ge.genMeshGraph(N=size, seed=False)
     else:
         ge.genGraph(graphKind=gkind, numNodes=size)
     return ge.graph
