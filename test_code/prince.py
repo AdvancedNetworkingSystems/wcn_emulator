@@ -197,18 +197,18 @@ class princeHeuristicKill(MininetTest):
         with open(self.prefix + "breakage.dat", "w") as breakage:
             for l in p.data_series:
                 print >> breakage, ",".join(map(str, l))
-        
-        bcs = nx.betweenness_centrality(self.graph, endpoints=True)
-        ctv = ComputeTheoreticalValues(graph=self.graph)
-        with open(self.prefix + "centrality.dat", "w") as report:
-            print >> report, "Node\tNX\tPrince+olsrv1"
-            for node, value in bcs.iteritems():
-                print >> report, "%s\t%f\t%f" % (node, value, self.get_mean_column(self.prefix + node, 4))
-        
-        with open(self.prefix + "timers.dat", "w") as report:
-            print >> report, "Node\tHello NX\tHello Prince\tTC NX\tTC Prince"
-            for node in self.graph.nodes():
-                print >> report, "%s\t%f\t%f\t%f\t%f" % (node, ctv.Hi[node], self.get_mean_column(self.prefix + "/" + node, 2), ctv.TCi[node], self.get_mean_column(self.prefix + "/" + node, 1))
+        if self.poprouting:
+            bcs = nx.betweenness_centrality(self.graph, endpoints=True)
+            ctv = ComputeTheoreticalValues(graph=self.graph)
+            with open(self.prefix + "centrality.dat", "w") as report:
+                print >> report, "Node\tNX\tPrince+olsrv1"
+                for node, value in bcs.iteritems():
+                    print >> report, "%s\t%f\t%f" % (node, value, self.get_mean_column(self.prefix + node, 4))
+            
+            with open(self.prefix + "timers.dat", "w") as report:
+                print >> report, "Node\tHello NX\tHello Prince\tTC NX\tTC Prince"
+                for node in self.graph.nodes():
+                    print >> report, "%s\t%f\t%f\t%f\t%f" % (node, ctv.Hi[node], self.get_mean_column(self.prefix + "/" + node, 2), ctv.TCi[node], self.get_mean_column(self.prefix + "/" + node, 1))
         return
 
     def get_mean_column(self, nodename, column):
