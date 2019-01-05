@@ -131,12 +131,12 @@ class princeHeuristicKill(MininetTest):
             launch_pid = self.launchRouting(host)
             if self.poprouting:
                 pid = self.launchPrince(host)
-            self.dumpRoute(host)
             if self.dump:
                 self.launch_sniffer(host)
             nx.write_adjlist(self.graph, self.prefix + "topology.adj")
             gu.save_netjson(self.graph, self.prefix)
-            
+        for idx, host in enumerate(self.getAllHosts()):
+            self.dumpRoute(host)
             
             
 
