@@ -77,10 +77,10 @@ class princeHeuristicKill(MininetTest):
         }
 
         InterfaceDefaults {
-            TcInterval 5.0
-            TcValidityTime  500.0
-            HelloInterval   2.0
-            HelloValidityTime 20.0
+            TcInterval 2.5
+            TcValidityTime  7.5
+            HelloInterval   1.0
+            HelloValidityTime 3.0
         }
 
         Interface %s {}
@@ -162,7 +162,7 @@ class princeHeuristicKill(MininetTest):
         log_str = "Host " + host.name + " launching command:\n"
         info(log_str)
         info(cmd + "\n")
-        logfile = self.prefix + host.name + "_olsr.log"
+        logfile = "/dev/null" #self.prefix + host.name + "_olsr.log"
 
         params = {}
         params['>'] = logfile
