@@ -30,8 +30,7 @@ class princeHeuristicKill(MininetTest):
                 "host": "%s",
                 "port": 2009,
                 "timer_port": 1234,
-                "refresh": 5,
-                "log_file": "%s"
+                "refresh": 5
             },
             "graph-parser": {
                 "heuristic": 1,
@@ -93,23 +92,21 @@ class princeHeuristicKill(MininetTest):
 
     def launchPrince(self, host):
         prince_conf_file = self.prefix + host.name + "_prince.json"
-        f_prince = open(prince_conf_file, "w")
-        logfile = os.path.abspath(self.prefix + host.name + "_prince.log")
-        with open(logfile, "w+") as fh:
-            fh.close()
-        os.chmod(logfile, 0o777)
-        print >> f_prince, self.prince_conf_template % (host.defaultIntf().ip, logfile, self.cutpoint_pen)
-        f_prince.close()
+        with open(prince_conf_file, "w") as f_prince:
+            # logfile = os.path.abspath(self.prefix + host.name + "_prince.log")
+            # with open(logfile, "w+") as fh:
+            #     fh.close()
+            #os.chmod(logfile, 0o777)
+            print >> f_prince, self.prince_conf_template % (host.defaultIntf().ip, self.cutpoint_pen)
         args = os.path.abspath(prince_conf_file)
         logfile = self.prefix + host.name + "_prince_out.log"
         cmd = "exec ../prince/build/prince " + args
-
-        log_str = "Host " + host.name + " launching command:\n"
-        info(log_str)
-        info(cmd + "\n")
+        # log_str = "Host " + host.name + " launching command:\n"
+        # info(log_str)
+        # info(cmd + "\n")
         params = {}
-        params['>'] = logfile
-        params['2>'] = logfile
+        params['>'] = "/dev/null"  # logfile
+        params['2>'] = "/dev/null"  # logfile
         return self.bgCmd(host, True, cmd,
                           *reduce(lambda x, y: x + y, params.items()))
 
@@ -118,9 +115,11 @@ class princeHeuristicKill(MininetTest):
         info("Data folder: " + self.prefix + "\n")
         plt.show()
         self.setupNetwork()
+        info("\n")
+        info("Waiting to kill the node...\n")
         self.performTests()
         info("Waiting completion...\n")
-        self.wait(float(self.duration), log_resources={'net': 'netusage.csv'})
+        self.wait(float(self.duration))
         self.tearDownNetwork()
         self.analyzeResults()
 
@@ -136,33 +135,32 @@ class princeHeuristicKill(MininetTest):
             nx.write_adjlist(self.graph, self.prefix + "topology.adj")
             gu.save_netjson(self.graph, self.prefix)
         for idx, host in enumerate(self.getAllHosts()):
-            self.dumpRoute(host)
+            self.dumpRoute(host, self.killwait - 10)
             
             
 
-    def dumpRoute(self, host):
+    def dumpRoute(self, host, wait):
         logdir = self.prefix + "rtables/" + host.name
         logfile = self.prefix + host.name + "_dump_out.log"
         os.makedirs(logdir)
-        cmd = "./dumpRoute.sh %s" % (logdir)
+        cmd = "./dumpRoute.sh %s %d" % (logdir, wait)
         params = {}
-        params['>'] = logfile
-        params['2>'] = logfile
+        params['>'] = "/dev/null" #logfile
+        params['2>'] = "/dev/null" #logfile
         return self.bgCmd(host, True, cmd,
                           *reduce(lambda x, y: x + y, params.items()))
 
     def launchRouting(self, host):
         olsr_conf_file = self.prefix + host.name + "_olsr.conf"
         olsr_lock_file = "/var/run/" + host.name + str(time.time()) + ".lock"
-        f_olsr = open(olsr_conf_file, "w")
-        print >> f_olsr, self.olsr_conf_template % (olsr_lock_file, self.intf_list)
-        f_olsr.close()
+        with open(olsr_conf_file, "w") as f_olsr:
+            print >> f_olsr, self.olsr_conf_template % (olsr_lock_file, self.intf_list)
         args = "-f " + os.path.abspath(olsr_conf_file)
         cmd = "../olsrd/olsrd " + args
-        log_str = "Host " + host.name + " launching command:\n"
-        info(log_str)
-        info(cmd + "\n")
-        logfile = "/dev/null" #self.prefix + host.name + "_olsr.log"
+        # log_str = "Host " + host.name + " launching command:\n"
+        # info(log_str)
+        # info(cmd + "\n")
+        logfile = "/dev/null"  # self.prefix + host.name + "_olsr.log"
 
         params = {}
         params['>'] = logfile
@@ -197,26 +195,26 @@ class princeHeuristicKill(MininetTest):
         with open(self.prefix + "breakage.dat", "w") as breakage:
             for l in p.data_series:
                 print >> breakage, ",".join(map(str, l))
-        if self.poprouting:
-            bcs = nx.betweenness_centrality(self.graph, endpoints=True)
-            ctv = ComputeTheoreticalValues(graph=self.graph)
-            with open(self.prefix + "centrality.dat", "w") as report:
-                print >> report, "Node\tNX\tPrince+olsrv1"
-                for node, value in bcs.iteritems():
-                    print >> report, "%s\t%f\t%f" % (node, value, self.get_mean_column(self.prefix + node, 4))
-            
-            with open(self.prefix + "timers.dat", "w") as report:
-                print >> report, "Node\tHello NX\tHello Prince\tTC NX\tTC Prince"
-                for node in self.graph.nodes():
-                    print >> report, "%s\t%f\t%f\t%f\t%f" % (node, ctv.Hi[node], self.get_mean_column(self.prefix + "/" + node, 2), ctv.TCi[node], self.get_mean_column(self.prefix + "/" + node, 1))
+        # if self.poprouting:
+        #     bcs = nx.betweenness_centrality(self.graph, endpoints=True)
+        #     ctv = ComputeTheoreticalValues(graph=self.graph)
+        #     with open(self.prefix + "centrality.dat", "w") as report:
+        #         print >> report, "Node\tNX\tPrince+olsrv1"
+        #         for node, value in bcs.iteritems():
+        #             print >> report, "%s\t%f\t%f" % (node, value, self.get_mean_column(self.prefix + node, 4))
+        #
+        #     with open(self.prefix + "timers.dat", "w") as report:
+        #         print >> report, "Node\tHello NX\tHello Prince\tTC NX\tTC Prince"
+        #         for node in self.graph.nodes():
+        #             print >> report, "%s\t%f\t%f\t%f\t%f" % (node, ctv.Hi[node], self.get_mean_column(self.prefix + "/" + node, 2), ctv.TCi[node], self.get_mean_column(self.prefix + "/" + node, 1))
         return
 
-    def get_mean_column(self, nodename, column):
-        with open(nodename + "_prince.log") as f:
-            values = np.loadtxt(f)
-            if values.shape[0] > 4:
-                return np.mean(values[-5:, column])
-        return 0
+    # def get_mean_column(self, nodename, column):
+    #     with open(nodename + "_prince.log") as f:
+    #         values = np.loadtxt(f)
+    #         if values.shape[0] > 4:
+    #             return np.mean(values[-5:, column])
+    #     return 0
 
     def sendSignal(self, sig, hostName=""):
         for pid, h in self.pendingProc.items():

@@ -162,7 +162,7 @@ class GraphNet(PowerNet):
     def pickHostAddrPort(self, node):
         port = self.hosts_port[node.name]
         addr = "10.0."+node.name.split('_')[-1]+"."+str(port)+"/8"
-        print node.name.split('_')[-1]
+        #print node.name.split('_')[-1]
         self.hosts_port[node.name] += 1
         return addr, port
 

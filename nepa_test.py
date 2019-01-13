@@ -44,10 +44,10 @@ def mean_val(subpath, wait):
                     d['correct'] = int(row[1])
                     data.append(d)
                 m_route = max(data, key=lambda x: x['correct'])['correct'] #Search for the max number of route (right one)
-                filtered = data[wait:-10] #Remove all the data before the wait time and the last 10 seconds
+                filtered = data[5:-5] #Remove all the data before the wait time and the last 10 seconds
                 stable = sorted([d['timestamp'] for d in filtered if d['correct'] != m_route])  # filter all about the fluctuations
-                longest_seq = max(np.split(stable, np.where(np.diff(stable) != 1)[0]+1), key=len).tolist()    
-                print >> fw, "%d,%s" %(len(longest_seq), node)
+                longest_seq = max(np.split(stable, np.where(np.diff(stable) != 1)[0]+5), key=len).tolist()
+                print >> fw, "%.2f,%s" %(float(len(longest_seq))*2.5, node) #ds
                 # diff = [x1 - x2 - 1 for (x1, x2) in zip(stable[1:], stable[:-1])] #make a vector of differences
                 # print >> fw, max(diff)
 
@@ -131,10 +131,8 @@ class Nepa():
                     net.enableForwarding()
                     # CLI(net)
                     runPath = "%s/%s" %(subPath, kill_node)
-                    print("PRETest")
                     test = self.C.className(mininet=net, kill=kill_node, name=runPath, args=self.C.confParams)
                     test.runTest()
-                    print("POSTTEST")
                     net.stop()
                     test.changePermissions()
                 info("*** Done with subcase %s" % (p[2]))

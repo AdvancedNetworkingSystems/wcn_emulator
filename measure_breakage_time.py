@@ -88,14 +88,14 @@ class resultParser():
         logWindow = {}
         orderedLogSequence = []
         alignedJsonRt = {}
-        for i in range(self.latest_time - self.earliest_time + 1):
+        for i in range(0, self.latest_time - self.earliest_time + 1, 5):
             self.sorted_routing_tables[i+self.earliest_time] = {}
         time_list = self.sorted_routing_tables.keys()
         for node_id, rt_dict in self.routing_tables.items():
             ord_rt_dict = sorted(rt_dict.items(), key=lambda x: x[0])
             last_added = ord_rt_dict[0][0]
             for timestamp, rt in ord_rt_dict:
-                for i in range(last_added + 1, timestamp):
+                for i in range(last_added + 5, timestamp, 5):
                     self.sorted_routing_tables[i] = self.sorted_routing_tables[last_added]
                 self.sorted_routing_tables[timestamp][node_id] = dict(rt)
                 last_added = timestamp
@@ -165,6 +165,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 2:
         p.killed_node = sys.argv[2]
     p.navigate_all_timestamps()
-    print "correct_paths, loops, broken_paths, missing_dest" 
+    print "correct_paths, loops, broken_paths, missing_dest"
     for l in p.data_series:
         print ",".join(map(str, l))
