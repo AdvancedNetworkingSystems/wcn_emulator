@@ -24,7 +24,7 @@ class resultParser():
         self.sorted_routing_tables = {}  # timestamp, node_id, rt
         self.dump_interval = 1
         self.latest_time = 0
-        self.earliest_time = (2020-1970)*365*24*60*60
+        self.earliest_time = (2020-1970)*365*24*60*60*1000 #ms
         self.data_series = []
         self.id_ip = {}
         self.init_data()
