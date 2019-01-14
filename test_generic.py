@@ -50,7 +50,7 @@ class MininetTest(object):
         if force_multiple_processes:
             host.waiting = False
         host.sendCmd(*(args + ("&",)))
-        sleep(0.5)
+        sleep(0.1)
         try:
             pid = (set(host_proc.children()).difference(host_ps)).pop().pid
             info("BGProcess: " + str(pid) + "; ")
