@@ -1,0 +1,1202 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key attr.name="wieght" attr.type="double" for="edge" id="d4" />
+  <key attr.name="src_orig_id" attr.type="string" for="edge" id="d3" />
+  <key attr.name="type" attr.type="string" for="edge" id="d2" />
+  <key attr.name="bidirect" attr.type="string" for="edge" id="d1" />
+  <key attr.name="dst_orig_id" attr.type="string" for="edge" id="d0" />
+  <graph edgedefault="undirected">
+    <node id="24" />
+    <node id="25" />
+    <node id="26" />
+    <node id="27" />
+    <node id="20" />
+    <node id="21" />
+    <node id="22" />
+    <node id="23" />
+    <node id="28" />
+    <node id="29" />
+    <node id="0" />
+    <node id="4" />
+    <node id="8" />
+    <node id="59" />
+    <node id="58" />
+    <node id="55" />
+    <node id="54" />
+    <node id="57" />
+    <node id="56" />
+    <node id="51" />
+    <node id="50" />
+    <node id="53" />
+    <node id="52" />
+    <node id="88" />
+    <node id="89" />
+    <node id="82" />
+    <node id="83" />
+    <node id="80" />
+    <node id="81" />
+    <node id="86" />
+    <node id="87" />
+    <node id="84" />
+    <node id="85" />
+    <node id="3" />
+    <node id="7" />
+    <node id="39" />
+    <node id="38" />
+    <node id="33" />
+    <node id="32" />
+    <node id="31" />
+    <node id="30" />
+    <node id="37" />
+    <node id="36" />
+    <node id="35" />
+    <node id="34" />
+    <node id="60" />
+    <node id="61" />
+    <node id="62" />
+    <node id="63" />
+    <node id="64" />
+    <node id="65" />
+    <node id="66" />
+    <node id="67" />
+    <node id="68" />
+    <node id="69" />
+    <node id="2" />
+    <node id="6" />
+    <node id="99" />
+    <node id="98" />
+    <node id="91" />
+    <node id="90" />
+    <node id="93" />
+    <node id="92" />
+    <node id="95" />
+    <node id="94" />
+    <node id="97" />
+    <node id="96" />
+    <node id="11" />
+    <node id="10" />
+    <node id="13" />
+    <node id="12" />
+    <node id="15" />
+    <node id="14" />
+    <node id="17" />
+    <node id="16" />
+    <node id="19" />
+    <node id="18" />
+    <node id="48" />
+    <node id="49" />
+    <node id="46" />
+    <node id="47" />
+    <node id="44" />
+    <node id="45" />
+    <node id="42" />
+    <node id="43" />
+    <node id="40" />
+    <node id="41" />
+    <node id="1" />
+    <node id="5" />
+    <node id="9" />
+    <node id="77" />
+    <node id="76" />
+    <node id="75" />
+    <node id="74" />
+    <node id="73" />
+    <node id="72" />
+    <node id="71" />
+    <node id="70" />
+    <node id="79" />
+    <node id="78" />
+    <edge source="24" target="25">
+      <data key="d0">18a6f74b988a</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">14cc20cd4e20</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="24" target="26">
+      <data key="d0">18a6f74b988a</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">002522b78891</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="24" target="44">
+      <data key="d2">wireless</data>
+      <data key="d0">18a6f74b988a</data>
+      <data key="d1">undef</data>
+      <data key="d3">14cc205a8180</data>
+      <data key="d4">1.294</data>
+    </edge>
+    <edge source="24" target="88">
+      <data key="d0">18a6f74b988a</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">f4f26d85af18</data>
+      <data key="d4">1.133</data>
+    </edge>
+    <edge source="24" target="73">
+      <data key="d0">18a6f74b988a</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">30b5c2884604</data>
+      <data key="d4">1.032</data>
+    </edge>
+    <edge source="24" target="84">
+      <data key="d0">18a6f74b988a</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">30b5c2b048d2</data>
+      <data key="d4">1.181</data>
+    </edge>
+    <edge source="25" target="26">
+      <data key="d0">002522b78891</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">14cc20cd4e20</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="26" target="0">
+      <data key="d2">fastd</data>
+      <data key="d0">002522b78891</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="27" target="0">
+      <data key="d2">fastd</data>
+      <data key="d0">c46e1fe6d57a</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="27" target="28">
+      <data key="d0">6872510a3b8b</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c46e1fe6d57a</data>
+      <data key="d4">1.364</data>
+    </edge>
+    <edge source="20" target="19">
+      <data key="d0">f4f26d3fef10</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">f4f26d3feee2</data>
+      <data key="d4">1.045</data>
+    </edge>
+    <edge source="20" target="30">
+      <data key="d0">f4f26d3feee2</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">6872510a35d3</data>
+      <data key="d4">6.22</data>
+    </edge>
+    <edge source="20" target="17">
+      <data key="d2">wireless</data>
+      <data key="d0">e8de27fd35de</data>
+      <data key="d1">undef</data>
+      <data key="d3">f4f26d3feee2</data>
+      <data key="d4">1.054</data>
+    </edge>
+    <edge source="21" target="22">
+      <data key="d0">c46e1fc70baa</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">6872510a392a</data>
+      <data key="d4">1.128</data>
+    </edge>
+    <edge source="21" target="23">
+      <data key="d2">wireless</data>
+      <data key="d0">c4e984b0af20</data>
+      <data key="d1">undef</data>
+      <data key="d3">c46e1fc70baa</data>
+      <data key="d4">1.054</data>
+    </edge>
+    <edge source="22" target="23">
+      <data key="d0">c4e984b0af20</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">6872510a392a</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="23" target="55">
+      <data key="d0">c4e984b0af20</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c4e984b0cd60</data>
+      <data key="d4">4.397</data>
+    </edge>
+    <edge source="23" target="0">
+      <data key="d2">fastd</data>
+      <data key="d0">c4e984b0af20</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="28" target="0">
+      <data key="d2">fastd</data>
+      <data key="d0">6872510a3b8b</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="28" target="31">
+      <data key="d2">wireless</data>
+      <data key="d0">6872510a3b8b</data>
+      <data key="d1">undef</data>
+      <data key="d3">68725108fc98</data>
+      <data key="d4">36.429</data>
+    </edge>
+    <edge source="28" target="32">
+      <data key="d0">a42bb0aaa95e</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">6872510a3b8b</data>
+      <data key="d4">1.256</data>
+    </edge>
+    <edge source="29" target="18">
+      <data key="d0">0418d62d1ec8</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">0418d62d1f6d</data>
+      <data key="d4">1.118</data>
+    </edge>
+    <edge source="29" target="17">
+      <data key="d2">wireless</data>
+      <data key="d0">0418d62d1ec8</data>
+      <data key="d1">undef</data>
+      <data key="d3">e8de27fd35de</data>
+      <data key="d4">2.833</data>
+    </edge>
+    <edge source="0" target="82">
+      <data key="d2">fastd</data>
+      <data key="d0">f4f26d5f0646</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="68">
+      <data key="d2">fastd</data>
+      <data key="d0">c46e1fe6e08c</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="69">
+      <data key="d2">fastd</data>
+      <data key="d0">f4f26d2286b4</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="80">
+      <data key="d2">fastd</data>
+      <data key="d0">f4f26d4000bc</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.016</data>
+    </edge>
+    <edge source="0" target="84">
+      <data key="d2">fastd</data>
+      <data key="d0">30b5c2b048d2</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="85">
+      <data key="d2">fastd</data>
+      <data key="d0">f4f26d2284aa</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="48">
+      <data key="d2">fastd</data>
+      <data key="d0">14cc204d0f3a</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="46">
+      <data key="d2">fastd</data>
+      <data key="d0">14cc20cd55a8</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="47">
+      <data key="d2">fastd</data>
+      <data key="d0">c46e1f8ccc50</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="42">
+      <data key="d2">fastd</data>
+      <data key="d0">c04a007fd0fa</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="43">
+      <data key="d2">fastd</data>
+      <data key="d0">647002986b1a</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="40">
+      <data key="d2">fastd</data>
+      <data key="d0">60e327c7136e</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="1">
+      <data key="d2">fastd</data>
+      <data key="d0">14cc206e248a</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="2">
+      <data key="d2">fastd</data>
+      <data key="d0">60e3272a553e</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="97">
+      <data key="d2">fastd</data>
+      <data key="d0">c46e1ff650cc</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="96">
+      <data key="d2">fastd</data>
+      <data key="d0">30b5c2b04c58</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="77">
+      <data key="d2">fastd</data>
+      <data key="d0">60e327e767d4</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="76">
+      <data key="d2">fastd</data>
+      <data key="d0">001e68f402ab</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="74">
+      <data key="d2">fastd</data>
+      <data key="d0">60e327edc626</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="73">
+      <data key="d2">fastd</data>
+      <data key="d0">30b5c2884604</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.041</data>
+    </edge>
+    <edge source="0" target="71">
+      <data key="d2">fastd</data>
+      <data key="d0">60e327edd500</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="94">
+      <data key="d2">fastd</data>
+      <data key="d0">60e3272a556c</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="79">
+      <data key="d2">fastd</data>
+      <data key="d0">f4f26d3fef42</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="78">
+      <data key="d2">fastd</data>
+      <data key="d0">f4f26d3feef6</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="10">
+      <data key="d2">fastd</data>
+      <data key="d0">860cfd95b6a4</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="13">
+      <data key="d2">fastd</data>
+      <data key="d0">14cc204d2950</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="15">
+      <data key="d2">fastd</data>
+      <data key="d0">c46e1fd06d48</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="14">
+      <data key="d2">fastd</data>
+      <data key="d0">30b5c2e2ffa4</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="17">
+      <data key="d2">fastd</data>
+      <data key="d0">e8de27fd35de</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="98">
+      <data key="d2">fastd</data>
+      <data key="d0">c46e1fe6d692</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="53">
+      <data key="d2">fastd</data>
+      <data key="d0">60e327d612ec</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="99">
+      <data key="d2">fastd</data>
+      <data key="d0">c4e984b0ccb8</data>
+      <data key="d1">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="4" target="2">
+      <data key="d0">14cc20a49930</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">60e3272a553e</data>
+      <data key="d4">1.016</data>
+    </edge>
+    <edge source="8" target="5">
+      <data key="d0">f4f26d85c23c</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">14cc206e2aa6</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="8" target="7">
+      <data key="d0">f4f26d85c23c</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">a42bb0aaabde</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="8" target="6">
+      <data key="d0">f4f26d85c23c</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">30b5c2e32724</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="59" target="76">
+      <data key="d0">001e68f402ab</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">60e327ceddb4</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="59" target="75">
+      <data key="d2">wireless</data>
+      <data key="d0">60e327ceddb4</data>
+      <data key="d1">undef</data>
+      <data key="d3">c46e1f3b4132</data>
+      <data key="d4">1.012</data>
+    </edge>
+    <edge source="59" target="58">
+      <data key="d0">60e327ceddb4</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c46e1ff64a26</data>
+      <data key="d4">2.383</data>
+    </edge>
+    <edge source="59" target="41">
+      <data key="d0">60e327cedf2e</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">60e327ceddb4</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="58" target="9">
+      <data key="d2">wireless</data>
+      <data key="d0">c46e1ff64a26</data>
+      <data key="d1">undef</data>
+      <data key="d3">f4f26d303c14</data>
+      <data key="d4">63.75</data>
+    </edge>
+    <edge source="58" target="3">
+      <data key="d0">60e327e753d2</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c46e1ff64a26</data>
+      <data key="d4">3.312</data>
+    </edge>
+    <edge source="55" target="30">
+      <data key="d0">6872510a35d3</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c4e984b0cd60</data>
+      <data key="d4">2.713</data>
+    </edge>
+    <edge source="55" target="54">
+      <data key="d0">6872510a2c30</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">c4e984b0cd60</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="55" target="57">
+      <data key="d0">6872510a3467</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c4e984b0cd60</data>
+      <data key="d4">1.527</data>
+    </edge>
+    <edge source="55" target="56">
+      <data key="d0">c46e1fe694de</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c4e984b0cd60</data>
+      <data key="d4">1.903</data>
+    </edge>
+    <edge source="55" target="77">
+      <data key="d2">wireless</data>
+      <data key="d0">60e327e767d4</data>
+      <data key="d1">undef</data>
+      <data key="d3">c4e984b0cd60</data>
+      <data key="d4">1.409</data>
+    </edge>
+    <edge source="54" target="56">
+      <data key="d0">6872510a2c30</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c46e1fe694de</data>
+      <data key="d4">1.433</data>
+    </edge>
+    <edge source="54" target="57">
+      <data key="d2">wireless</data>
+      <data key="d0">6872510a3467</data>
+      <data key="d1">undef</data>
+      <data key="d3">6872510a2c30</data>
+      <data key="d4">1.594</data>
+    </edge>
+    <edge source="54" target="30">
+      <data key="d2">wireless</data>
+      <data key="d0">6872510a35d3</data>
+      <data key="d1">undef</data>
+      <data key="d3">6872510a2c30</data>
+      <data key="d4">3.592</data>
+    </edge>
+    <edge source="54" target="77">
+      <data key="d0">6872510a2c30</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">60e327e767d4</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="57" target="56">
+      <data key="d0">c46e1fe694de</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">6872510a3467</data>
+      <data key="d4">1.149</data>
+    </edge>
+    <edge source="51" target="50">
+      <data key="d0">647002fd8390</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">e8de2787678c</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="50" target="91">
+      <data key="d0">647002fd8390</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">f4f26d5f0944</data>
+      <data key="d4">1.154</data>
+    </edge>
+    <edge source="50" target="12">
+      <data key="d2">wireless</data>
+      <data key="d0">647002fd8390</data>
+      <data key="d1">undef</data>
+      <data key="d3">f4f26d85af02</data>
+      <data key="d4">1.371</data>
+    </edge>
+    <edge source="53" target="52">
+      <data key="d0">60e327d612ec</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">60e32753288c</data>
+      <data key="d4">1.067</data>
+    </edge>
+    <edge source="52" target="44">
+      <data key="d0">14cc205a8180</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">60e32753288c</data>
+      <data key="d4">1.114</data>
+    </edge>
+    <edge source="52" target="38">
+      <data key="d2">wireless</data>
+      <data key="d0">68725124fab8</data>
+      <data key="d1">undef</data>
+      <data key="d3">60e32753288c</data>
+      <data key="d4">42.5</data>
+    </edge>
+    <edge source="89" target="46">
+      <data key="d0">14cc20cd55a8</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c8d3a35c8366</data>
+      <data key="d4">1.016</data>
+    </edge>
+    <edge source="82" target="80">
+      <data key="d0">f4f26d5f0646</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">f4f26d4000bc</data>
+      <data key="d4">1.425</data>
+    </edge>
+    <edge source="82" target="81">
+      <data key="d0">c46e1f8ccedc</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">f4f26d5f0646</data>
+      <data key="d4">1.081</data>
+    </edge>
+    <edge source="83" target="80">
+      <data key="d0">f4f26d85aec2</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">f4f26d4000bc</data>
+      <data key="d4">1.032</data>
+    </edge>
+    <edge source="83" target="38">
+      <data key="d0">68725124fab8</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">f4f26d85aec2</data>
+      <data key="d4">1.269</data>
+    </edge>
+    <edge source="83" target="81">
+      <data key="d0">c46e1f8ccedc</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">f4f26d85aec2</data>
+      <data key="d4">1.214</data>
+    </edge>
+    <edge source="80" target="81">
+      <data key="d0">c46e1f8ccedc</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">f4f26d4000bc</data>
+      <data key="d4">1.275</data>
+    </edge>
+    <edge source="86" target="87">
+      <data key="d0">c4e984b0d908</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">ec086b6da022</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="86" target="85">
+      <data key="d0">c4e984b0d908</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">f4f26d2284aa</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="87" target="85">
+      <data key="d0">ec086b6da022</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">f4f26d2284aa</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="84" target="73">
+      <data key="d0">30b5c2884604</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">30b5c2b048d2</data>
+      <data key="d4">1.269</data>
+    </edge>
+    <edge source="3" target="31">
+      <data key="d0">60e327e753d2</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">68725108fc98</data>
+      <data key="d4">9.808</data>
+    </edge>
+    <edge source="3" target="2">
+      <data key="d0">60e327e753d2</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">60e3272a553e</data>
+      <data key="d4">4.322</data>
+    </edge>
+    <edge source="3" target="73">
+      <data key="d0">60e327e753d2</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">30b5c2884604</data>
+      <data key="d4">2.237</data>
+    </edge>
+    <edge source="7" target="36">
+      <data key="d0">a42bb0aaabde</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c46e1ff64ab2</data>
+      <data key="d4">1.037</data>
+    </edge>
+    <edge source="7" target="62">
+      <data key="d0">18a6f7ca8b34</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">a42bb0aaabde</data>
+      <data key="d4">1.335</data>
+    </edge>
+    <edge source="7" target="5">
+      <data key="d0">a42bb0aaabde</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">14cc206e2aa6</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="7" target="6">
+      <data key="d0">a42bb0aaabde</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">30b5c2e32724</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="7" target="9">
+      <data key="d0">a42bb0aaabde</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">f4f26d303c14</data>
+      <data key="d4">2.656</data>
+    </edge>
+    <edge source="39" target="38">
+      <data key="d0">68725124fab8</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">c46e1f8ccef8</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="38" target="68">
+      <data key="d2">wireless</data>
+      <data key="d0">68725124fab8</data>
+      <data key="d1">undef</data>
+      <data key="d3">c46e1fe6e08c</data>
+      <data key="d4">5.795</data>
+    </edge>
+    <edge source="38" target="31">
+      <data key="d2">wireless</data>
+      <data key="d0">68725124fab8</data>
+      <data key="d1">undef</data>
+      <data key="d3">68725108fc98</data>
+      <data key="d4">36.429</data>
+    </edge>
+    <edge source="33" target="5">
+      <data key="d0">f4f26d3feece</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">14cc206e2aa6</data>
+      <data key="d4">1.054</data>
+    </edge>
+    <edge source="33" target="70">
+      <data key="d0">30b5c2b04b54</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">f4f26d3feece</data>
+      <data key="d4">1.209</data>
+    </edge>
+    <edge source="32" target="90">
+      <data key="d0">f4f26d228062</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">a42bb0aaa95e</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="31" target="62">
+      <data key="d0">18a6f7ca8b34</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">68725108fc98</data>
+      <data key="d4">1.518</data>
+    </edge>
+    <edge source="31" target="60">
+      <data key="d0">68725108fc98</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c46e1fe6d5de</data>
+      <data key="d4">1.133</data>
+    </edge>
+    <edge source="31" target="63">
+      <data key="d0">f4f26d85aeb0</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">68725108fc98</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="31" target="9">
+      <data key="d0">68725108fc98</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">f4f26d303c14</data>
+      <data key="d4">1.294</data>
+    </edge>
+    <edge source="30" target="17">
+      <data key="d2">wireless</data>
+      <data key="d0">6872510a35d3</data>
+      <data key="d1">undef</data>
+      <data key="d3">e8de27fd35de</data>
+      <data key="d4">9.107</data>
+    </edge>
+    <edge source="30" target="16">
+      <data key="d2">wireless</data>
+      <data key="d0">c46e1fe6d9b8</data>
+      <data key="d1">undef</data>
+      <data key="d3">6872510a35d3</data>
+      <data key="d4">11.087</data>
+    </edge>
+    <edge source="30" target="64">
+      <data key="d0">6872510a35d3</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">6872510a3931</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="30" target="65">
+      <data key="d0">6872510a35d3</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">6872510a3b7c</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="30" target="66">
+      <data key="d0">6872510a35d3</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">6872510a1c9c</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="37" target="36">
+      <data key="d0">c46e1ff672d2</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c46e1ff64ab2</data>
+      <data key="d4">1.244</data>
+    </edge>
+    <edge source="37" target="35">
+      <data key="d0">c46e1ff672d2</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c46e1f7b193e</data>
+      <data key="d4">1.238</data>
+    </edge>
+    <edge source="36" target="35">
+      <data key="d0">c46e1f7b193e</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c46e1ff64ab2</data>
+      <data key="d4">1.143</data>
+    </edge>
+    <edge source="34" target="5">
+      <data key="d0">c46e1fe6df60</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">14cc206e2aa6</data>
+      <data key="d4">1.667</data>
+    </edge>
+    <edge source="60" target="61">
+      <data key="d0">f4f26d4000e2</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c46e1fe6d5de</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="62" target="93">
+      <data key="d0">18a6f7ca8b34</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">14cc2040f365</data>
+      <data key="d4">1.067</data>
+    </edge>
+    <edge source="64" target="65">
+      <data key="d0">6872510a3931</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">6872510a3b7c</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="64" target="66">
+      <data key="d0">6872510a1c9c</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">6872510a3931</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="65" target="66">
+      <data key="d0">6872510a1c9c</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">6872510a3b7c</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="67" target="68">
+      <data key="d2">wireless</data>
+      <data key="d0">60e327c735da</data>
+      <data key="d1">undef</data>
+      <data key="d3">c46e1fe6e08c</data>
+      <data key="d4">42.5</data>
+    </edge>
+    <edge source="67" target="44">
+      <data key="d0">14cc205a8180</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">60e327c735da</data>
+      <data key="d4">1.192</data>
+    </edge>
+    <edge source="68" target="92">
+      <data key="d0">c0a0bbf0de40</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c46e1fe6e08c</data>
+      <data key="d4">1.308</data>
+    </edge>
+    <edge source="68" target="72">
+      <data key="d2">wireless</data>
+      <data key="d0">c46e1fe6e08c</data>
+      <data key="d1">undef</data>
+      <data key="d3">30b5c2bcfca6</data>
+      <data key="d4">3.923</data>
+    </edge>
+    <edge source="6" target="11">
+      <data key="d0">0a6cf880b055</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">30b5c2e32724</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="6" target="10">
+      <data key="d0">860cfd95b6a4</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">30b5c2e32724</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="6" target="12">
+      <data key="d0">f4f26d85af02</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">30b5c2e32724</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="6" target="5">
+      <data key="d0">14cc206e2aa6</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">30b5c2e32724</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="6" target="9">
+      <data key="d0">f4f26d303c14</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">30b5c2e32724</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="98" target="97">
+      <data key="d0">c46e1ff650cc</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c46e1fe6d692</data>
+      <data key="d4">1.054</data>
+    </edge>
+    <edge source="91" target="12">
+      <data key="d0">f4f26d5f0944</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">f4f26d85af02</data>
+      <data key="d4">1.104</data>
+    </edge>
+    <edge source="95" target="96">
+      <data key="d0">60e327ceb558</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">30b5c2b04c58</data>
+      <data key="d4">1.049</data>
+    </edge>
+    <edge source="11" target="9">
+      <data key="d0">0a6cf880b055</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">f4f26d303c14</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="11" target="10">
+      <data key="d0">0a6cf880b055</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">860cfd95b6a4</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="11" target="12">
+      <data key="d0">0a6cf880b055</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">f4f26d85af02</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="10" target="9">
+      <data key="d0">860cfd95b6a4</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">f4f26d303c14</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="10" target="12">
+      <data key="d0">860cfd95b6a4</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">f4f26d85af02</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="12" target="9">
+      <data key="d0">f4f26d85af02</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">f4f26d303c14</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="17" target="16">
+      <data key="d0">c46e1fe6d9b8</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">e8de27fd35de</data>
+      <data key="d4">1.071</data>
+    </edge>
+    <edge source="17" target="19">
+      <data key="d0">f4f26d3fef10</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">e8de27fd35de</data>
+      <data key="d4">1.058</data>
+    </edge>
+    <edge source="17" target="18">
+      <data key="d2">wireless</data>
+      <data key="d0">e8de27fd35de</data>
+      <data key="d1">undef</data>
+      <data key="d3">0418d62d1f6d</data>
+      <data key="d4">1.281</data>
+    </edge>
+    <edge source="16" target="19">
+      <data key="d0">f4f26d3fef10</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c46e1fe6d9b8</data>
+      <data key="d4">1.094</data>
+    </edge>
+    <edge source="16" target="18">
+      <data key="d0">c46e1fe6d9b8</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">0418d62d1f6d</data>
+      <data key="d4">1.17</data>
+    </edge>
+    <edge source="48" target="49">
+      <data key="d0">f4f26d40008c</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">14cc204d0f3a</data>
+      <data key="d4">1.062</data>
+    </edge>
+    <edge source="46" target="9">
+      <data key="d0">14cc20cd55a8</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">f4f26d303c14</data>
+      <data key="d4">1.584</data>
+    </edge>
+    <edge source="44" target="43">
+      <data key="d2">wireless</data>
+      <data key="d0">647002986b1a</data>
+      <data key="d1">undef</data>
+      <data key="d3">14cc205a8180</data>
+      <data key="d4">63.75</data>
+    </edge>
+    <edge source="44" target="73">
+      <data key="d2">wireless</data>
+      <data key="d0">14cc205a8180</data>
+      <data key="d1">undef</data>
+      <data key="d3">30b5c2884604</data>
+      <data key="d4">1.491</data>
+    </edge>
+    <edge source="44" target="72">
+      <data key="d2">wireless</data>
+      <data key="d0">14cc205a8180</data>
+      <data key="d1">undef</data>
+      <data key="d3">30b5c2bcfca6</data>
+      <data key="d4">1.5</data>
+    </edge>
+    <edge source="45" target="43">
+      <data key="d0">14cc20a498cc</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">647002986b1a</data>
+      <data key="d4">1.049</data>
+    </edge>
+    <edge source="42" target="41">
+      <data key="d0">60e327cedf2e</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">c04a007fd0fa</data>
+      <data key="d4">1.076</data>
+    </edge>
+    <edge source="41" target="75">
+      <data key="d0">c46e1f3b4132</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">60e327cedf2e</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="41" target="76">
+      <data key="d0">001e68f402ab</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">60e327cedf2e</data>
+      <data key="d4">1.0</data>
+    </edge>
+  </graph>
+</graphml>

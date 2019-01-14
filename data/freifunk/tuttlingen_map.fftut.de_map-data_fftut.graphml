@@ -1,0 +1,161 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key attr.name="wieght" attr.type="double" for="edge" id="d4" />
+  <key attr.name="src_orig_id" attr.type="string" for="edge" id="d3" />
+  <key attr.name="type" attr.type="string" for="edge" id="d2" />
+  <key attr.name="bidirect" attr.type="string" for="edge" id="d1" />
+  <key attr.name="dst_orig_id" attr.type="string" for="edge" id="d0" />
+  <graph edgedefault="undirected">
+    <node id="11" />
+    <node id="10" />
+    <node id="13" />
+    <node id="12" />
+    <node id="15" />
+    <node id="14" />
+    <node id="17" />
+    <node id="16" />
+    <node id="1" />
+    <node id="0" />
+    <node id="3" />
+    <node id="2" />
+    <node id="5" />
+    <node id="4" />
+    <node id="7" />
+    <node id="6" />
+    <node id="9" />
+    <node id="8" />
+    <edge source="11" target="0">
+      <data key="d0">50c7bf12e60e</data>
+      <data key="d1">undef</data>
+      <data key="d2">tunnel</data>
+      <data key="d3">88e640ff1725</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="10" target="0">
+      <data key="d0">50c7bf12d2ee</data>
+      <data key="d1">undef</data>
+      <data key="d2">tunnel</data>
+      <data key="d3">88e640ff1725</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="13" target="0">
+      <data key="d0">50c7bf12de46</data>
+      <data key="d1">undef</data>
+      <data key="d2">tunnel</data>
+      <data key="d3">88e640ff1725</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="12" target="0">
+      <data key="d0">88e640ff1723</data>
+      <data key="d1">undef</data>
+      <data key="d2">other</data>
+      <data key="d3">88e640ff1725</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="15" target="0">
+      <data key="d0">50c7bf12e15e</data>
+      <data key="d1">undef</data>
+      <data key="d2">tunnel</data>
+      <data key="d3">88e640ff1725</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="14" target="0">
+      <data key="d0">f4f26dd7bb98</data>
+      <data key="d1">undef</data>
+      <data key="d2">tunnel</data>
+      <data key="d3">88e640ff1725</data>
+      <data key="d4">1.016</data>
+    </edge>
+    <edge source="14" target="17">
+      <data key="d0">f4f26dd7bb98</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">50c7bf12cf06</data>
+      <data key="d4">1.425</data>
+    </edge>
+    <edge source="17" target="0">
+      <data key="d0">50c7bf12cf06</data>
+      <data key="d1">undef</data>
+      <data key="d2">tunnel</data>
+      <data key="d3">88e640ff1725</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="16" target="0">
+      <data key="d0">50c7bf12e9b8</data>
+      <data key="d1">undef</data>
+      <data key="d2">tunnel</data>
+      <data key="d3">88e640ff1725</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="1" target="0">
+      <data key="d0">88e640ff1725</data>
+      <data key="d1">undef</data>
+      <data key="d2">tunnel</data>
+      <data key="d3">f4f26d53e9e4</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="3">
+      <data key="d0">88e640ff1725</data>
+      <data key="d1">undef</data>
+      <data key="d2">tunnel</data>
+      <data key="d3">18a6f7062cb6</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="2">
+      <data key="d0">88e640ff1725</data>
+      <data key="d1">undef</data>
+      <data key="d2">tunnel</data>
+      <data key="d3">a42bb0d86f70</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="5">
+      <data key="d0">88e640ff1725</data>
+      <data key="d1">undef</data>
+      <data key="d2">tunnel</data>
+      <data key="d3">18a6f705d528</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="4">
+      <data key="d0">88e640ff1725</data>
+      <data key="d1">undef</data>
+      <data key="d2">tunnel</data>
+      <data key="d3">18a6f7f7b2f4</data>
+      <data key="d4">1.045</data>
+    </edge>
+    <edge source="0" target="7">
+      <data key="d0">88e640ff1725</data>
+      <data key="d1">undef</data>
+      <data key="d2">tunnel</data>
+      <data key="d3">50c7bf12d9a6</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="6">
+      <data key="d0">88e640ff1725</data>
+      <data key="d1">undef</data>
+      <data key="d2">tunnel</data>
+      <data key="d3">50c7bf12e0dc</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="8">
+      <data key="d0">50c7bf12e784</data>
+      <data key="d1">undef</data>
+      <data key="d2">tunnel</data>
+      <data key="d3">88e640ff1725</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="5" target="4">
+      <data key="d0">18a6f705d528</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">18a6f7f7b2f4</data>
+      <data key="d4">5.312</data>
+    </edge>
+    <edge source="9" target="8">
+      <data key="d0">50c7bf12e784</data>
+      <data key="d1">undef</data>
+      <data key="d2">wireless</data>
+      <data key="d3">50c7bf12d33c</data>
+      <data key="d4">1.016</data>
+    </edge>
+  </graph>
+</graphml>

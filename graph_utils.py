@@ -98,6 +98,13 @@ def loadGraph(fname, remap=False, connected=True, silent=False):
             print
             print err
             sys.exit(1)
+    elif fname.lower().endswith(".graphml"):
+        try:
+            G = nx.read_graphml(fname, node_type=int)
+        except IOError as err:
+            print
+            print err
+            sys.exit(1)
     # load a a network in NetJSON format
     elif fname.lower().endswith(".json"):
         try:

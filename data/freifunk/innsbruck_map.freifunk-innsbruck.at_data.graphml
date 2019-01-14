@@ -1,0 +1,186 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key attr.name="wieght" attr.type="double" for="edge" id="d4" />
+  <key attr.name="src_orig_id" attr.type="string" for="edge" id="d3" />
+  <key attr.name="bidirect" attr.type="string" for="edge" id="d2" />
+  <key attr.name="dst_orig_id" attr.type="string" for="edge" id="d1" />
+  <key attr.name="type" attr.type="string" for="edge" id="d0" />
+  <graph edgedefault="undirected">
+    <node id="11" />
+    <node id="10" />
+    <node id="13" />
+    <node id="12" />
+    <node id="14" />
+    <node id="1" />
+    <node id="0" />
+    <node id="3" />
+    <node id="2" />
+    <node id="5" />
+    <node id="4" />
+    <node id="7" />
+    <node id="6" />
+    <node id="9" />
+    <node id="8" />
+    <edge source="11" target="0">
+      <data key="d0">fastd</data>
+      <data key="d1">e8de27b78a7a</data>
+      <data key="d2">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="11" target="2">
+      <data key="d0">fastd</data>
+      <data key="d1">e8de27b78a7a</data>
+      <data key="d2">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="10" target="3">
+      <data key="d0">wireless</data>
+      <data key="d1">802aa8064771</data>
+      <data key="d2">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="13" target="0">
+      <data key="d0">fastd</data>
+      <data key="d1">18a6f73debb0</data>
+      <data key="d2">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="13" target="2">
+      <data key="d0">fastd</data>
+      <data key="d1">18a6f73debb0</data>
+      <data key="d2">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.067</data>
+    </edge>
+    <edge source="12" target="0">
+      <data key="d0">fastd</data>
+      <data key="d1">24a43c42ce57</data>
+      <data key="d2">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="12" target="2">
+      <data key="d0">fastd</data>
+      <data key="d1">24a43c42ce57</data>
+      <data key="d2">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.016</data>
+    </edge>
+    <edge source="14" target="0">
+      <data key="d0">fastd</data>
+      <data key="d1">60e327ee1d0c</data>
+      <data key="d2">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="14" target="2">
+      <data key="d0">fastd</data>
+      <data key="d1">60e327ee1d0c</data>
+      <data key="d2">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.016</data>
+    </edge>
+    <edge source="1" target="0">
+      <data key="d0">fastd</data>
+      <data key="d1">ec086b6f678c</data>
+      <data key="d2">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="1" target="2">
+      <data key="d0">fastd</data>
+      <data key="d1">ec086b6f678c</data>
+      <data key="d2">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.016</data>
+    </edge>
+    <edge source="0" target="4">
+      <data key="d0">fastd</data>
+      <data key="d1">4c5e0c8732a1</data>
+      <data key="d2">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="6">
+      <data key="d0">fastd</data>
+      <data key="d1">687251509d3a</data>
+      <data key="d2">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="8">
+      <data key="d0">fastd</data>
+      <data key="d1">6872515099c5</data>
+      <data key="d2">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="3" target="9">
+      <data key="d1">802aa8064771</data>
+      <data key="d2">undef</data>
+      <data key="d0">other</data>
+      <data key="d3">60e327b809da</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="3" target="4">
+      <data key="d1">802aa8064771</data>
+      <data key="d2">undef</data>
+      <data key="d0">wireless</data>
+      <data key="d3">4c5e0c8732a1</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="2" target="4">
+      <data key="d0">fastd</data>
+      <data key="d1">4c5e0c8732a1</data>
+      <data key="d2">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.016</data>
+    </edge>
+    <edge source="2" target="6">
+      <data key="d0">fastd</data>
+      <data key="d1">687251509d3a</data>
+      <data key="d2">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="2" target="8">
+      <data key="d0">fastd</data>
+      <data key="d1">6872515099c5</data>
+      <data key="d2">undef</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.032</data>
+    </edge>
+    <edge source="5" target="4">
+      <data key="d1">18a6f74b973e</data>
+      <data key="d2">undef</data>
+      <data key="d0">other</data>
+      <data key="d3">4c5e0c8732a1</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="5" target="6">
+      <data key="d1">18a6f74b973e</data>
+      <data key="d2">undef</data>
+      <data key="d0">wireless</data>
+      <data key="d3">687251509d3a</data>
+      <data key="d4">1.747</data>
+    </edge>
+    <edge source="4" target="6">
+      <data key="d1">687251509d3a</data>
+      <data key="d2">undef</data>
+      <data key="d0">other</data>
+      <data key="d3">4c5e0c8732a1</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="7" target="6">
+      <data key="d1">60e327ee1da0</data>
+      <data key="d2">undef</data>
+      <data key="d0">wireless</data>
+      <data key="d3">687251509d3a</data>
+      <data key="d4">14.167</data>
+    </edge>
+  </graph>
+</graphml>

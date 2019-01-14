@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='utf-8'?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+  <key attr.name="wieght" attr.type="double" for="edge" id="d4" />
+  <key attr.name="src_orig_id" attr.type="string" for="edge" id="d3" />
+  <key attr.name="bidirect" attr.type="string" for="edge" id="d2" />
+  <key attr.name="dst_orig_id" attr.type="string" for="edge" id="d1" />
+  <key attr.name="type" attr.type="string" for="edge" id="d0" />
+  <graph edgedefault="undirected">
+    <node id="1" />
+    <node id="0" />
+    <node id="3" />
+    <node id="2" />
+    <node id="4" />
+    <edge source="1" target="0">
+      <data key="d0">undef</data>
+      <data key="d1">undef</data>
+      <data key="d2">True</data>
+      <data key="d3">021b0cc30202</data>
+      <data key="d4">1.016</data>
+    </edge>
+    <edge source="1" target="2">
+      <data key="d0">undef</data>
+      <data key="d1">021b0cc30102</data>
+      <data key="d2">True</data>
+      <data key="d3">undef</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="3">
+      <data key="d0">undef</data>
+      <data key="d1">98ded0d5d3c4</data>
+      <data key="d2">True</data>
+      <data key="d3">021b0cc30202</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="0" target="2">
+      <data key="d0">undef</data>
+      <data key="d1">021b0cc30102</data>
+      <data key="d2">True</data>
+      <data key="d3">021b0cc30202</data>
+      <data key="d4">1.0</data>
+    </edge>
+    <edge source="2" target="4">
+      <data key="d0">undef</data>
+      <data key="d1">10feede61022</data>
+      <data key="d2">True</data>
+      <data key="d3">021b0cc30102</data>
+      <data key="d4">1.0</data>
+    </edge>
+  </graph>
+</graphml>
