@@ -129,6 +129,7 @@ class princeHeuristicKill(MininetTest):
 
     def setupNetwork(self):
         self.dump_pids = []
+        nx.write_adjlist(self.graph, self.prefix + "topology.adj")
         for idx, host in enumerate(self.getAllHosts()):
             intf = host.intfList()
             self.intf_list = ' '.join(["\"" + i.name + "\"" for i in intf])
@@ -137,8 +138,6 @@ class princeHeuristicKill(MininetTest):
                 pid = self.launchPrince(host)
             if self.dump:
                 self.launch_sniffer(host)
-            nx.write_adjlist(self.graph, self.prefix + "topology.adj")
-            gu.save_netjson(self.graph, self.prefix)
         for idx, host in enumerate(self.getAllHosts()):
             self.dump_pids.append(self.dumpRoute(host, self.killwait - 10))
             
