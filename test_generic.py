@@ -62,7 +62,7 @@ class MininetTest(object):
 
     def sendSig(self, pid, sig=signal.SIGTERM):
         try:
-            info("Killing BGProcess: " + str(pid) + "; ")
+            info("BGProcess: %d, sending %d;" % (pid, sig))
             os.kill(pid, sig)
         except OSError:
             error("Error while killing process " + str(pid))

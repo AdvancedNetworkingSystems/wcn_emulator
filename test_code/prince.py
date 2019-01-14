@@ -120,10 +120,15 @@ class princeHeuristicKill(MininetTest):
         self.performTests()
         info("Waiting completion...\n")
         self.wait(float(self.duration))
+        # Stop all the route grabbing before the networks stops
+        for pid in self.dump_pids:
+            self.sendSig(pid, sig=signal.SIGTERM)
+        # Stop the network
         self.tearDownNetwork()
         self.analyzeResults()
 
     def setupNetwork(self):
+        self.dump_pids = []
         for idx, host in enumerate(self.getAllHosts()):
             intf = host.intfList()
             self.intf_list = ' '.join(["\"" + i.name + "\"" for i in intf])
@@ -135,7 +140,7 @@ class princeHeuristicKill(MininetTest):
             nx.write_adjlist(self.graph, self.prefix + "topology.adj")
             gu.save_netjson(self.graph, self.prefix)
         for idx, host in enumerate(self.getAllHosts()):
-            self.dumpRoute(host, self.killwait - 10)
+            self.dump_pids.append(self.dumpRoute(host, self.killwait - 10))
             
             
 
@@ -170,7 +175,12 @@ class princeHeuristicKill(MininetTest):
                           *reduce(lambda x, y: x + y, params.items()))
 
     def performTests(self):
-        self.wait(int(self.killwait))
+        keep_time = 10
+        self.wait(int(self.killwait - keep_time))
+        #Signal the processes to start dumping keep_time before the killing of the node
+        for pid in self.dump_pids:
+            self.sendSig(pid=pid, sig=signal.SIGUSR1)
+        self.wait(keep_time)
         print("Killing %s at time %d\n" % (self.kill_node, time.time()))
         self.sendSignal(signal.SIGKILL, hostName=[self.kill_node])
         print("Killed at time %d\n" % (time.time()))
