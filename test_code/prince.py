@@ -70,7 +70,7 @@ class princeHeuristicKill(MininetTest):
             PlParam "port" "2009"
         }
 
-        LoadPlugin "../olsrd/lib/poprouting/olsrd_poprouting.so.1.0"{
+        LoadPlugin "../olsrd/lib/poprouting/olsrd_poprouting.so.1.1"{
             PlParam "accept" "0.0.0.0"
             PlParam "port" "1234"
         }

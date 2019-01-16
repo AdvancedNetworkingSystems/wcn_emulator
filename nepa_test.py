@@ -41,7 +41,7 @@ def mean_val(subpath, wait):
                 for row in reader:
                     d = {}
                     d['timestamp'] = int(row[0])
-                    d['correct'] = int(row[1])
+                    d['correct'] = float(row[1])
                     data.append(d)
                 m_route = max(data, key=lambda x: x['correct'])['correct'] #Search for the max number of route (right one)
                 filtered = data[5:-5] #Remove all the data before the wait time and the last 10 seconds
@@ -136,10 +136,10 @@ class Nepa():
                     net.stop()
                     test.changePermissions()
                 info("*** Done with subcase %s" % (p[2]))
-                mean_val(subPath, int(self.C.confParams['kill_wait']))
-            with open(multitestpath + "/result.dat", 'a') as fw:
-                means = mean_exp(testPath)
-                print >> fw, "%f,%f,%f" % (means[0], means[1], means[2])
+                #mean_val(subPath, int(self.C.confParams['kill_wait']))
+            #with open(multitestpath + "/result.dat", 'a') as fw:
+                #means = mean_exp(testPath)
+                #print >> fw, "%f,%f,%f" % (means[0], means[1], means[2])
         info("*** Done with experiment: " + testName + "\n")
 if __name__ == "__main__":
     N = Nepa()
