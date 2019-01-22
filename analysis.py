@@ -7,8 +7,6 @@ import pandas
 def mean_val(subpath):
     breaks = []
     dirs = os.listdir(subpath)
-    if "result.dat" in dirs:
-        dirs.remove("result.dat")
     for node in dirs:
         with open("%s/%s/breakage.dat" % (subpath, node)) as f:
             data = []
@@ -26,7 +24,6 @@ def mean_val(subpath):
             breaks.append(breakage)
             #print "%.2fs,%s"%(breakage, node) #ds
     return breaks
-
 
 def main(path, n_run):
     samples = 13
@@ -47,5 +44,6 @@ def main(path, n_run):
     for i in range(n_run):
         print pandas.DataFrame(data[i])
     print np.mean(data, (2,0))
+
 if __name__ == '__main__':
-    main(sys.argv[1], int(sys.argv[2]))
+    main(sys.argv[1])

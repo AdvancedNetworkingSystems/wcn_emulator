@@ -4,7 +4,6 @@ from os import kill, path, makedirs
 from matplotlib.pyplot import ion
 from random import sample, randint
 from mininet.util import pmonitor
-from poprouting import ComputeTheoreticalValues
 from measure_breakage_time import resultParser
 import time
 import graph_utils as gu
@@ -96,7 +95,7 @@ class princeHeuristicKill(MininetTest):
             # logfile = os.path.abspath(self.prefix + host.name + "_prince.log")
             # with open(logfile, "w+") as fh:
             #     fh.close()
-            #os.chmod(logfile, 0o777)
+            # os.chmod(logfile, 0o777)
             print >> f_prince, self.prince_conf_template % (host.defaultIntf().ip, self.cutpoint_pen)
         args = os.path.abspath(prince_conf_file)
         logfile = self.prefix + host.name + "_prince_out.log"
@@ -105,8 +104,8 @@ class princeHeuristicKill(MininetTest):
         # info(log_str)
         # info(cmd + "\n")
         params = {}
-        params['>'] = "/dev/null"  # logfile
-        params['2>'] = "/dev/null"  # logfile
+        params['>'] = logfile
+        params['2>'] = logfile
         return self.bgCmd(host, True, cmd,
                           *reduce(lambda x, y: x + y, params.items()))
 
@@ -140,8 +139,6 @@ class princeHeuristicKill(MininetTest):
                 self.launch_sniffer(host)
         for idx, host in enumerate(self.getAllHosts()):
             self.dump_pids.append(self.dumpRoute(host, self.killwait - 10))
-            
-            
 
     def dumpRoute(self, host, wait):
         logdir = self.prefix + "rtables/" + host.name
@@ -149,8 +146,8 @@ class princeHeuristicKill(MininetTest):
         os.makedirs(logdir)
         cmd = "./dumpRoute.sh %s %d" % (logdir, wait)
         params = {}
-        params['>'] = "/dev/null" #logfile
-        params['2>'] = "/dev/null" #logfile
+        params['>'] = "/dev/null"  # logfile
+        params['2>'] = "/dev/null"  # logfile
         return self.bgCmd(host, True, cmd,
                           *reduce(lambda x, y: x + y, params.items()))
 
@@ -176,7 +173,7 @@ class princeHeuristicKill(MininetTest):
     def performTests(self):
         keep_time = 10
         self.wait(int(self.killwait - keep_time))
-        #Signal the processes to start dumping keep_time before the killing of the node
+        # Signal the processes to start dumping keep_time before the killing of the node
         for pid in self.dump_pids:
             self.sendSig(pid=pid, sig=signal.SIGUSR1)
         self.wait(keep_time)
@@ -197,33 +194,13 @@ class princeHeuristicKill(MininetTest):
         graph.remove_node(p.killed_node)
         for cc in nx.connected_components(graph):
             p.cc_list.append(map(lambda x: p.id_ip[x], cc))
-        
         p.navigate_all_timestamps()
         print "time, correct_paths, loops, broken_paths, missing_dest"
-        p.data_series.sort(key=lambda x:x[0])
+        p.data_series.sort(key=lambda x: x[0])
         with open(self.prefix + "breakage.dat", "w") as breakage:
             for l in p.data_series:
                 print >> breakage, ",".join(map(str, l))
-        # if self.poprouting:
-        #     bcs = nx.betweenness_centrality(self.graph, endpoints=True)
-        #     ctv = ComputeTheoreticalValues(graph=self.graph)
-        #     with open(self.prefix + "centrality.dat", "w") as report:
-        #         print >> report, "Node\tNX\tPrince+olsrv1"
-        #         for node, value in bcs.iteritems():
-        #             print >> report, "%s\t%f\t%f" % (node, value, self.get_mean_column(self.prefix + node, 4))
-        #
-        #     with open(self.prefix + "timers.dat", "w") as report:
-        #         print >> report, "Node\tHello NX\tHello Prince\tTC NX\tTC Prince"
-        #         for node in self.graph.nodes():
-        #             print >> report, "%s\t%f\t%f\t%f\t%f" % (node, ctv.Hi[node], self.get_mean_column(self.prefix + "/" + node, 2), ctv.TCi[node], self.get_mean_column(self.prefix + "/" + node, 1))
         return
-
-    # def get_mean_column(self, nodename, column):
-    #     with open(nodename + "_prince.log") as f:
-    #         values = np.loadtxt(f)
-    #         if values.shape[0] > 4:
-    #             return np.mean(values[-5:, column])
-    #     return 0
 
     def sendSignal(self, sig, hostName=""):
         for pid, h in self.pendingProc.items():
