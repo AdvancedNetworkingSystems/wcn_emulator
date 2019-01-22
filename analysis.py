@@ -2,7 +2,7 @@ import sys
 import os
 import numpy as np
 import csv
-
+import pandas
 
 def mean_val(subpath):
     breaks = []
@@ -24,22 +24,28 @@ def mean_val(subpath):
             longest_seq = max(np.split(stable, np.where(np.diff(stable) != 5)[0]+1), key=len).tolist()
             breakage = float(len(longest_seq))*0.5
             breaks.append(breakage)
-            #p2rint "%.2f,%s" %(float(len(longest_seq)) * 0.5, node) #ds
+            #print "%.2fs,%s"%(breakage, node) #ds
     return breaks
 
 
-def main(path, n):
-    data = np.empty([n,3,26])
+def main(path, n_run):
+    samples = 13
+    n_params = 2
+    data = np.empty([n_run, n_params, samples])
     dirs = os.listdir(path)
     dirs.sort()
     i=0
-    for d in dirs[:n]:
+    for d in dirs[:n_run]:
         j=0
-        for p in ["NOPOP", "POP", "POPPEN"]: 
+        params = ["NOPOP", "POP", "POPPEN"]
+        for p in params[:n_params]: 
             breaks =  mean_val("%s/%s/%s" % (path, d, p))
             data[i,j]=breaks
             j+=1
         i+=1
+
+    for i in range(n_run):
+        print pandas.DataFrame(data[i])
     print np.mean(data, (2,0))
 if __name__ == '__main__':
     main(sys.argv[1], int(sys.argv[2]))
