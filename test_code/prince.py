@@ -30,7 +30,7 @@ class princeHeuristicKill(MininetTest):
                 "host": "%s",
                 "port": 2009,
                 "timer_port": 1234,
-                "refresh": 5
+                "refresh": 20
             },
             "graph-parser": {
                 "heuristic": 1,
