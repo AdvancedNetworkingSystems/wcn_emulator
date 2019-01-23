@@ -10,7 +10,7 @@ while true; do
 		timestamp=$(date +%s%N) #ns
 		timestamp_short="${timestamp%????????}" #ms
 		timestamp_rounded=$((5*($timestamp_short/5)))
-		echo "/NetworkGraph" | nc 127.0.0.1 2010 > $1/$timestamp_rounded
+		echo "/lin" | nc 127.0.0.1 2008 > $1/$timestamp_rounded
 		sleep 0.5
 	fi
 done
