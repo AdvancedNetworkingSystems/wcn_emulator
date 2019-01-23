@@ -1,29 +1,62 @@
 #!/usr/bin/env python
 import networkx as nx
 import math
+import json
+from GraphParser import GraphParser
+from collections import OrderedDict
+import random
 
+def composeNetJson(graph, weight=None):
+        """ Parameters
+        graph: nx graph object
+        """
+        Netjson = OrderedDict()
+        Netjson['type'] = 'NetworkGraph'
+        Netjson['protocol'] = 'olsrv2'
+        Netjson['version'] = 'poprouting custom'
+        Netjson['revision'] = '0.11.3'
+        Netjson['metric'] = 'ff_dat_metric'
+        node = random.sample(graph.nodes(), 1)[0]
+        Netjson['router_id'] = graph.nodes()[node]
+        Netjson['nodes'] = []
+        for node in graph.nodes():
+            n = {}
+            n['id'] = str(node)
+            Netjson['nodes'].append(n)
+
+        Netjson['links'] = []
+        for link in graph.edges(data=True):
+            e = {}
+            e['source'] = str(link[0])
+            e['target'] = str(link[1])
+            if weight:
+                e['cost'] = link[2][weight]
+            else:
+                e['cost'] = 1
+            Netjson['links'].append(e)
+        return Netjson
 
 class ComputeTheoreticalValues():
 
-    def __init__(self, graph, cent="B", cH=2.0, cTC=5.0):
+    def __init__(self, graph, weight=None, cent="B", cH=2.0, cTC=5.0):
         self.G = graph
         self.cent = cent
         self.cH = cH
         self.cTC = cTC
+        self.deg_dict = {}
         self.decimal_values = 3
+        self.node_list = filter(lambda x: self.G.degree()[x] > 0, self.G)
         if cent == "B":
-            self.bet_dict = nx.betweenness_centrality(self.G, endpoints=True)
-            self.bet_ordered_nodes = [i[0] for i in sorted(
-                self.bet_dict.items(), key=lambda x: x[1])]
-        elif cent == "C":
-            self.bet_dict = nx.betweenness_centrality(self.G, endpoints=True)
-            self.bet_ordered_nodes = [i[0] for i in sorted(
-                self.bet_dict.items(), key=lambda x: x[1])]
-            self.cent_dict = nx.closeness_centrality(self.G)
-            self.cent_ordered_nodes = [i[0] for i in sorted(
-                self.cent_dict.items(), key=lambda x: x[1])]
-        self.deg_dict = self.G.degree()
-        self.node_list = filter(lambda x: self.deg_dict[x] > 0, self.G)
+            self.bet_dict = nx.betweenness_centrality(self.G, weight=weight, endpoints=True)
+            for n in self.node_list:
+                self.deg_dict[n] = self.G.degree()[n]
+        elif cent == "B_Pen":
+            self.bet_dict = GraphParser(json.dumps(composeNetJson(self.G, weight)))
+            for n in self.node_list:
+                self.deg_dict[n] = self.G.degree()[n]
+        self.bet_ordered_nodes = [i[0] for i in sorted(
+            self.bet_dict.items(), key=lambda x: x[1])]
+
         self.R = len(self.G.edges())
         self.compute_constants()
         self.compute_timers()
