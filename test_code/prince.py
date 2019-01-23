@@ -33,7 +33,7 @@ class princeHeuristicKill(MininetTest):
     },
     "graph-parser": {
         "heuristic": 1,
-        "weights": 0,
+        "weights": 1,
         "recursive": 0,
         "stop_unchanged": 0,
         "multithreaded": 0,
@@ -146,12 +146,24 @@ InterfaceDefaults {
                 self.launch_sniffer(host)
         for idx, host in enumerate(self.getAllHosts()):
             self.dump_pids.append(self.dumpRoute(host, self.killwait - 10))
+            self.dump_pids.append(self.dumpTopo(host, self.killwait - 10))
 
     def dumpRoute(self, host, wait):
         logdir = self.prefix + "rtables/" + host.name
         logfile = self.prefix + host.name + "_dump_out.log"
         os.makedirs(logdir)
         cmd = "./dumpRoute.sh %s %d" % (logdir, wait)
+        params = {}
+        params['>'] = "/dev/null"  # logfile
+        params['2>'] = "/dev/null"  # logfile
+        return self.bgCmd(host, True, cmd,
+                          *reduce(lambda x, y: x + y, params.items()))
+
+    def dumpTopo(self, host, wait):
+        logdir = self.prefix + "topology/" + host.name
+        logfile = self.prefix + host.name + "_dump_out.log"
+        os.makedirs(logdir)
+        cmd = "./dumpTopo.sh %s %d" % (logdir, wait)
         params = {}
         params['>'] = "/dev/null"  # logfile
         params['2>'] = "/dev/null"  # logfile
