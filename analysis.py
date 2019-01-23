@@ -26,7 +26,7 @@ def mean_val(subpath):
     return breaks
 
 def main(path, n_run):
-    samples = 13
+    samples = 8
     n_params = 2
     data = np.empty([n_run, n_params, samples])
     dirs = os.listdir(path)
@@ -34,7 +34,7 @@ def main(path, n_run):
     i=0
     for d in dirs[:n_run]:
         j=0
-        params = ["NOPOP", "POP", "POPPEN"]
+        params = ["POP", "POPPEN"]
         for p in params[:n_params]: 
             breaks =  mean_val("%s/%s/%s" % (path, d, p))
             data[i,j]=breaks
@@ -46,4 +46,4 @@ def main(path, n_run):
     print np.mean(data, (2,0))
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    main(sys.argv[1], int(sys.argv[2]))
