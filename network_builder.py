@@ -6,6 +6,8 @@ from mininet.node import CPULimitedHost
 from mininet.link import TCLink
 from mininet.log import info, debug
 import matplotlib.pyplot as plt
+import math
+
 
 class PowerNet(Mininet):
     def __init__(self, **params):
@@ -117,6 +119,7 @@ class GraphNet(PowerNet):
             del params["graph_kind"]
             graph_size = int(params["graph_size"])
             del params["graph_size"]
+        self.if_lqm = {}
         super(GraphNet, self).__init__(**params)
         nodeCounter = 0
         nodeMap = {}
@@ -147,6 +150,8 @@ class GraphNet(PowerNet):
             # quality_params["delay"] = '0.515ms'
             # quality_params["jitter"] = '0.284ms'
             # quality_params["delay_distribution"] = 'wifi_m0.515_s0.284'
+            if "weight" in e[2]:
+                quality_params['weight'] = e[2]['weight']
             if "loss" in quality_params.keys():
                 if quality_params["loss"] == "wifi_loss":
                     quality_params["loss"] = \
@@ -169,6 +174,12 @@ class GraphNet(PowerNet):
     def insertLink(self, n1, n2, quality_params={}):
         addr1, port1 = self.pickHostAddrPort(n1)
         addr2, port2 = self.pickHostAddrPort(n2)
+        if 'weight' in quality_params:
+            lqm = math.sqrt(1.0 / quality_params['weight'])
+            if1 = "%s-eth%d"%(n1.name, port1)
+            if2 = "%s-eth%d"%(n2.name, port2)
+            self.if_lqm[if1] = lqm
+            self.if_lqm[if2] = lqm
         self.addLink(n1, n2,
                      port1=port1,
                      port2=port2,

@@ -115,7 +115,7 @@ class Nepa():
                 kill_nodes = [n for n in self.g.nodes() if self.g.degree(n) > 1]  # Filter out leaves
             else:
                 kill_nodes = map(int, kill_nodes[1:-1].split(','))
-            for p in params[1:]:
+            for p in params:
                 self.C.confParams['poprouting'] = p[0]
                 self.C.confParams['cutpoint_pen'] = p[1]
                 subPath = "%s/%s" % (testPath, p[2])

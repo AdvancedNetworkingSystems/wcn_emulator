@@ -23,66 +23,65 @@ class princeHeuristicKill(MininetTest):
         self.stopNodeList = []
         self.graph = mininet.gg
         self.prince_conf_template = """
-        {
-            "proto": {
-                "protocol": "olsr",
-                "host": "%s",
-                "port": 2009,
-                "timer_port": 1234,
-                "refresh": 5
-            },
-            "graph-parser": {
-                "heuristic": 1,
-                "weights": 0,
-                "recursive": 0,
-                "stop_unchanged": 0,
-                "multithreaded": 0,
-                "cutpoint_penalization": %d
-            }
-        }
-        """
+{
+    "proto": {
+        "protocol": "olsr",
+        "host": "%s",
+        "port": 2009,
+        "timer_port": 1234,
+        "refresh": 5
+    },
+    "graph-parser": {
+        "heuristic": 1,
+        "weights": 0,
+        "recursive": 0,
+        "stop_unchanged": 0,
+        "multithreaded": 0,
+        "cutpoint_penalization": %d
+    }
+}
+"""
         self.poprouting = int(args["poprouting"])
         self.cutpoint_pen = int(args["cutpoint_pen"])
         self.setPrefix(name)
         self.olsr_conf_template = """
-        DebugLevel  1
-        IpVersion 4
-        FIBMetric "flat"
-        LinkQualityFishEye  0
-        LockFile "%s"
-        Hna4{}
-        Hna6{}
+DebugLevel  1
+IpVersion 4
+FIBMetric "flat"
+LinkQualityFishEye  0
+LockFile "%s"
+Hna4{}
+Hna6{}
 
-        #This plugin is bugged
-        LoadPlugin "../olsrd/lib/netjson/olsrd_netjson.so.1.1"{
-           PlParam "accept" "0.0.0.0"
-           PlParam "port" "2010"
-        }
+#This plugin is bugged
+LoadPlugin "../olsrd/lib/netjson/olsrd_netjson.so.1.1"{
+   PlParam "accept" "0.0.0.0"
+   PlParam "port" "2010"
+}
 
-        LoadPlugin "../olsrd/lib/txtinfo/olsrd_txtinfo.so.1.1"{
-            PlParam "accept" "0.0.0.0"
-            PlParam "port" "2008"
-        }
+LoadPlugin "../olsrd/lib/txtinfo/olsrd_txtinfo.so.1.1"{
+    PlParam "accept" "0.0.0.0"
+    PlParam "port" "2008"
+}
 
-        LoadPlugin "../olsrd/lib/jsoninfo/olsrd_jsoninfo.so.1.1"{
-            PlParam "accept" "0.0.0.0"
-            PlParam "port" "2009"
-        }
+LoadPlugin "../olsrd/lib/jsoninfo/olsrd_jsoninfo.so.1.1"{
+    PlParam "accept" "0.0.0.0"
+    PlParam "port" "2009"
+}
 
-        LoadPlugin "../olsrd/lib/poprouting/olsrd_poprouting.so.1.1"{
-            PlParam "accept" "0.0.0.0"
-            PlParam "port" "1234"
-        }
+LoadPlugin "../olsrd/lib/poprouting/olsrd_poprouting.so.1.1"{
+    PlParam "accept" "0.0.0.0"
+    PlParam "port" "1234"
+}
 
-        InterfaceDefaults {
-            TcInterval 2.5
-            TcValidityTime  7.5
-            HelloInterval   1.0
-            HelloValidityTime 3.0
-        }
+InterfaceDefaults {
+    TcInterval 2.5
+    TcValidityTime  7.5
+    HelloInterval   1.0
+    HelloValidityTime 3.0
+}
 
-        Interface %s {}
-        """
+%s"""
         self.heuristic = 1
         self.killwait = int(args["kill_wait"])
         self.weights = 1
@@ -125,6 +124,14 @@ class princeHeuristicKill(MininetTest):
         # Stop the network
         self.tearDownNetwork()
         self.analyzeResults()
+    
+    def gen_olsr_if_block(self, host):
+        intf = host.intfList()
+        block = ""
+        for i in intf:
+            lqm = self.mininet.if_lqm[str(i)]
+            block += "Interface \"%s\" {\nLinkQualityMult default %f\n}\n" % (i, lqm)
+        return block
 
     def setupNetwork(self):
         self.dump_pids = []
@@ -155,7 +162,8 @@ class princeHeuristicKill(MininetTest):
         olsr_conf_file = self.prefix + host.name + "_olsr.conf"
         olsr_lock_file = "/var/run/" + host.name + str(time.time()) + ".lock"
         with open(olsr_conf_file, "w") as f_olsr:
-            print >> f_olsr, self.olsr_conf_template % (olsr_lock_file, self.intf_list)
+            ifblock = self.gen_olsr_if_block(host)
+            print >> f_olsr, self.olsr_conf_template % (olsr_lock_file, ifblock)
         args = "-f " + os.path.abspath(olsr_conf_file)
         cmd = "../olsrd/olsrd " + args
         # log_str = "Host " + host.name + " launching command:\n"
