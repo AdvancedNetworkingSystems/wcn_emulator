@@ -146,7 +146,7 @@ InterfaceDefaults {
                 self.launch_sniffer(host)
         for idx, host in enumerate(self.getAllHosts()):
             self.dump_pids.append(self.dumpRoute(host, self.killwait - 10))
-            self.dump_pids.append(self.dumpLink(host, self.killwait - 10))
+            #self.dump_pids.append(self.dumpLink(host, self.killwait - 10))
 
     def dumpRoute(self, host, wait):
         logdir = self.prefix + "rtables/" + host.name
