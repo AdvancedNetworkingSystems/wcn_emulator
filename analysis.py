@@ -25,25 +25,29 @@ def mean_val(subpath):
             #print "%.2fs,%s"%(breakage, node) #ds
     return breaks
 
-def main(path, n_run):
-    samples = 8
-    n_params = 2
+def main(path, n_run, n_samples):
+    samples = n_samples
+    n_params = 3
     data = np.empty([n_run, n_params, samples])
     dirs = os.listdir(path)
     dirs.sort()
     i=0
     for d in dirs[:n_run]:
         j=0
-        params = ["POP", "POPPEN"]
+        params = ["NOPOP", "POP", "POPPEN"]
         for p in params[:n_params]: 
             breaks =  mean_val("%s/%s/%s" % (path, d, p))
             data[i,j]=breaks
             j+=1
         i+=1
 
-    for i in range(n_run):
-        print pandas.DataFrame(data[i])
-    print np.mean(data, (2,0))
+    #for i in range(n_run):
+        #print pandas.DataFrame(data[i])
+    #d = np.mean(data, (0))
+    #print pandas.DataFrame(d)
+    mean = np.mean(data, (0,2))
+    std = np.std(data, (0,2))
+    print("%f,%f,%f,%f,%f,%f"%(mean[0], std[0],mean[1],std[1],mean[2],std[2]))
 
 if __name__ == '__main__':
-    main(sys.argv[1], int(sys.argv[2]))
+    main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]))
