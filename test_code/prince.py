@@ -198,7 +198,7 @@ InterfaceDefaults {
             self.sendSig(pid=pid, sig=signal.SIGUSR1)
         self.wait(keep_time)
         print("Killing %s at time %d\n" % (self.kill_node, time.time()))
-        self.sendSignal(signal.SIGKILL, hostName=[self.kill_node])
+        self.sendSignal(signal.SIGUSR1, hostName=[self.kill_node])
         print("Killed at time %d\n" % (time.time()))
 
     def tearDownNetwork(self):
