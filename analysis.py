@@ -45,8 +45,9 @@ def main(path, n_run, n_samples):
         #print pandas.DataFrame(data[i])
     #d = np.mean(data, (0))
     #print pandas.DataFrame(d)
-    mean = np.mean(data, (0,2))
-    std = np.std(data, (0,2))
+    means = np.mean(data, (2))
+    mean = np.mean(means, (0))
+    std = np.std(means, (0))
     print("%f,%f,%f,%f,%f,%f"%(mean[0], std[0],mean[1],std[1],mean[2],std[2]))
 
 if __name__ == '__main__':
