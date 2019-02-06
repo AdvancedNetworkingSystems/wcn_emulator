@@ -153,17 +153,22 @@ if __name__ == "__main__":
         sys.exit(1)
 
     pathPrefix = sys.argv[1]
-    
+    p.killed_node = sys.argv[2]
     p = resultParser()
     p.read_topologies_from_node(pathPrefix+ "/rtables/")
     p.reorder_logs()
     graph = nx.read_adjlist(pathPrefix + "/topology.adj")
-    graph.remove_node(sys.argv[2])
-    p.cc_list = []
-    for cc in nx.connected_components(graph):
-        p.cc_list.append(map(lambda x: p.id_ip[x], cc))
-    if len(sys.argv) > 2:
-        p.killed_node = sys.argv[2]
+    if graph.nodes[p.killed_node] in nx.articulation_points(graph):
+        # verify against its BCC
+        bccs = [bc for bc in nx.biconnected_components(graph) if p.killed_node in bc)
+        for bcc in bccs:
+            bcc.remove_node(p.killed_node)
+        for cc in bcc
+            p.cc_list.append(map(lambda x: p.id_ip[x], cc))
+    else:
+        #Normal node
+        graph.remove_node(p.killed)
+        p.cc_list.append(map(lambda x:p.id_ip[x], graph))
     p.navigate_all_timestamps()
     print "correct_paths, loops, broken_paths, missing_dest"
     for l in p.data_series:
