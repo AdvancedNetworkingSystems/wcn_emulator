@@ -56,8 +56,7 @@ class resultParser():
                 j = json.load(f)
                 f.close()
             except Exception as e:
-                print "NOK", str(e)
-                print topoFile
+                #print "NOK", str(e)
                 try:
                     f.close()
                 except Exception:
@@ -153,23 +152,26 @@ if __name__ == "__main__":
         sys.exit(1)
 
     pathPrefix = sys.argv[1]
-    p.killed_node = sys.argv[2]
     p = resultParser()
+    p.killed_node = sys.argv[2]
+    p.cc_list = []
     p.read_topologies_from_node(pathPrefix+ "/rtables/")
     p.reorder_logs()
     graph = nx.read_adjlist(pathPrefix + "/topology.adj")
-    if graph.nodes[p.killed_node] in nx.articulation_points(graph):
+    if graph.nodes()[graph.nodes().index(p.killed_node)] in nx.articulation_points(graph):
         # verify against its BCC
-        bccs = [bc for bc in nx.biconnected_components(graph) if p.killed_node in bc)
+        bccs = [bc for bc in nx.biconnected_components(graph) if p.killed_node in bc]
         for bcc in bccs:
-            bcc.remove_node(p.killed_node)
-        for cc in bcc
-            p.cc_list.append(map(lambda x: p.id_ip[x], cc))
+            bcc.remove(p.killed_node)
+        for bcc in bccs:
+            p.cc_list.append(map(lambda x: p.id_ip[x], bcc))
     else:
         #Normal node
-        graph.remove_node(p.killed)
-        p.cc_list.append(map(lambda x:p.id_ip[x], graph))
+        graph.remove_node(p.killed_node)
+        print(list(nx.connected_components(graph)))
+        p.cc_list.append(map(lambda x:p.id_ip[x], graph.nodes()))
     p.navigate_all_timestamps()
+    p.data_series.sort(key=lambda x: x[0])
     print "correct_paths, loops, broken_paths, missing_dest"
     for l in p.data_series:
         print ",".join(map(str, l))
