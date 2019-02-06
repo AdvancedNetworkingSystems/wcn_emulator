@@ -18,9 +18,11 @@ def mean_val(subpath):
                 data.append(d)
             m_route = max(data, key=lambda x: x['correct'])['correct'] #Search for the max number of route (right one)
             filtered = data[5:-5] #Remove all the data before the wait time and the last 10 seconds
-            stable = sorted([d['timestamp'] for d in filtered if d['correct'] != m_route])  # filter all about the fluctuations
-            longest_seq = max(np.split(stable, np.where(np.diff(stable) != 5)[0]+1), key=len).tolist()
-            breakage = float(len(longest_seq))*0.5
+            stable = sorted([(d['timestamp'], d['correct']) for d in filtered if d['correct'] != m_route], key=lambda x: x[0])  # filter all about the fluctuations
+            longest_seq = max(np.split(stable, np.where(np.diff(stable[0]) != 5)[0]+1), key=len).tolist()
+            breakage = 0
+            for l in longest_seq:
+                breakage += 0.5*(m_route-l[1])
             breaks.append(breakage)
             #print "%.2fs,%s"%(breakage, node) #ds
     return breaks
