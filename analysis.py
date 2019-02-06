@@ -7,6 +7,7 @@ import pandas
 def mean_val(subpath):
     breaks = []
     dirs = os.listdir(subpath)
+    dirs.sort(key=lambda x: int(x.split('_')[1]))
     for node in dirs:
         with open("%s/%s/breakage.dat" % (subpath, node)) as f:
             data = []
@@ -37,17 +38,15 @@ def main(path, n_run, n_samples):
         params = ["NOPOP", "POP", "POPPEN"]
         for p in params[:n_params]: 
             breaks =  mean_val("%s/%s/%s" % (path, d, p))
-            data[i,j]=breaks
+            data[i,j] = breaks
             j+=1
         i+=1
 
     #for i in range(n_run):
         #print pandas.DataFrame(data[i])
-    #d = np.mean(data, (0))
     #print pandas.DataFrame(d)
-    means = np.mean(data, (2))
-    mean = np.mean(means, (0))
-    std = np.std(means, (0))
+    mean = np.mean(data, (2,0))
+    std = np.std(data, (2,0))
     print("%f,%f,%f,%f,%f,%f"%(mean[0], std[0],mean[1],std[1],mean[2],std[2]))
 
 if __name__ == '__main__':
