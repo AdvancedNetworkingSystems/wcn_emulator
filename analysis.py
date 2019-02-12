@@ -40,9 +40,19 @@ def mean_val(subpath):
             breaks.append(breakage)
     return (breaks)
 
-def main(path, n_run, n_samples):
+
+def pick_first_folder(path):
+    runs = os.listdir(path)
+    nodes = os.listdir(path+runs[0]+"/POP/")
+    return (nodes, runs)
+    
+    
+
+def main(path):
+    nodes,runs = pick_first_folder(path)
     global graph
-    samples = n_samples
+    samples = len(nodes)
+    n_run = len(runs)
     data = np.empty([n_run, 3, samples])
     dirs = os.listdir(path)
     dirs.sort()
@@ -57,7 +67,7 @@ def main(path, n_run, n_samples):
         i+=1
 
     for i in range(n_run):
-        print pandas.DataFrame(data[i])
+        print pandas.DataFrame(data[i], columns=nodes)
     #print pandas.DataFrame(d)
     results = np.zeros([3,3,samples])
     means = np.mean(data, (0))
@@ -67,7 +77,7 @@ def main(path, n_run, n_samples):
     results=np.reshape(results, (9,samples)).T.tolist()
     bet = nx.betweenness_centrality(graph)
     for i in range(samples):
-        results[i].append("h%d_%d"%(i,i))
+        results[i].append(nodes[i])
         results[i].append(bet[results[i][9]])
     results.sort(key=lambda x:x[10]) 
     for i in range(samples):
@@ -80,4 +90,4 @@ def main(path, n_run, n_samples):
     print("%f,%f,%f,%f,%f,%f"%(mean[0], std[0],mean[1],std[1],mean[2],std[2]))
 
 if __name__ == '__main__':
-    main(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]))
+    main(sys.argv[1])
