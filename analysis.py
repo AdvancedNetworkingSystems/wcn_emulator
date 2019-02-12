@@ -49,10 +49,14 @@ def pick_first_folder(path):
     
 
 def main(path):
+
     nodes,runs = pick_first_folder(path)
     global graph
     samples = len(nodes)
-    n_run = len(runs)
+    try:
+        n_run = int(sys.argv[2])
+    except:
+        n_run = len(runs)
     data = np.empty([n_run, 3, samples])
     dirs = os.listdir(path)
     dirs.sort()
