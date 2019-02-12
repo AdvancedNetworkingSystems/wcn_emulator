@@ -6,7 +6,7 @@ sigusr1(){
 trap 'sigusr1' USR1
 while true; do
 	if $dump; then
-		date +%s
+
 		timestamp=$(date +%s%N) #ns
 		timestamp_short="${timestamp%????????}" #ms
 		timestamp_rounded=$((5*($timestamp_short/5)))
