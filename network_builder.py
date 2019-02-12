@@ -124,10 +124,10 @@ class GraphNet(PowerNet):
         nodeCounter = 0
         nodeMap = {}
         # mininet bails if host names are longer than 10 chars
-        max_name_len = 10 - len(str(len(graph))) - 2
+        max_name_len = 10 - len(str(len(graph))) - 2 #mess
         for name in graph.nodes():
             # remove unprintable chars from name
-            nodeMap[name] = "h" + filter(str.isalnum, str(name))[-max_name_len:]\
+            nodeMap[name] = "h" + str(nodeCounter)\
                             + "_" + str(nodeCounter)
             nodeCounter += 1
 
