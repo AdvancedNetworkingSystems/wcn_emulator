@@ -111,9 +111,7 @@ class resultParser():
             if s == self.id_ip[p.killed_node]:
                 self.data['broken_paths'] += 1
             else:
-                self.data['missing_dest'] +=1
-            #print self.sorted_routing_tables[timestamp][s]
-            print timestamp, s, d, current_path
+                self.data['missing_dest'] += 1
             import pdb
             #pdb.set_trace()
             #code.interact(local=locals())
