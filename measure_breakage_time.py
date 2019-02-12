@@ -108,7 +108,7 @@ class resultParser():
         try:
             nh = self.sorted_routing_tables[timestamp][s][d]
         except KeyError:
-            if s == self.id_ip[p.killed_node]:
+            if s == self.id_ip[self.killed_node]:
                 self.data['broken_paths'] += 1
             else:
                 self.data['missing_dest'] += 1
