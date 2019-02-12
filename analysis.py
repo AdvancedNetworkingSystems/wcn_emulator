@@ -30,9 +30,9 @@ def mean_val(subpath):
             stable = sorted([(d['timestamp'], d['correct']) for d in filtered if d['correct'] != m_route], key=lambda x: x[0])  # filter all about the fluctuations
             breakage = 0
             try:
-                longest_seq = max(np.split(stable, np.where(np.diff(stable[0]) != 5)[0]+1), key=len).tolist()
+                longest_seq = max(np.split(stable, np.where(np.diff(stable[0]) != 1)[0]+1), key=len).tolist()
                 for l in longest_seq:
-                    breakage += 0.5*(m_route-l[1])
+                    breakage += 0.1*(m_route-l[1])
             except IndexError:
                 pass
             if breakage == 11:

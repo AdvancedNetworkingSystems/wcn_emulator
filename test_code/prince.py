@@ -195,7 +195,7 @@ InterfaceDefaults {
         self.wait(int(self.killwait - keep_time))
         # Signal the processes to start dumping keep_time before the killing of the node
         for pid in self.dump_pids:
-            self.sendSig(pid=pid, sig=signal.SIGUSR1)
+            self.sendSig(pid=pid, sig=signal.SIGUSR2)
         self.wait(keep_time)
         print("Killing %s at time %d\n" % (self.kill_node, time.time()))
         self.sendSignal(signal.SIGUSR1, hostName=[self.kill_node])

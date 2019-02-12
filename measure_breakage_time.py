@@ -24,8 +24,9 @@ class resultParser():
         self.sorted_routing_tables = {}  # timestamp, node_id, rt
         self.dump_interval = 1
         self.latest_time = 0
-        self.earliest_time = (2020-1970)*365*24*60*60*1000 #ms
+        self.earliest_time = (2020-1970)*365*24*60*60*1000  # ms
         self.data_series = []
+        self.precision = 1  # ds deciseconds
         self.id_ip = {}
         self.init_data()
         self.killed_node = ""
@@ -87,14 +88,14 @@ class resultParser():
         logWindow = {}
         orderedLogSequence = []
         alignedJsonRt = {}
-        for i in range(0, self.latest_time - self.earliest_time + 1, 5):
+        for i in range(0, self.latest_time - self.earliest_time + 1, self.precision):
             self.sorted_routing_tables[i+self.earliest_time] = {}
         time_list = self.sorted_routing_tables.keys()
         for node_id, rt_dict in self.routing_tables.items():
             ord_rt_dict = sorted(rt_dict.items(), key=lambda x: x[0])
             last_added = ord_rt_dict[0][0]
             for timestamp, rt in ord_rt_dict:
-                for i in range(last_added + 5, timestamp, 5):
+                for i in range(last_added + self.precision, timestamp, self.precision):
                     self.sorted_routing_tables[i] = self.sorted_routing_tables[last_added]
                 self.sorted_routing_tables[timestamp][node_id] = dict(rt)
                 last_added = timestamp
@@ -107,12 +108,15 @@ class resultParser():
         try:
             nh = self.sorted_routing_tables[timestamp][s][d]
         except KeyError:
-            self.data['missing_dest'] += 1
-            import code
+            if s == self.id_ip[p.killed_node]:
+                self.data['broken_paths'] += 1
+            else:
+                self.data['missing_dest'] +=1
+            #print self.sorted_routing_tables[timestamp][s]
+            print timestamp, s, d, current_path
+            import pdb
+            #pdb.set_trace()
             #code.interact(local=locals())
-            return []
-        if nh == self.killed_node:
-            self.data['broken_paths'] += 1
             return []
         if nh in current_path:
             self.data['loops'] += 1
@@ -126,11 +130,10 @@ class resultParser():
         node_list = list(self.nodeSet)
         counter = 0
         for cc in self.cc_list:
-            routes = it.combinations(cc, 2)
+            routes = it.permutations(cc, 2)
             for r in routes:
-                if r[0] != r[1] and r[0] != self.killed_node and r[1] != self.killed_node:
-                    counter += 1
-                    path = self.navigate_rt(r[0], r[1], timestamp,
+                counter += 1
+                path = self.navigate_rt(r[0], r[1], timestamp,
                                      current_path=[r[0]])
         self.data_series.append([timestamp, self.data["correct_paths"],
                                self.data['loops'], self.data['broken_paths'],
