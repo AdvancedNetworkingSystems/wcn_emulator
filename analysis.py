@@ -32,7 +32,7 @@ def mean_val(subpath):
             try:
                 longest_seq = max(np.split(stable, np.where(np.diff(stable[0]) != 1)[0]+1), key=len).tolist()
                 for l in longest_seq:
-                    breakage += 0.5*(m_route-l[1])
+                    breakage += 0.1*(m_route-l[1])
             except IndexError:
                 pass
             if breakage == 11:
