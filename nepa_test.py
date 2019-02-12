@@ -124,7 +124,6 @@ class Nepa():
                     if drawGraph:
                         nx.draw(self.g)
                         plt.show()
-            
                     link_opts = self.C.link_conf()
                     net = GraphNet(self.g, link_opts=link_opts)
                     net.start()
