@@ -6,6 +6,7 @@ from GraphParser import GraphParser
 from collections import OrderedDict
 import random
 
+
 def composeNetJson(graph, weight=None):
         """ Parameters
         graph: nx graph object
@@ -36,6 +37,7 @@ def composeNetJson(graph, weight=None):
             Netjson['links'].append(e)
         return Netjson
 
+
 class ComputeTheoreticalValues():
 
     def __init__(self, graph, weight=None, cent="B", cH=2.0, cTC=5.0):
@@ -51,7 +53,7 @@ class ComputeTheoreticalValues():
             for n in self.node_list:
                 self.deg_dict[n] = self.G.degree()[n]
         elif cent == "B_Pen":
-            self.bet_dict = GraphParser(json.dumps(composeNetJson(self.G, weight)))
+            self.bet_dict = GraphParser(json.dumps(composeNetJson(self.G)), True, True, True)
             for n in self.node_list:
                 self.deg_dict[n] = self.G.degree()[n]
         self.bet_ordered_nodes = [i[0] for i in sorted(

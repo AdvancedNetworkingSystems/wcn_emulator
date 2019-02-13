@@ -63,7 +63,7 @@ class TheoricValues():
             self.CTV = ComputeTheoreticalValues(self.G, cent="B_Pen", weight=self.weight, cH=self.cH, cTC=self.cTC)
             self.Hi = self.CTV.Hi
             self.TCi = self.CTV.TCi
-        self.plot_timers(how)
+            #self.plot_timers(how)
         #self.print_timers()
         assert len(self.Hi) == len(self.G.nodes())
         return dict(self.Hi)
@@ -71,7 +71,7 @@ class TheoricValues():
     def print_timers(self):
         print("H:", [h for h in sorted(self.Hi.items(), key=lambda x:x[0])])
         print("TC:", [h for h in sorted(self.TCi.items(), key=lambda x:x[0])])
-        
+
     def plot_timers(self, how):
         fig, ax1 = plt.subplots()
         plt.title(how)
@@ -109,8 +109,8 @@ class TheoricValues():
             if not leaf_nodes:
                 if self.deg_dict[node] == 1:
                     continue
-            L_h += self.Hi[node] * self.pathsCounts[node] # self.CTV_P.bet_dict[node]
-            L_tc += self.R / self.TCi[node]
+            L_h += self.Hi[node] * self.CTV_P.bet_dict[node]
+            L_tc += self.TCi[node] * self.CTV_P.bet_dict[node]
         return (round(L_h, self.decimal_values), round(L_tc, self.decimal_values))
 
     # def compute_critical_loss(self, how="NOpop", leaf_nodes=False, perc=10):
