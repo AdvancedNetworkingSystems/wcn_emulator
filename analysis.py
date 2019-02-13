@@ -44,6 +44,7 @@ def mean_val(subpath):
 def pick_first_folder(path):
     runs = os.listdir(path)
     nodes = os.listdir(path+runs[0]+"/POP/")
+    nodes.sort(key=lambda x: int(x.split('_')[1]))
     return (nodes, runs)
     
     
@@ -89,9 +90,10 @@ def main(path):
     #print pandas.DataFrame(results,columns=labels)
     #np.save('temp.dat', results)
     #print pandas.DataFrame(np.std(data,(0)))
-    mean = np.mean(data, (2,0))
-    std = np.std(data, (2,0))
-    print("%f,%f,%f,%f,%f,%f"%(mean[0], std[0],mean[1],std[1],mean[2],std[2]))
+    means = np.average(data, 0)
+    print(means)
+    mean = np.average(means, (1), weights=[1./20, 1./20, 1./41])
+    print("%f,%f,%f"%tuple(mean))
 
 if __name__ == '__main__':
     main(sys.argv[1])
