@@ -26,7 +26,23 @@ def mean_val(subpath):
                 d['correct'] = int(row[1])
                 data.append(d)
             m_route = max(data, key=lambda x: x['correct'])['correct'] #Search for the max number of route (right one)
-            filtered = data[5:-5] #Remove all the data before the wait time and the last 10 seconds
+            unconverged_index = 0
+            for i in range (len(data)):
+                if data[i]['correct'] < m_route:
+                    if data[unconverged_index]['correct'] <= data[i]['correct']:
+                        unconverged_index += 1 
+                    else:
+                        print("Error2")
+                        exit(0)
+                else:
+                    break
+            if unconverged_index > len(data)/2:
+                print("Error")
+                exit(0)
+
+            if unconverged_index> 5:
+                print("%s/%s"%(subpath, node))
+            filtered = data[unconverged_index:-5] #Remove all the data before the wait time and the last 10 seconds
             stable = sorted([(d['timestamp'], d['correct']) for d in filtered if d['correct'] != m_route], key=lambda x: x[0])  # filter all about the fluctuations
             breakage = 0
             try:
@@ -35,14 +51,13 @@ def mean_val(subpath):
                     breakage += 0.1*(m_route-l[1])
             except IndexError:
                 pass
-            if breakage == 11:
-                print("%s/%s"%(subpath, node))
             breaks.append(breakage)
     return (breaks)
 
 
 def pick_first_folder(path):
     runs = os.listdir(path)
+    runs.sort()
     nodes = os.listdir(path+runs[0]+"/POP/")
     nodes.sort(key=lambda x: int(x.split('_')[1]))
     return (nodes, runs)
@@ -92,7 +107,7 @@ def main(path):
     #print pandas.DataFrame(np.std(data,(0)))
     means = np.average(data, 0)
     print(means)
-    mean = np.average(means, (1), weights=[1./20, 1./20, 1./41])
+    mean = np.average(means, (1), weights=[10./20, 10./20, 1./41])
     print("%f,%f,%f"%tuple(mean))
 
 if __name__ == '__main__':
